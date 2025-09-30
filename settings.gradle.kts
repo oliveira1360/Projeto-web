@@ -4,12 +4,8 @@ plugins {
 }
 
 rootProject.name = "daw2025"
-include("lesson01-intro-DAW")
-include("lesson02-movies")
-include("lesson03-spring-context")
-include("lesson03-ioc-and-di-container")
-include("lesson03-movies-in-ioc-container")
-include("lesson05-lab-spring-mvc")
-include("lesson07-servlet-api")
-include("lesson08-spring-web-pipeline")
-include("lesson09-spring-and-auth")
+include("service")
+include("teste")
+include("domain")
+include("http")
+include("repository")
