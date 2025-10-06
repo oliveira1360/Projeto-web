@@ -1,0 +1,11 @@
+services:
+  db-tests:
+    container_name: db-tests
+    build:
+      dockerfile: /Dockerfile-db-test
+    environment:
+      - POSTGRES_USER=dbuser
+      - POSTGRES_PASSWORD=2025-daw-leic52d-2025-leic52d-14
+      - POSTGRES_DB=db
+    ports:
+      - 5432:5432

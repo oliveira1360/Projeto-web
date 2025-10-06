@@ -5,7 +5,7 @@ value class Money(
     val value: Int,
 ) {
     init {
-        require(this.value > 0)
+        //require(this.value > 0)
     }
 }
 

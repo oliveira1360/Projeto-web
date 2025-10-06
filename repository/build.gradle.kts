@@ -10,6 +10,14 @@ repositories {
 }
 
 dependencies {
+    api(project(":domain"))
+
+    implementation("org.jdbi:jdbi3-core:3.37.1")
+    implementation("org.jdbi:jdbi3-kotlin:3.37.1")
+    implementation("org.jdbi:jdbi3-postgres:3.37.1")
+    implementation("org.postgresql:postgresql:42.7.2")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+
     testImplementation(kotlin("test"))
 }
 
@@ -18,4 +26,31 @@ tasks.test {
 }
 kotlin {
     jvmToolchain(21)
+}
+
+val composeFileDir: Directory = rootProject.layout.projectDirectory
+val dockerComposePath = composeFileDir.file("docker/docker-compose.yml").asFile.absolutePath
+
+val dockerExe =
+    when (
+        org.gradle.internal.os.OperatingSystem
+            .current()
+    ) {
+        org.gradle.internal.os.OperatingSystem.MAC_OS -> "/usr/local/bin/docker"
+        org.gradle.internal.os.OperatingSystem.WINDOWS -> "docker"
+        else -> "docker" // Linux and others
+    }
+tasks.register<Exec>("dbTestsUp") {
+    println("Running Docker Compose with file: $dockerComposePath")
+    println("Using docker executable: $dockerExe")
+    commandLine(dockerExe, "compose", "-f", dockerComposePath, "up", "-d", "--build", "--force-recreate", "db-tests")
+}
+
+tasks.register<Exec>("dbTestsWait") {
+    commandLine(dockerExe, "exec", "db-tests", "/app/bin/wait-for-postgres.sh", "localhost")
+    dependsOn("dbTestsUp")
+}
+
+tasks.register<Exec>("dbTestsDown") {
+    commandLine(dockerExe, "compose", "-f", dockerComposePath, "down", "db-tests")
 }
