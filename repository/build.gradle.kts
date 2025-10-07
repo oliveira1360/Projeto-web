@@ -29,7 +29,7 @@ kotlin {
 }
 
 val composeFileDir: Directory = rootProject.layout.projectDirectory
-val dockerComposePath = composeFileDir.file("docker/docker-compose.yml").asFile.absolutePath
+val dockerComposePath: String = composeFileDir.file("docker/docker-compose.yml").asFile.absolutePath
 
 val dockerExe =
     when (
@@ -41,8 +41,6 @@ val dockerExe =
         else -> "docker" // Linux and others
     }
 tasks.register<Exec>("dbTestsUp") {
-    println("Running Docker Compose with file: $dockerComposePath")
-    println("Using docker executable: $dockerExe")
     commandLine(dockerExe, "compose", "-f", dockerComposePath, "up", "-d", "--build", "--force-recreate", "db-tests")
 }
 

@@ -14,6 +14,7 @@ import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.mapper.RowMapper
 import org.jdbi.v3.core.statement.StatementContext
 import java.sql.ResultSet
+import java.util.UUID
 
 
 class RepositoryUserJBDI(
@@ -63,6 +64,15 @@ class RepositoryUserJBDI(
         )
     }
 
+    override fun findByToken(token: String): User? =
+        handle
+            .createQuery("SELECT * FROM users WHERE token = :token")
+            .bind("token", token)
+            .map (UserMapper())
+            .findOne()
+            .orElse(null)
+
+
 
     override fun findById(id: Int): User? {
         TODO("Not yet implemented")
@@ -92,12 +102,12 @@ private class UserMapper : RowMapper<User> {
     ): User =
         User(
             id = rs.getInt("id"),
-            uuid = rs.getObject("uuid", java.util.UUID::class.java),
-            name = rs.getString("name").toName(),
+            uuid = UUID.fromString(rs.getString("token")),
+            name = rs.getString("username").toName(),
             nickName = rs.getString("nick_name").toName(),
-            imageUrl = rs.getString("avatar_url").toUrlOrNull(),
             email = rs.getString("email").toEmail(),
-            password = rs.getString("password").toPassword(),
+            imageUrl = rs.getString("avatar_url").toUrlOrNull(),
+            password = rs.getString("password_hash").toPassword(),
             balance = rs.getInt("balance").toBalance(),
         )
 }
