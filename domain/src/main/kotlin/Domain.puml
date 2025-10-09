@@ -1,0 +1,82 @@
+@startuml
+package "Poker Dice Domain" {
+enum DiceFace {
+    ACE,
+    KING,
+    QUEEN,
+    JACK,
+    TEN,
+    NINE
+}
+
+class Dice {
+    face: DiceFace
+}
+
+class Hand {
+    dices: List<Dice>
+}
+
+class User {
+    id : Int
+    uuid : UUID
+    name : Name
+    nickName : Name
+    imageUrl : URL?
+    email : Email
+    password : Password
+    val balance : Balance
+}
+
+class UUID
+class URL
+
+class Name {
+    value : String
+}
+
+class Email {
+    value : String
+}
+
+class Password {
+    value : String or Hash TODO()
+}
+
+class Balance {
+    money : Money
+}
+
+Balance --> Money : money
+
+class Money {
+    value : Int
+}
+
+User -left-> UUID : uuid
+User -left-> URL : imageUrl?
+User -left-> Name : name
+User -left-> Name : nickName
+User -down-> Email : email
+User -down-> Password : password
+User -down-> Balance : balance
+
+class "Round (Game)" {
+    playersTurn: User
+    hands : Map<User, Hand>
+}
+
+class Name {
+
+}
+
+
+<> RoundHands
+
+Dice -down-> DiceFace
+Hand -down-> Dice
+"Round (Game)" -down-> RoundHands : hands
+RoundHands -left-> User : player
+RoundHands -right-> Hand : playerHand
+}
+@enduml
