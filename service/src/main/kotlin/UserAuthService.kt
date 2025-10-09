@@ -46,8 +46,11 @@ class UserAuthService(
             success(user)
         }
     }
-    fun getUserByToken(token: String): User?{
-        TODO()
+    fun getUserByToken(token: String): Either<UserError, User>{
+        return  trxManager.run {
+            val user : User = repositoryUser.findByToken(token) ?: return@run failure(UserError.InvalidCredentials)
+            success(user)
+        }
 
     }
 

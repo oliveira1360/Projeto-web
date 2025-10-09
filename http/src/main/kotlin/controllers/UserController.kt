@@ -24,7 +24,6 @@ class UserController(
 
     /*
     curl -X POST "http://localhost:8080/create/user" -H "Content-Type: application/json" -d "{\"name\":\"John Doe\",\"nickName\":\"john\",\"email\":\"john@example.com\",\"password\":\"Secret1\"}"
-
      */
     @PostMapping("/create/user")
     fun createUser(
@@ -49,9 +48,9 @@ class UserController(
 
     @GetMapping("/user/info")
     fun getUserInfo(
-        @RequestBody body: AuthenticatedUserDto
-    ) {
-
+         user: AuthenticatedUserDto
+    ): ResponseEntity<*>  {
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(" ${user.uuid}, \n ${user.email},\n ${user.name}")
     }
     
 

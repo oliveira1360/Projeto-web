@@ -71,7 +71,7 @@ CREATE TABLE rounds (
                         match_id INT REFERENCES matches(id) ON DELETE CASCADE,
                         round_number INT NOT NULL CHECK (round_number BETWEEN 1 AND 60),
                         winner_id INT REFERENCES users(id),
-                        UNIQUE (match_id, round_number)
+                        UNIQUE (match_id, round_number, id)
 );
 
 -- === HANDS ===

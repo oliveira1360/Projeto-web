@@ -11,7 +11,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.web.method.support.HandlerMethodArgumentResolver
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
-
 import java.time.Clock
 import java.time.Duration
 
@@ -30,7 +29,7 @@ open class PipelineConfigurer(
 }
 
 
-@SpringBootApplication()
+@SpringBootApplication
 open class App {
 
     @Bean
