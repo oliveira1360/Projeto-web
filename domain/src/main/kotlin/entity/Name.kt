@@ -5,9 +5,11 @@ value class Name(
     val value: String,
 ) {
     init {
-        require(this.value.trim().isNotBlank())
+        require(value.isNameValid())
     }
 }
+
+fun String.isNameValid() = if (this.trim().isNotBlank()) true else false
 
 fun String.toName() = Name(this)
 

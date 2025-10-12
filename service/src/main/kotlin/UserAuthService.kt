@@ -72,6 +72,14 @@ class UserAuthService(
 
     }
 
+    fun revokeToken(token: String): Boolean {
+        val tokenValidationInfo = tokenEncoder.createValidationInformation(token)
+        return trxManager.run {
+            repositoryUser.removeTokenByValidationInfo(tokenValidationInfo)
+            true
+        }
+    }
+
     fun updateUser(userID: Int, name: String?, nickName: String?, password: String?, imageUrl: String?): ReturnResult{
         val name = name.toNameOrNull()
         val nickName = nickName.toNameOrNull()
@@ -81,6 +89,10 @@ class UserAuthService(
             val user = repositoryUser.updateUser(userID, name, nickName, password, imageUrl)
             success(user)
         }
+    }
+
+    fun userStates(userId: Int) : ReturnResult{
+        TODO()
     }
 
     fun createToken( email: String, password: String,): Either<TokenCreationError, TokenExternalInfo> {

@@ -79,4 +79,20 @@ class UserController(
             is Success -> return ResponseEntity.status(HttpStatus.ACCEPTED).body(result.value)
         }
     }
+
+
+    @PostMapping("/user/logout")
+    fun logoutUser(
+        user: AuthenticatedUserDto
+    ) {
+        userServices.revokeToken(user.token)
+    }
+
+    @PostMapping("user/stats")
+    fun userStates(
+        user: AuthenticatedUserDto
+    ): ResponseEntity<*>{
+        val result = userServices.userStates(user.user.id)
+        TODO()
+    }
 }
