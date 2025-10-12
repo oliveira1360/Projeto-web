@@ -10,3 +10,5 @@ value class Name(
 }
 
 fun String.toName() = Name(this)
+
+fun String?.toNameOrNull() = this?.let { Name(it) }

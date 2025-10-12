@@ -9,11 +9,11 @@ DROP TABLE IF EXISTS matches CASCADE;
 DROP TABLE IF EXISTS player_hands_history CASCADE;
 DROP TABLE IF EXISTS player_stats CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS Tokens CASCADE;
 
 -- === USERS ===
 CREATE TABLE users (
                        id SERIAL PRIMARY KEY,
-                       token VARCHAR(36) UNIQUE,
                        username VARCHAR(64),
                        nick_name VARCHAR(64) UNIQUE NOT NULL,
                        email VARCHAR(128) UNIQUE NOT NULL,
@@ -33,6 +33,14 @@ CREATE TABLE player_stats (
                               total_points INT DEFAULT 0,
                               longest_win_streak INT DEFAULT 0,
                               current_streak INT DEFAULT 0
+);
+
+create table Tokens
+(
+    token_validation VARCHAR(256) primary key,
+    user_id          int references users (id),
+    created_at       bigint not null,
+    last_used_at     bigint not null
 );
 
 -- === PLAYER HANDS HISTORY ===

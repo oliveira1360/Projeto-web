@@ -9,13 +9,7 @@ import org.example.entity.User
 import java.util.UUID
 
 class AuthenticatedUserDto(
-    val id: Int,
-    val uuid: String,
-    val name: String,
-    val nickName: String,
-    val imageUrl: String?,
-    val email: String,
-    val password: String,
-    val balance: Int,
+    val user: User,
+    val token: String,
 ) {
 }

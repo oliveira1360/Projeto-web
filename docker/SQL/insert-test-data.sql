@@ -1,10 +1,10 @@
 -- === USERS ===
-INSERT INTO users (username, token, nick_name, email, password_hash, avatar_url, balance)
+INSERT INTO users (username, nick_name, email, password_hash, avatar_url, balance)
 VALUES
-    ('alice123', 'tok1', 'Alice', 'alice@example.com', 'hash1', 'https://i.pravatar.cc/150?img=1', 100),
-    ('bob456', 'tok2', 'Bob', 'bob@example.com', 'hash2', 'https://i.pravatar.cc/150?img=2', 150),
-    ('charlie789', 'tok3', 'Charlie', 'charlie@example.com', 'hash3', 'https://i.pravatar.cc/150?img=3', 200),
-    ('diana101', 'tok4', 'Diana', 'diana@example.com', 'hash4', 'https://i.pravatar.cc/150?img=4', 120);
+    ('alice123', 'Alice', 'alice@example.com', 'hash1', 'https://i.pravatar.cc/150?img=1', 100),
+    ('bob456', 'Bob', 'bob@example.com', 'hash2', 'https://i.pravatar.cc/150?img=2', 150),
+    ('charlie789', 'Charlie', 'charlie@example.com', 'hash3', 'https://i.pravatar.cc/150?img=3', 200),
+    ('diana101', 'Diana', 'diana@example.com', 'hash4', 'https://i.pravatar.cc/150?img=4', 120);
 
 -- === PLAYER STATS ===
 INSERT INTO player_stats (user_id, total_games, total_wins, total_losses, total_points, longest_win_streak, current_streak)

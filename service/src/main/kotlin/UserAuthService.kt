@@ -6,10 +6,17 @@ import org.example.entity.Name
 import org.example.entity.Password
 import org.example.entity.URL
 import org.example.entity.User
-import org.springframework.security.core.token.Token
+import org.example.entity.toEmail
+import org.example.entity.toNameOrNull
+import org.example.entity.toPasswordOrNull
+import org.example.entity.toUrlOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
-import java.awt.Image
+import java.security.SecureRandom
 import java.time.Clock
+import java.time.Duration
+import java.time.Instant
+import java.util.Base64.getUrlDecoder
+import java.util.Base64.getUrlEncoder
 
 
 sealed class UserError {
@@ -23,6 +30,9 @@ sealed class UserError {
 sealed class TokenCreationError {
     data object UserOrPasswordAreInvalid : TokenCreationError()
 }
+
+typealias ReturnResult = Either<UserError, User>
+
 @Named
 class UserAuthService(
     private val passwordEncoder: PasswordEncoder,
@@ -31,7 +41,6 @@ class UserAuthService(
     private val trxManager: TransactionManager,
     private val clock: Clock,
 ) {
-
     fun createUser(name: Name, nickName: Name, email: Email, password: Password, imageUrl: URL?): Either<UserError, User> {
         return trxManager.run {
             val user = repositoryUser.createUser(name,nickName,email, password, imageUrl)
@@ -40,18 +49,93 @@ class UserAuthService(
 
     }
 
-    fun getUserByEmail(email: Email): Either<UserError, User> {
+    fun getUserByEmail(email: Email): ReturnResult {
         return trxManager.run {
             val user = repositoryUser.findByEmail(email = email) ?: return@run failure(UserError.InvalidCredentials)
             success(user)
         }
     }
-    fun getUserByToken(token: String): Either<UserError, User>{
-        return  trxManager.run {
-            val user : User = repositoryUser.findByToken(token) ?: return@run failure(UserError.InvalidCredentials)
-            success(user)
+    fun getUserByToken(token: String): User?{
+        if (!canBeToken(token)) {
+            return null
+        }
+        return trxManager.run {
+            val tokenValidationInfo = tokenEncoder.createValidationInformation(token)
+            val userAndToken: Pair<User, Token>? = repositoryUser.getTokenByTokenValidationInfo(tokenValidationInfo)
+            if (userAndToken != null && isTokenTimeValid(clock, userAndToken.second)) {
+                repositoryUser.updateTokenLastUsed(userAndToken.second, clock.instant())
+                userAndToken.first
+            } else {
+                null
+            }
         }
 
+    }
+
+    fun updateUser(userID: Int, name: String?, nickName: String?, password: String?, imageUrl: String?): ReturnResult{
+        val name = name.toNameOrNull()
+        val nickName = nickName.toNameOrNull()
+        val password = password.toPasswordOrNull()
+        val imageUrl = imageUrl.toUrlOrNull()
+        return trxManager.run {
+            val user = repositoryUser.updateUser(userID, name, nickName, password, imageUrl)
+            success(user)
+        }
+    }
+
+    fun createToken( email: String, password: String,): Either<TokenCreationError, TokenExternalInfo> {
+        if (email.isBlank() || password.isBlank()) {
+            return failure(TokenCreationError.UserOrPasswordAreInvalid)
+        }
+
+        return trxManager.run {
+            val user: User = repositoryUser.findByEmail(email.toEmail()) ?: return@run failure(TokenCreationError.UserOrPasswordAreInvalid)
+            val tokenValue = generateTokenValue()
+            val now = clock.instant()
+            val newToken =
+                Token(
+                    tokenEncoder.createValidationInformation(tokenValue),
+                    user.id,
+                    createdAt = now,
+                    lastUsedAt = now,
+                )
+
+            repositoryUser.createToken(newToken,  config.maxTokensPerUser)
+            Either.Right(TokenExternalInfo(tokenValue, getTokenExpiration(newToken)))
+
+        }
+    }
+    private fun canBeToken(token: String): Boolean =
+        try {
+            getUrlDecoder().decode(token).size == config.tokenSizeInBytes
+        } catch (ex: IllegalArgumentException) {
+            false
+        }
+
+    private fun isTokenTimeValid(
+        clock: Clock,
+        token: Token,
+    ): Boolean {
+        val now = clock.instant()
+        return token.createdAt <= now &&
+                Duration.between(now, token.createdAt) <= config.tokenTtl &&
+                Duration.between(now, token.lastUsedAt) <= config.tokenRollingTtl
+    }
+
+    private fun generateTokenValue(): String =
+        ByteArray(config.tokenSizeInBytes).let { byteArray ->
+            SecureRandom.getInstanceStrong().nextBytes(byteArray)
+            getUrlEncoder().encodeToString(byteArray)
+        }
+
+    private fun getTokenExpiration(token: Token): Instant {
+        val absoluteExpiration = token.createdAt + config.tokenTtl
+        val rollingExpiration = token.lastUsedAt + config.tokenRollingTtl
+        return if (absoluteExpiration < rollingExpiration) {
+            absoluteExpiration
+        } else {
+            rollingExpiration
+        }
     }
 
 }
