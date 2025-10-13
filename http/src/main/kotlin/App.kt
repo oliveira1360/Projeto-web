@@ -61,6 +61,14 @@ open class App {
             tokenRollingTtl = Duration.ofHours(1),
             maxTokensPerUser = 3,
         )
+
+    @Bean
+    open fun lobbiesDomainConfig() =
+        LobbiesDomainConfig(
+            maxPlayersPerLobby = 8,
+            inviteCodeLength = 6,
+            maxLobbiesPerUser = 3,
+        )
 }
 
 fun main() {

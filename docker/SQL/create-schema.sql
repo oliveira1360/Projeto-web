@@ -102,18 +102,22 @@ CREATE TABLE dice_rolls (
                             rolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- === SESSIONS (LOBBIES) ===
-CREATE TABLE sessions (
-                          id SERIAL PRIMARY KEY,
-                          match_id INT REFERENCES matches(id) ON DELETE SET NULL,
-                          is_active BOOLEAN DEFAULT TRUE,
-                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- === LOBBIES ===
+CREATE TABLE lobbies (
+                         id SERIAL PRIMARY KEY,
+                         host_id INT REFERENCES users(id) ON DELETE CASCADE,
+                         name TEXT NOT NULL,
+                         max_players INT NOT NULL CHECK (max_players > 0),
+                         rounds INT NOT NULL CHECK (rounds > 0 AND mod(rounds, max_players) = 0),
+                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- === SESSION PLAYERS ===
-CREATE TABLE session_players (
-                                 session_id INT REFERENCES sessions(id) ON DELETE CASCADE,
-                                 user_id INT REFERENCES users(id) ON DELETE CASCADE,
-                                 joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                 PRIMARY KEY (session_id, user_id)
+
+
+-- === LOBBY PLAYERS ===
+CREATE TABLE lobby_players (
+                               lobby_id INT REFERENCES lobbies(id) ON DELETE CASCADE,
+                               user_id INT REFERENCES users(id) ON DELETE CASCADE,
+                               joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                               PRIMARY KEY (lobby_id, user_id)
 );

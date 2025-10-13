@@ -8,6 +8,8 @@ class TransactionJdbi(
 ) : Transaction {
     override val repositoryUser: RepositoryUser = RepositoryUserJBDI(handle)
 
+    override val repositoryLobby: RepositoryLobby = RepositoryLobbyJBDI(handle)
+
     override fun rollback() {
         handle.rollback()
     }
