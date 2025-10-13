@@ -24,10 +24,7 @@ typealias LobbyResult = Either<LobbyError, Lobby>
 @Named
 class LobbyService(
     private val trxManager: TransactionManager,
-    private val repositoryLobby: RepositoryLobby,
-    private val repositoryUser: RepositoryUser,
     private val config: LobbiesDomainConfig,
-    private val clock: Clock
 ) {
 
     fun createLobby(hostId: Int, name: String, maxPlayers: Int): LobbyResult {
@@ -90,7 +87,7 @@ class LobbyService(
 
             repositoryLobby.removePlayer(lobby.id, userId)
 
-            // Se o host sair, pode fechar o lobby
+            // Se o host sair, fecha o lobby
             if (lobby.hostId == userId) {
                 repositoryLobby.closeLobby(lobby.id)
             }

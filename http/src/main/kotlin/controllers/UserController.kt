@@ -27,7 +27,7 @@ class UserController(
 ) {
 
     /*
-    curl -X POST "http://localhost:8080/create/user" -H "Content-Type: application/json" -d "{\"name\":\"John Doe\",\"nickName\":\"john\",\"email\":\"john@example.com\",\"password\":\"Secret1\"}"
+    curl -X POST "http://localhost:8080/user/create" -H "Content-Type: application/json" -d "{\"name\":\"John Doe\",\"nickName\":\"john\",\"email\":\"john@example.com\",\"password\":\"Secret1\"}"
      */
     @PostMapping("/user/create")
     fun createUser(
