@@ -1,10 +1,10 @@
 package org.example.controllers
 
 import org.example.Either
-import org.example.Either.*
+import org.example.Failure
 import org.example.LobbyError
 import org.example.LobbyService
-import org.example.UserAuthService
+import org.example.Success
 import org.example.dto.inputDto.AuthenticatedUserDto
 import org.example.dto.inputDto.CreateLobbyDTO
 import org.example.entity.Lobby
@@ -33,8 +33,8 @@ class LobbyController(
         val result: Either<LobbyError, Lobby> = lobbyService.createLobby(user.user.id, body.name, body.maxPlayers)
 
         return when (result) {
-            is Left -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Right -> ResponseEntity.status(HttpStatus.CREATED).body(result.value)
+            is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
+            is Success -> ResponseEntity.status(HttpStatus.CREATED).body(result.value)
         }
     }
 
@@ -56,8 +56,8 @@ class LobbyController(
     ): ResponseEntity<*> {
         val result: Either<LobbyError, Lobby> = lobbyService.getLobbyDetails(lobbyId)
         return when (result) {
-            is Left -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(result.value)
-            is Right -> ResponseEntity.ok(result.value)
+            is Failure -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(result.value)
+            is Success -> ResponseEntity.ok(result.value)
         }
     }
 
@@ -72,8 +72,8 @@ class LobbyController(
     ): ResponseEntity<*> {
         val result = lobbyService.joinLobby(user.user.id, inviteCode)
         return when (result) {
-            is Left -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Right -> ResponseEntity.status(HttpStatus.ACCEPTED).body(result.value)
+            is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
+            is Success -> ResponseEntity.status(HttpStatus.ACCEPTED).body(result.value)
         }
     }
 
@@ -88,8 +88,8 @@ class LobbyController(
     ): ResponseEntity<*> {
         val result = lobbyService.leaveLobby(user.user.id, lobbyId)
         return when (result) {
-            is Left -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Right -> ResponseEntity.status(HttpStatus.ACCEPTED).body(result.value)
+            is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
+            is Success  -> ResponseEntity.status(HttpStatus.ACCEPTED).body(result.value)
         }
     }
 }
