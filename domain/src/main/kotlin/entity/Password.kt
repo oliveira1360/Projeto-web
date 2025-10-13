@@ -9,7 +9,7 @@ value class Password(
     }
 }
 
-fun String.isPasswordValid(): Boolean{
+fun String.isPasswordValid(): Boolean {
     if (this.trim().isBlank()) return false
     if (this.none { char -> char.isUpperCase() }) return false
     if (this.none { char -> char.isDigit() }) return false
@@ -18,6 +18,4 @@ fun String.isPasswordValid(): Boolean{
 
 fun String.toPassword() = Password(this)
 
-
-fun String?.toPasswordOrNull() = this?.let{ Password(it) }
-
+fun String?.toPasswordOrNull() = this?.let { Password(it) }

@@ -13,7 +13,6 @@ import org.springframework.web.method.support.ModelAndViewContainer
 class AuthenticatedUserArgumentResolver : HandlerMethodArgumentResolver {
     override fun supportsParameter(parameter: MethodParameter) = parameter.parameterType == AuthenticatedUserDto::class.java
 
-
     override fun resolveArgument(
         parameter: MethodParameter,
         mavContainer: ModelAndViewContainer?,

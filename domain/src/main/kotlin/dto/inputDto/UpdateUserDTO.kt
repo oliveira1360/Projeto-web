@@ -5,5 +5,4 @@ data class UpdateUserDTO(
     val nickName: String? = null,
     val password: String? = null,
     val imageUrl: String? = null,
-) {
-}
+)

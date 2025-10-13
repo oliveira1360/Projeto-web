@@ -5,7 +5,5 @@ data class CreateUserDTO(
     val nickName: String,
     val email: String,
     val password: String,
-    val imageUrl: String? = null
-) {
-}
-
+    val imageUrl: String? = null,
+)

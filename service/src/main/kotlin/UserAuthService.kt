@@ -18,7 +18,6 @@ import java.time.Instant
 import java.util.Base64.getUrlDecoder
 import java.util.Base64.getUrlEncoder
 
-
 sealed class UserError {
     data object AlreadyUsedEmailAddress : UserError()
 
@@ -41,13 +40,17 @@ class UserAuthService(
     private val trxManager: TransactionManager,
     private val clock: Clock,
 ) {
-    fun createUser(name: Name, nickName: Name, email: Email, password: Password, imageUrl: URL?): Either<UserError, User> {
-        return trxManager.run {
-            val user = repositoryUser.createUser(name,nickName,email, password, imageUrl)
+    fun createUser(
+        name: Name,
+        nickName: Name,
+        email: Email,
+        password: Password,
+        imageUrl: URL?,
+    ): Either<UserError, User> =
+        trxManager.run {
+            val user = repositoryUser.createUser(name, nickName, email, password, imageUrl)
             success(user)
         }
-
-    }
 
     fun getUserByEmail(email: Email): ReturnResult {
         return trxManager.run {
@@ -55,7 +58,8 @@ class UserAuthService(
             success(user)
         }
     }
-    fun getUserByToken(token: String): User?{
+
+    fun getUserByToken(token: String): User? {
         if (!canBeToken(token)) {
             return null
         }
@@ -69,7 +73,6 @@ class UserAuthService(
                 null
             }
         }
-
     }
 
     fun revokeToken(token: String): Boolean {
@@ -80,7 +83,13 @@ class UserAuthService(
         }
     }
 
-    fun updateUser(userID: Int, name: String?, nickName: String?, password: String?, imageUrl: String?): ReturnResult{
+    fun updateUser(
+        userID: Int,
+        name: String?,
+        nickName: String?,
+        password: String?,
+        imageUrl: String?,
+    ): ReturnResult {
         val name = name.toNameOrNull()
         val nickName = nickName.toNameOrNull()
         val password = password.toPasswordOrNull()
@@ -91,11 +100,14 @@ class UserAuthService(
         }
     }
 
-    fun userStates(userId: Int) : ReturnResult{
+    fun userStates(userId: Int): ReturnResult {
         TODO()
     }
 
-    fun createToken( email: String, password: String,): Either<TokenCreationError, TokenExternalInfo> {
+    fun createToken(
+        email: String,
+        password: String,
+    ): Either<TokenCreationError, TokenExternalInfo> {
         if (email.isBlank() || password.isBlank()) {
             return failure(TokenCreationError.UserOrPasswordAreInvalid)
         }
@@ -112,11 +124,11 @@ class UserAuthService(
                     lastUsedAt = now,
                 )
 
-            repositoryUser.createToken(newToken,  config.maxTokensPerUser)
+            repositoryUser.createToken(newToken, config.maxTokensPerUser)
             Either.Right(TokenExternalInfo(tokenValue, getTokenExpiration(newToken)))
-
         }
     }
+
     private fun canBeToken(token: String): Boolean =
         try {
             getUrlDecoder().decode(token).size == config.tokenSizeInBytes
@@ -130,8 +142,8 @@ class UserAuthService(
     ): Boolean {
         val now = clock.instant()
         return token.createdAt <= now &&
-                Duration.between(now, token.createdAt) <= config.tokenTtl &&
-                Duration.between(now, token.lastUsedAt) <= config.tokenRollingTtl
+            Duration.between(now, token.createdAt) <= config.tokenTtl &&
+            Duration.between(now, token.lastUsedAt) <= config.tokenRollingTtl
     }
 
     private fun generateTokenValue(): String =
@@ -149,7 +161,4 @@ class UserAuthService(
             rollingExpiration
         }
     }
-
 }
-
-

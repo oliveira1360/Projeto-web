@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package org.example.controllers
 
 import org.example.Either
@@ -12,13 +14,11 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
-
 @RestController
 @RequestMapping("/lobbies")
 class LobbyController(
-    private val lobbyService: LobbyService
+    private val lobbyService: LobbyService,
 ) {
-
     /*
     curl -X POST "http://localhost:8080/lobbies/create" \
          -H "Content-Type: application/json" \
@@ -28,7 +28,7 @@ class LobbyController(
     @PostMapping("/create")
     fun createLobby(
         user: AuthenticatedUserDto,
-        @RequestBody body: CreateLobbyDTO
+        @RequestBody body: CreateLobbyDTO,
     ): ResponseEntity<*> {
         val result: Either<LobbyError, Lobby> = lobbyService.createLobby(user.user.id, body.name, body.maxPlayers)
 
@@ -40,7 +40,7 @@ class LobbyController(
 
     /*
     curl -X GET "http://localhost:8080/lobbies"
-    */
+     */
     @GetMapping
     fun listLobbies(): ResponseEntity<*> {
         val result = lobbyService.listLobbies()
@@ -49,10 +49,10 @@ class LobbyController(
 
     /*
     curl -X GET "http://localhost:8080/lobbies/{lobbyId}"
-    */
+     */
     @GetMapping("/{lobbyId}")
     fun getLobbyDetails(
-        @PathVariable lobbyId: Int
+        @PathVariable lobbyId: Int,
     ): ResponseEntity<*> {
         val result: Either<LobbyError, Lobby> = lobbyService.getLobbyDetails(lobbyId)
         return when (result) {
@@ -64,11 +64,11 @@ class LobbyController(
     /*
     curl -X POST "http://localhost:8080/lobbies/join/{inviteCode}" \
          -H "Authorization: Bearer <token>"
-    */
+     */
     @PostMapping("/join/{inviteCode}")
     fun joinLobby(
         user: AuthenticatedUserDto,
-        @PathVariable inviteCode: String
+        @PathVariable inviteCode: String,
     ): ResponseEntity<*> {
         val result = lobbyService.joinLobby(user.user.id, inviteCode)
         return when (result) {
@@ -80,16 +80,16 @@ class LobbyController(
     /*
     curl -X POST "http://localhost:8080/lobbies/leave/{lobbyId}" \
          -H "Authorization: Bearer <token>"
-    */
+     */
     @PostMapping("/leave/{lobbyId}")
     fun leaveLobby(
         user: AuthenticatedUserDto,
-        @PathVariable lobbyId: Int
+        @PathVariable lobbyId: Int,
     ): ResponseEntity<*> {
         val result = lobbyService.leaveLobby(user.user.id, lobbyId)
         return when (result) {
             is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Success  -> ResponseEntity.status(HttpStatus.ACCEPTED).body(result.value)
+            is Success -> ResponseEntity.status(HttpStatus.ACCEPTED).body(result.value)
         }
     }
 }

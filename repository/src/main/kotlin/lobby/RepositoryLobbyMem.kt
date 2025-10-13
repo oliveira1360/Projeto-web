@@ -3,12 +3,12 @@ package org.example.lobby
 import org.example.entity.Lobby
 import org.example.entity.Name
 
-class RepositoryLobbyMem: RepositoryLobby {
+class RepositoryLobbyMem : RepositoryLobby {
     override fun createLobby(
         name: Name,
         hostId: Int,
         maxPlayers: Int,
-        inviteCode: String
+        inviteCode: String,
     ): Lobby {
         TODO("Not yet implemented")
     }
@@ -25,7 +25,10 @@ class RepositoryLobbyMem: RepositoryLobby {
         TODO("Not yet implemented")
     }
 
-    override fun isUserInLobby(userId: Int, lobbyId: Int): Boolean {
+    override fun isUserInLobby(
+        userId: Int,
+        lobbyId: Int,
+    ): Boolean {
         TODO("Not yet implemented")
     }
 
@@ -33,11 +36,17 @@ class RepositoryLobbyMem: RepositoryLobby {
         TODO("Not yet implemented")
     }
 
-    override fun addPlayer(lobbyId: Int, userId: Int) {
+    override fun addPlayer(
+        lobbyId: Int,
+        userId: Int,
+    ) {
         TODO("Not yet implemented")
     }
 
-    override fun removePlayer(lobbyId: Int, userId: Int) {
+    override fun removePlayer(
+        lobbyId: Int,
+        userId: Int,
+    ) {
         TODO("Not yet implemented")
     }
 

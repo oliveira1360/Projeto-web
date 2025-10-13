@@ -1,6 +1,5 @@
 package org.example
 
-
 /**
  * Strongly typed information of token hashed by a TokenEncoder.
  */

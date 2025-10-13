@@ -1,13 +1,12 @@
 package org.example.entity
 
-    data class URL(
-        val value: String,
-        ){
-        init {
-            require(value.isUrlValid())
-        }
-
+data class URL(
+    val value: String,
+) {
+    init {
+        require(value.isUrlValid())
     }
+}
 
 fun String.isUrlValid() = if (this.trim().isNotBlank()) true else false
 

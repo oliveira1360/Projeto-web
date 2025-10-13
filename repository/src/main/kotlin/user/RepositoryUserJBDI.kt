@@ -19,18 +19,16 @@ import org.jdbi.v3.core.statement.StatementContext
 import java.sql.ResultSet
 import java.time.Instant
 
-
 class RepositoryUserJBDI(
     private val handle: Handle,
-): RepositoryUser {
+) : RepositoryUser {
     override fun findByEmail(email: Email): User? =
         handle
             .createQuery("SELECT * FROM users WHERE email = :email")
             .bind("email", email.value)
-            .map (UserMapper())
+            .map(UserMapper())
             .findOne()
             .orElse(null)
-
 
     override fun createUser(
         name: Name,
@@ -39,19 +37,19 @@ class RepositoryUserJBDI(
         password: Password,
         imageUrl: URL?,
     ): User {
-        val id = handle
-            .createUpdate(
-                "INSERT INTO users (username, nick_name, email, password_hash, avatar_url) " +
-                        "VALUES (:name, :nickName, :email, :password, :imageUrl)"
-            )
-            .bind("name", name.value)
-            .bind("nickName", nickName.value)
-            .bind("email", email.value)
-            .bind("password", password.value)
-            .bind("imageUrl", imageUrl?.value)
-            .executeAndReturnGeneratedKeys()
-            .mapTo(Int::class.java)
-            .one()
+        val id =
+            handle
+                .createUpdate(
+                    "INSERT INTO users (username, nick_name, email, password_hash, avatar_url) " +
+                        "VALUES (:name, :nickName, :email, :password, :imageUrl)",
+                ).bind("name", name.value)
+                .bind("nickName", nickName.value)
+                .bind("email", email.value)
+                .bind("password", password.value)
+                .bind("imageUrl", imageUrl?.value)
+                .executeAndReturnGeneratedKeys()
+                .mapTo(Int::class.java)
+                .one()
 
         return User(
             id = id,
@@ -68,7 +66,7 @@ class RepositoryUserJBDI(
         handle
             .createQuery("SELECT * FROM users WHERE token = :token")
             .bind("token", token)
-            .map (UserMapper())
+            .map(UserMapper())
             .findOne()
             .orElse(null)
 
@@ -77,19 +75,19 @@ class RepositoryUserJBDI(
         name: Name?,
         nickName: Name?,
         password: Password?,
-        imageUrl: URL?
+        imageUrl: URL?,
     ): User =
-        handle.createQuery(
-            "UPDATE users " +
+        handle
+            .createQuery(
+                "UPDATE users " +
                     "SET " +
                     "username = COALESCE(:name, username), " +
                     "nick_name = COALESCE(:nickName, nick_name), " +
                     "password_hash = COALESCE(:password, password_hash), " +
                     "avatar_url = COALESCE(:imageUrl, avatar_url) " +
                     "WHERE id = :id " +
-                    "RETURNING *"
-        )
-            .bind("id", userId)
+                    "RETURNING *",
+            ).bind("id", userId)
             .bind("name", name?.value)
             .bind("nickName", nickName?.value)
             .bind("password", password?.value)
@@ -98,16 +96,14 @@ class RepositoryUserJBDI(
             .one()
 
     override fun getTokenByTokenValidationInfo(tokenValidationInfo: TokenValidationInfo): Pair<User, Token>? =
-        handle.createQuery(
-            "select * from Users as users " +
+        handle
+            .createQuery(
+                "select * from Users as users " +
                     "inner join Tokens as tokens on users.id = tokens.user_id " +
-                    "where tokens.token_validation = :validation_information"
-        )
-            .bind("validation_information", tokenValidationInfo.validationInfo)
+                    "where tokens.token_validation = :validation_information",
+            ).bind("validation_information", tokenValidationInfo.validationInfo)
             .map(UserAndTokenMapper())
             .singleOrNull()
-
-
 
     override fun createToken(
         token: Token,
@@ -142,21 +138,21 @@ class RepositoryUserJBDI(
             .execute()
     }
 
-        override fun updateTokenLastUsed(
-            token: Token,
-            now: Instant,
-        ) {
-            handle
-                .createUpdate(
-                    """
+    override fun updateTokenLastUsed(
+        token: Token,
+        now: Instant,
+    ) {
+        handle
+            .createUpdate(
+                """
                 update Tokens
                 set last_used_at = :last_used_at
                 where token_validation = :validation_information
                 """.trimIndent(),
-                ).bind("last_used_at", now.epochSecond)
-                .bind("validation_information", token.tokenValidationInfo.validationInfo)
-                .execute()
-        }
+            ).bind("last_used_at", now.epochSecond)
+            .bind("validation_information", token.tokenValidationInfo.validationInfo)
+            .execute()
+    }
 
     override fun removeTokenByValidationInfo(tokenValidationInfo: TokenValidationInfo): Int =
         handle
@@ -167,7 +163,6 @@ class RepositoryUserJBDI(
             """,
             ).bind("validation_information", tokenValidationInfo.validationInfo)
             .execute()
-
 
     override fun findById(id: Int): User? {
         TODO("Not yet implemented")
@@ -189,31 +184,31 @@ class RepositoryUserJBDI(
         TODO("Not yet implemented")
     }
 
-        private data class UserAndTokenModel(
-            val id: Int,
-            val name: Name,
-            val nickName: Name,
-            val imageUrl: URL,
-            val email: Email,
-            val passwordValidation: Password,
-            val tokenValidation: TokenValidationInfo,
-            val balance: Balance,
-            val createdAt: Long,
-            val lastUsedAt: Long,
-        ) {
-            val userAndToken: Pair<User, Token>
-                get() =
-                    Pair(
-                        User(id, name, nickName, imageUrl, email, passwordValidation, balance),
-                        Token(
-                            tokenValidation,
-                            id,
-                            Instant.ofEpochSecond(createdAt),
-                            Instant.ofEpochSecond(lastUsedAt),
-                        ),
-                    )
-        }
+    private data class UserAndTokenModel(
+        val id: Int,
+        val name: Name,
+        val nickName: Name,
+        val imageUrl: URL,
+        val email: Email,
+        val passwordValidation: Password,
+        val tokenValidation: TokenValidationInfo,
+        val balance: Balance,
+        val createdAt: Long,
+        val lastUsedAt: Long,
+    ) {
+        val userAndToken: Pair<User, Token>
+            get() =
+                Pair(
+                    User(id, name, nickName, imageUrl, email, passwordValidation, balance),
+                    Token(
+                        tokenValidation,
+                        id,
+                        Instant.ofEpochSecond(createdAt),
+                        Instant.ofEpochSecond(lastUsedAt),
+                    ),
+                )
     }
+}
 
 private class UserMapper : RowMapper<User> {
     override fun map(
@@ -232,22 +227,27 @@ private class UserMapper : RowMapper<User> {
 }
 
 private class UserAndTokenMapper : RowMapper<Pair<User, Token>> {
-    override fun map(rs: ResultSet, ctx: StatementContext): Pair<User, Token> {
-        val user = User(
-            id = rs.getInt("id"),
-            name = rs.getString("username").toName(),
-            nickName = rs.getString("nick_name").toName(),
-            imageUrl = rs.getString("avatar_url").toUrlOrNull(),
-            email = rs.getString("email").toEmail(),
-            password = rs.getString("password_hash").toPassword(),
-            balance = rs.getInt("balance").toBalance()
-        )
-        val token = Token(
-            tokenValidationInfo = TokenValidationInfo(rs.getString("token_validation")),
-            userId = rs.getInt("id"),
-            createdAt = Instant.ofEpochSecond(rs.getLong("created_at")),
-            lastUsedAt = Instant.ofEpochSecond(rs.getLong("last_used_at"))
-        )
+    override fun map(
+        rs: ResultSet,
+        ctx: StatementContext,
+    ): Pair<User, Token> {
+        val user =
+            User(
+                id = rs.getInt("id"),
+                name = rs.getString("username").toName(),
+                nickName = rs.getString("nick_name").toName(),
+                imageUrl = rs.getString("avatar_url").toUrlOrNull(),
+                email = rs.getString("email").toEmail(),
+                password = rs.getString("password_hash").toPassword(),
+                balance = rs.getInt("balance").toBalance(),
+            )
+        val token =
+            Token(
+                tokenValidationInfo = TokenValidationInfo(rs.getString("token_validation")),
+                userId = rs.getInt("id"),
+                createdAt = Instant.ofEpochSecond(rs.getLong("created_at")),
+                lastUsedAt = Instant.ofEpochSecond(rs.getLong("last_used_at")),
+            )
         return Pair(user, token)
     }
 }

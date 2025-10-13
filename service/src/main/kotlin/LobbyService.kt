@@ -3,21 +3,26 @@ package org.example
 import jakarta.inject.Named
 import org.example.entity.Lobby
 import org.example.entity.toName
-import java.time.Clock
 import java.util.Locale
 import java.util.UUID
 
-
-sealed class LobbyError(val message: String) {
+sealed class LobbyError(
+    val message: String,
+) {
     object LobbyNotFound : LobbyError("Lobby not found")
+
     object UserNotFound : LobbyError("User not found")
+
     object InvalidLobbyData : LobbyError("Invalid lobby data")
+
     object InvalidInviteCode : LobbyError("Invalid invite code")
+
     object AlreadyInLobby : LobbyError("User already in a lobby")
+
     object NotInLobby : LobbyError("User not in this lobby")
+
     object LobbyFull : LobbyError("Lobby is full")
 }
-
 
 typealias LobbyResult = Either<LobbyError, Lobby>
 
@@ -26,8 +31,11 @@ class LobbyService(
     private val trxManager: TransactionManager,
     private val config: LobbiesDomainConfig,
 ) {
-
-    fun createLobby(hostId: Int, name: String, maxPlayers: Int): LobbyResult {
+    fun createLobby(
+        hostId: Int,
+        name: String,
+        maxPlayers: Int,
+    ): LobbyResult {
         if (name.isBlank() || maxPlayers <= 0) {
             return failure(LobbyError.InvalidLobbyData)
         }
@@ -35,8 +43,9 @@ class LobbyService(
         val inviteCode = generateInviteCode()
 
         return trxManager.run {
-            val host = repositoryUser.findById(hostId)
-                ?: return@run failure(LobbyError.UserNotFound)
+            val host =
+                repositoryUser.findById(hostId)
+                    ?: return@run failure(LobbyError.UserNotFound)
 
             val lobby = repositoryLobby.createLobby(name.toName(), host.id, maxPlayers, inviteCode)
             success(lobby)
@@ -50,18 +59,24 @@ class LobbyService(
 
     fun getLobbyDetails(lobbyId: Int): LobbyResult =
         trxManager.run {
-            val lobby = repositoryLobby.findLobbyById(lobbyId)
-                ?: return@run failure(LobbyError.LobbyNotFound)
+            val lobby =
+                repositoryLobby.findLobbyById(lobbyId)
+                    ?: return@run failure(LobbyError.LobbyNotFound)
             success(lobby)
         }
 
-    fun joinLobby(userId: Int, inviteCode: String): LobbyResult =
+    fun joinLobby(
+        userId: Int,
+        inviteCode: String,
+    ): LobbyResult =
         trxManager.run {
-            val user = repositoryUser.findById(userId)
-                ?: return@run failure(LobbyError.UserNotFound)
+            val user =
+                repositoryUser.findById(userId)
+                    ?: return@run failure(LobbyError.UserNotFound)
 
-            val lobby = repositoryLobby.findByInviteCode(inviteCode)
-                ?: return@run failure(LobbyError.InvalidInviteCode)
+            val lobby =
+                repositoryLobby.findByInviteCode(inviteCode)
+                    ?: return@run failure(LobbyError.InvalidInviteCode)
 
             if (repositoryLobby.isUserInLobby(userId, lobby.id)) {
                 return@run failure(LobbyError.AlreadyInLobby)
@@ -76,10 +91,14 @@ class LobbyService(
             success(updatedLobby)
         }
 
-    fun leaveLobby(userId: Int, lobbyId: Int): LobbyResult =
+    fun leaveLobby(
+        userId: Int,
+        lobbyId: Int,
+    ): LobbyResult =
         trxManager.run {
-            val lobby = repositoryLobby.findLobbyById(lobbyId)
-                ?: return@run failure(LobbyError.LobbyNotFound)
+            val lobby =
+                repositoryLobby.findLobbyById(lobbyId)
+                    ?: return@run failure(LobbyError.LobbyNotFound)
 
             if (!repositoryLobby.isUserInLobby(userId, lobby.id)) {
                 return@run failure(LobbyError.NotInLobby)
@@ -96,7 +115,8 @@ class LobbyService(
         }
 
     private fun generateInviteCode(): String =
-        UUID.randomUUID()
+        UUID
+            .randomUUID()
             .toString()
             .substring(0, config.inviteCodeLength.coerceIn(4, 12))
             .uppercase(Locale.getDefault())

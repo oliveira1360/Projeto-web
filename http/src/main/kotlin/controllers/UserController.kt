@@ -25,14 +25,13 @@ import org.springframework.web.bind.annotation.RestController
 class UserController(
     private val userServices: UserAuthService,
 ) {
-
     /*
     curl -X POST "http://localhost:8080/user/create" -H "Content-Type: application/json" -d "{\"name\":\"John Doe\",\"nickName\":\"john\",\"email\":\"john@example.com\",\"password\":\"Secret1\"}"
      */
     @PostMapping("/user/create")
     fun createUser(
-        @RequestBody body: CreateUserDTO
-    ):  ResponseEntity<*> {
+        @RequestBody body: CreateUserDTO,
+    ): ResponseEntity<*> {
         val name = body.name.toName()
         val nickName = body.nickName.toName()
         val email = body.email.toEmail()
@@ -42,56 +41,46 @@ class UserController(
         val result: Either<UserError, User> =
             userServices.createUser(name, nickName, email, password, imageUrl)
 
-        return when(result){
+        return when (result) {
             is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
             is Success -> ResponseEntity.status(HttpStatus.CREATED).body(result.value)
-
         }
-
     }
 
     @PostMapping("/user/login")
     fun loginUser(
-        @RequestBody body: LoginUserDTO
-    ) : ResponseEntity<*>{
+        @RequestBody body: LoginUserDTO,
+    ): ResponseEntity<*> {
         val result = userServices.createToken(body.email, body.password)
-        return when(result){
+        return when (result) {
             is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
             is Success -> ResponseEntity.status(HttpStatus.ACCEPTED).body(result.value)
         }
     }
 
     @GetMapping("/user/info")
-    fun getUserInfo(
-         user: AuthenticatedUserDto
-    ): ResponseEntity<*>  {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(" ${user.user.id}, \n ${user.user.email},\n ${user.user.name}")
-    }
+    fun getUserInfo(user: AuthenticatedUserDto): ResponseEntity<*> =
+        ResponseEntity.status(HttpStatus.ACCEPTED).body(" ${user.user.id}, \n ${user.user.email},\n ${user.user.name}")
 
     @PostMapping("/user/update")
     fun updateUser(
         user: AuthenticatedUserDto,
-        @RequestBody body: UpdateUserDTO
-    ): ResponseEntity<*>{
+        @RequestBody body: UpdateUserDTO,
+    ): ResponseEntity<*> {
         val result = userServices.updateUser(user.user.id, body.name, body.nickName, body.password, body.imageUrl)
-        when(result){
+        when (result) {
             is Failure -> return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
             is Success -> return ResponseEntity.status(HttpStatus.ACCEPTED).body(result.value)
         }
     }
 
-
     @PostMapping("/user/logout")
-    fun logoutUser(
-        user: AuthenticatedUserDto
-    ) {
+    fun logoutUser(user: AuthenticatedUserDto) {
         userServices.revokeToken(user.token)
     }
 
     @PostMapping("user/stats")
-    fun userStates(
-        user: AuthenticatedUserDto
-    ): ResponseEntity<*>{
+    fun userStates(user: AuthenticatedUserDto): ResponseEntity<*> {
         val result = userServices.userStates(user.user.id)
         TODO()
     }

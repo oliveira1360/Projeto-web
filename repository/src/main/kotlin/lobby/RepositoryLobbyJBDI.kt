@@ -4,7 +4,9 @@ import org.example.entity.Lobby
 import org.example.entity.Name
 import org.jdbi.v3.core.Handle
 
-class RepositoryLobbyJBDI(private val handle: Handle) : RepositoryLobby {
+class RepositoryLobbyJBDI(
+    private val handle: Handle,
+) : RepositoryLobby {
     override fun createLobby(
         name: Name,
         hostId: Int,
@@ -26,7 +28,10 @@ class RepositoryLobbyJBDI(private val handle: Handle) : RepositoryLobby {
         TODO("Not yet implemented")
     }
 
-    override fun isUserInLobby(userId: Int, lobbyId: Int): Boolean {
+    override fun isUserInLobby(
+        userId: Int,
+        lobbyId: Int,
+    ): Boolean {
         TODO("Not yet implemented")
     }
 
@@ -34,23 +39,23 @@ class RepositoryLobbyJBDI(private val handle: Handle) : RepositoryLobby {
         TODO("Not yet implemented")
     }
 
-    override fun addPlayer(lobbyId: Int, userId: Int) {
+    override fun addPlayer(
+        lobbyId: Int,
+        userId: Int,
+    ) {
         TODO("Not yet implemented")
     }
 
-    override fun removePlayer(lobbyId: Int, userId: Int) {
+    override fun removePlayer(
+        lobbyId: Int,
+        userId: Int,
+    ) {
         TODO("Not yet implemented")
     }
 
     override fun closeLobby(lobbyId: Int) {
         TODO("Not yet implemented")
     }
-
-
-
-
-
-
 
     override fun findById(id: Int): Lobby? {
         TODO("Not yet implemented")

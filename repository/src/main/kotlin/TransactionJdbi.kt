@@ -6,9 +6,8 @@ import org.example.user.RepositoryUser
 import org.example.user.RepositoryUserJBDI
 import org.jdbi.v3.core.Handle
 
-
 class TransactionJdbi(
-    private val handle: Handle
+    private val handle: Handle,
 ) : Transaction {
     override val repositoryUser: RepositoryUser = RepositoryUserJBDI(handle)
 

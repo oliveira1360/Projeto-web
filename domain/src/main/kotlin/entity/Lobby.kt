@@ -6,5 +6,5 @@ data class Lobby(
     val hostId: Int,
     val maxPlayers: Int,
     val currentPlayers: List<User>,
-    val inviteCode: String
+    val inviteCode: String,
 )

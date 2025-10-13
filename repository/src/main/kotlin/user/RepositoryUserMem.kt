@@ -12,10 +12,10 @@ import org.example.entity.toMoney
 import java.time.Instant
 
 class RepositoryUserMem : RepositoryUser {
-
     private val _users = Companion.users
 
     val users: List<User> get() = _users
+
     companion object {
         val users = mutableListOf<User>()
     }
@@ -29,17 +29,18 @@ class RepositoryUserMem : RepositoryUser {
         nickName: Name,
         email: Email,
         password: Password,
-        imageUrl: URL?
+        imageUrl: URL?,
     ): User {
-        val user = User(
-            id = users.size + 1,
-            name = name,
-            nickName = nickName,
-            email = email,
-            password = password,
-            imageUrl = imageUrl,
-            balance = Balance(0.toMoney())
-        )
+        val user =
+            User(
+                id = users.size + 1,
+                name = name,
+                nickName = nickName,
+                email = email,
+                password = password,
+                imageUrl = imageUrl,
+                balance = Balance(0.toMoney()),
+            )
         _users.add(user)
         return user
     }
@@ -53,7 +54,7 @@ class RepositoryUserMem : RepositoryUser {
         name: Name?,
         nickName: Name?,
         password: Password?,
-        imageUrl: URL?
+        imageUrl: URL?,
     ): User {
         TODO("Not yet implemented")
     }
@@ -62,11 +63,17 @@ class RepositoryUserMem : RepositoryUser {
         TODO("Not yet implemented")
     }
 
-    override fun createToken(token: Token, maxTokens: Int) {
+    override fun createToken(
+        token: Token,
+        maxTokens: Int,
+    ) {
         TODO("Not yet implemented")
     }
 
-    override fun updateTokenLastUsed(token: Token, now: Instant) {
+    override fun updateTokenLastUsed(
+        token: Token,
+        now: Instant,
+    ) {
         TODO("Not yet implemented")
     }
 

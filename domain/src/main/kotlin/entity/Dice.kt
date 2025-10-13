@@ -2,11 +2,9 @@ package org.example.entity
 
 data class Dice(
     val index: Int,
-    val face: DiceFace
+    val face: DiceFace,
 ) {
-    override fun equals(other: Any?): Boolean {
-        return other is Dice && index == other.index && face == other.face
-    }
+    override fun equals(other: Any?): Boolean = other is Dice && index == other.index && face == other.face
 
     override fun hashCode(): Int {
         var result = index
@@ -15,6 +13,4 @@ data class Dice(
     }
 }
 
-fun Dice.roll(): Dice {
-    return Dice(this.index, DiceFace.entries.random())
-}
+fun Dice.roll(): Dice = Dice(this.index, DiceFace.entries.random())

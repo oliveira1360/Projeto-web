@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:filename")
+
 package org.example
 
 data class LobbiesDomainConfig(

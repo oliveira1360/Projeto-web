@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package org.example
 
 import org.example.auth.*
@@ -28,10 +30,8 @@ open class PipelineConfigurer(
     }
 }
 
-
 @SpringBootApplication
 open class App {
-
     @Bean
     open fun jdbi() =
         Jdbi
@@ -74,4 +74,3 @@ open class App {
 fun main() {
     runApplication<App>()
 }
-

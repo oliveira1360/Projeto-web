@@ -14,17 +14,18 @@ import org.example.lobby.RepositoryLobbyMem
 import org.example.user.RepositoryUserMem
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import java.time.Clock
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.fail
-import kotlin.test.Test
 
 class UserAuthServiceTest {
-    val dominConfig = UsersDomainConfig(
-        tokenSizeInBytes = 100,
-        tokenTtl = java.time.Duration.ofMinutes(1),
-        tokenRollingTtl = java.time.Duration.ofMinutes(5),
-        maxTokensPerUser = 100,
-    )
+    val dominConfig =
+        UsersDomainConfig(
+            tokenSizeInBytes = 100,
+            tokenTtl = java.time.Duration.ofMinutes(1),
+            tokenRollingTtl = java.time.Duration.ofMinutes(5),
+            maxTokensPerUser = 100,
+        )
 
     val userMem = RepositoryUserMem()
     val lobbyMem = RepositoryLobbyMem()
@@ -33,38 +34,39 @@ class UserAuthServiceTest {
     val passwordEncoder = BCryptPasswordEncoder()
     val trx = TransactionManagerMem(userMem, lobbyMem)
 
-    val service = UserAuthService(
-        passwordEncoder = passwordEncoder,
-        tokenEncoder = tokenEncoder,
-        config = dominConfig,
-        trxManager = trx,
-        clock = clock,
-
+    val service =
+        UserAuthService(
+            passwordEncoder = passwordEncoder,
+            tokenEncoder = tokenEncoder,
+            config = dominConfig,
+            trxManager = trx,
+            clock = clock,
         )
 
-    val user = User(
-        id = 1,
-        name = Name("Diogo Oliveira"),
-        nickName = Name("diogo"),
-        imageUrl = URL("https://example.com/avatar.png"),
-        email = Email("diogo.oliveira@example.com"),
-        password = Password("SuperSecret123!"),
-        balance = Balance(500.toMoney())
-    )
+    val user =
+        User(
+            id = 1,
+            name = Name("Diogo Oliveira"),
+            nickName = Name("diogo"),
+            imageUrl = URL("https://example.com/avatar.png"),
+            email = Email("diogo.oliveira@example.com"),
+            password = Password("SuperSecret123!"),
+            balance = Balance(500.toMoney()),
+        )
 
     @Test
     fun testCreateUser() {
-        val result = service.createUser(
-            user.name,
-            user.nickName,
-            user.email,
-            user.password,
-            user.imageUrl,
-        )
+        val result =
+            service.createUser(
+                user.name,
+                user.nickName,
+                user.email,
+                user.password,
+                user.imageUrl,
+            )
         when (result) {
             is Success -> {
                 assertEquals(result.value, userMem.users.first())
-
             }
             else -> fail()
         }
