@@ -1,8 +1,7 @@
-package mock
+package org.example
 
-import org.example.RepositoryLobby
-import org.example.RepositoryUser
-import org.example.Transaction
+import org.example.lobby.RepositoryLobby
+import org.example.user.RepositoryUser
 
 class TransactionMem(
     override val repositoryUser: RepositoryUser,

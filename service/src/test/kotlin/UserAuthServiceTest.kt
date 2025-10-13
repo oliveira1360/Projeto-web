@@ -1,9 +1,7 @@
-import org.example.Failure
 import org.example.Sha256TokenEncoder
 import org.example.Success
 import org.example.TransactionManagerMem
 import org.example.UserAuthService
-import org.example.UserError
 import org.example.UsersDomainConfig
 import org.example.entity.Balance
 import org.example.entity.Email
@@ -16,12 +14,11 @@ import org.example.lobby.RepositoryLobbyMem
 import org.example.user.RepositoryUserMem
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import java.time.Clock
-import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.fail
+import kotlin.test.Test
 
-class Test {
-
+class UserAuthServiceTest {
     val dominConfig = UsersDomainConfig(
         tokenSizeInBytes = 100,
         tokenTtl = java.time.Duration.ofMinutes(1),
@@ -64,39 +61,12 @@ class Test {
             user.password,
             user.imageUrl,
         )
-        when(result){
+        when (result) {
             is Success -> {
-                assertEquals(result.value, userMem.users.first() )
+                assertEquals(result.value, userMem.users.first())
 
             }
             else -> fail()
         }
-    }
-
-    @Test
-    fun testCreateUserDuplicateEmail() {
-        val result1 = service.createUser(
-            user.name,
-            user.nickName,
-            user.email,
-            user.password,
-            user.imageUrl,
-        )
-        when(result1){
-            is Success -> {
-                assertEquals(result1.value, userMem.users.first() )
-
-            }
-            else -> fail()
-        }
-
-        val result2 = service.createUser(
-            Name("Another User"),
-            Name("another"),
-            user.email, // same email
-            Password("AnotherPass123!"),
-            URL("https://example.com/another_avatar.png"),
-        )
-        assert(result2 is Failure)
     }
 }

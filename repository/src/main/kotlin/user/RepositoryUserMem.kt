@@ -1,4 +1,5 @@
-import org.example.RepositoryUser
+package org.example.user
+
 import org.example.Token
 import org.example.TokenValidationInfo
 import org.example.entity.Balance
@@ -10,10 +11,14 @@ import org.example.entity.User
 import org.example.entity.toMoney
 import java.time.Instant
 
-class userRepoInMem : RepositoryUser{
+class RepositoryUserMem : RepositoryUser {
 
-    val users = mutableListOf<User>()
+    private val _users = Companion.users
 
+    val users: List<User> get() = _users
+    companion object {
+        val users = mutableListOf<User>()
+    }
 
     override fun findByEmail(email: Email): User? {
         TODO("Not yet implemented")
@@ -35,7 +40,7 @@ class userRepoInMem : RepositoryUser{
             imageUrl = imageUrl,
             balance = Balance(0.toMoney())
         )
-        users.add(user)
+        _users.add(user)
         return user
     }
 
@@ -88,5 +93,4 @@ class userRepoInMem : RepositoryUser{
     override fun clear() {
         TODO("Not yet implemented")
     }
-
 }

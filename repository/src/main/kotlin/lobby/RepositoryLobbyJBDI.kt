@@ -1,13 +1,15 @@
-import org.example.RepositoryLobby
+package org.example.lobby
+
 import org.example.entity.Lobby
 import org.example.entity.Name
+import org.jdbi.v3.core.Handle
 
-class lobbyRepoInMem : RepositoryLobby {
+class RepositoryLobbyJBDI(private val handle: Handle) : RepositoryLobby {
     override fun createLobby(
         name: Name,
         hostId: Int,
         maxPlayers: Int,
-        inviteCode: String
+        inviteCode: String,
     ): Lobby {
         TODO("Not yet implemented")
     }
@@ -43,6 +45,12 @@ class lobbyRepoInMem : RepositoryLobby {
     override fun closeLobby(lobbyId: Int) {
         TODO("Not yet implemented")
     }
+
+
+
+
+
+
 
     override fun findById(id: Int): Lobby? {
         TODO("Not yet implemented")

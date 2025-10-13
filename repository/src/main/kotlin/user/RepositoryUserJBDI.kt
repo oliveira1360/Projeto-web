@@ -1,5 +1,7 @@
-package org.example
+package org.example.user
 
+import org.example.Token
+import org.example.TokenValidationInfo
 import org.example.entity.Balance
 import org.example.entity.Email
 import org.example.entity.Name

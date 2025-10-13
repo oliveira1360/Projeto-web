@@ -1,5 +1,6 @@
-package org.example
+package org.example.lobby
 
+import org.example.Repository
 import org.example.entity.Lobby
 import org.example.entity.Name
 
