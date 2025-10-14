@@ -2,75 +2,110 @@ package org.example.lobby
 
 import org.example.entity.Lobby
 import org.example.entity.Name
+import org.example.user.RepositoryUserMem
 
 class RepositoryLobbyMem : RepositoryLobby {
+    companion object {
+        val userRepo = RepositoryUserMem()
+        val lobbies = mutableListOf<Lobby>()
+    }
+
     override fun createLobby(
         name: Name,
         hostId: Int,
         maxPlayers: Int,
         inviteCode: String,
     ): Lobby {
-        TODO("Not yet implemented")
+        val lobby =
+            Lobby(
+                id = 1,
+                name = name,
+                hostId = hostId,
+                maxPlayers = maxPlayers,
+                inviteCode = inviteCode,
+                currentPlayers = listOf(userRepo.findById(hostId) ?: throw IllegalArgumentException("Invalid hostId: $hostId")),
+            )
+        return lobby
     }
 
-    override fun findAllLobbies(): List<Lobby> {
-        TODO("Not yet implemented")
-    }
+    override fun findAllLobbies(): List<Lobby> = lobbies.toList()
 
-    override fun findLobbyById(id: Int): Lobby? {
-        TODO("Not yet implemented")
-    }
+    override fun findLobbyById(id: Int): Lobby? = lobbies.find { it.id == id }
 
-    override fun findByInviteCode(code: String): Lobby? {
-        TODO("Not yet implemented")
-    }
+    override fun findByInviteCode(code: String): Lobby? = lobbies.find { it.inviteCode == code }
 
     override fun isUserInLobby(
         userId: Int,
         lobbyId: Int,
     ): Boolean {
-        TODO("Not yet implemented")
+        val lobby = findLobbyById(lobbyId) ?: return false
+        return lobby.currentPlayers.any { it.id == userId }
     }
 
     override fun countPlayers(lobbyId: Int): Int {
-        TODO("Not yet implemented")
+        val lobby = findLobbyById(lobbyId) ?: return 0
+        return lobby.currentPlayers.size
     }
 
     override fun addPlayer(
         lobbyId: Int,
         userId: Int,
     ) {
-        TODO("Not yet implemented")
+        val lobby = findLobbyById(lobbyId) ?: throw IllegalArgumentException("Lobby not found: $lobbyId")
+        val user = userRepo.findById(userId) ?: throw IllegalArgumentException("User not found: $userId")
+        if (lobby.currentPlayers.size >= lobby.maxPlayers) {
+            throw IllegalStateException("Lobby is full: $lobbyId")
+        }
+        if (isUserInLobby(userId, lobbyId)) {
+            throw IllegalStateException("User already in lobby: $userId")
+        }
+        lobbies[lobbies.indexOf(lobby)] =
+            lobby.copy(
+                currentPlayers = lobby.currentPlayers + user,
+            )
     }
 
     override fun removePlayer(
         lobbyId: Int,
         userId: Int,
     ) {
-        TODO("Not yet implemented")
+        val lobby = findLobbyById(lobbyId) ?: throw IllegalArgumentException("Lobby not found: $lobbyId")
+        if (!isUserInLobby(userId, lobbyId)) {
+            throw IllegalStateException("User not in lobby: $userId")
+        }
+        lobbies[lobbies.indexOf(lobby)] =
+            lobby.copy(
+                currentPlayers = lobby.currentPlayers.filter { it.id != userId },
+            )
     }
 
     override fun closeLobby(lobbyId: Int) {
-        TODO("Not yet implemented")
+        val lobby = findLobbyById(lobbyId) ?: throw IllegalArgumentException("Lobby not found: $lobbyId")
+        lobbies[lobbies.indexOf(lobby)] =
+            lobby.copy(
+                isClosed = true,
+            )
     }
 
-    override fun findById(id: Int): Lobby? {
-        TODO("Not yet implemented")
-    }
+    override fun findById(id: Int): Lobby? = lobbies.find { it.id == id }
 
-    override fun findAll(): List<Lobby> {
-        TODO("Not yet implemented")
-    }
+    override fun findAll(): List<Lobby> = lobbies.toList()
 
     override fun save(entity: Lobby) {
-        TODO("Not yet implemented")
+        val lobby = findById(entity.id)
+        if (lobby == null) {
+            lobbies.add(entity)
+        } else {
+            lobbies[lobbies.indexOf(lobby)] = entity
+        }
     }
 
     override fun deleteById(id: Int) {
-        TODO("Not yet implemented")
+        val lobby = findById(id) ?: throw IllegalArgumentException("Lobby not found: $id")
+        lobbies.remove(lobby)
     }
 
     override fun clear() {
-        TODO("Not yet implemented")
+        lobbies.clear()
     }
 }
