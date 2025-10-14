@@ -59,13 +59,7 @@ class UserController(
     }
 
     @GetMapping("/user/info")
-    fun getUserInfo(user: AuthenticatedUserDto): ResponseEntity<*> {
-        val result = userServices.getUserInfo(user.user.id)
-        return when (result) {
-            is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Success -> ResponseEntity.status(HttpStatus.ACCEPTED).body(result.value)
-        }
-    }
+    fun getUserInfo(user: AuthenticatedUserDto): ResponseEntity<*> = ResponseEntity.ok(user.user)
 
     @PostMapping("/user/update")
     fun updateUser(
@@ -84,9 +78,12 @@ class UserController(
         userServices.revokeToken(user.token)
     }
 
-    @PostMapping("user/stats")
+    @GetMapping("user/stats")
     fun userStates(user: AuthenticatedUserDto): ResponseEntity<*> {
-        val result = userServices.userStates(user.user.id)
-        TODO()
+        val result = userServices.getUserInfo(user.user.id)
+        return when (result) {
+            is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
+            is Success -> ResponseEntity.status(HttpStatus.ACCEPTED).body(result.value)
+        }
     }
 }
