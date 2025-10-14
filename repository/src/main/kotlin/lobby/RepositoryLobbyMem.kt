@@ -14,7 +14,7 @@ class RepositoryLobbyMem : RepositoryLobby {
         name: Name,
         hostId: Int,
         maxPlayers: Int,
-        inviteCode: String,
+        rounds: Int,
     ): Lobby {
         val lobby =
             Lobby(
@@ -22,28 +22,22 @@ class RepositoryLobbyMem : RepositoryLobby {
                 name = name,
                 hostId = hostId,
                 maxPlayers = maxPlayers,
-                inviteCode = inviteCode,
+                rounds = rounds,
                 currentPlayers = listOf(userRepo.findById(hostId) ?: throw IllegalArgumentException("Invalid hostId: $hostId")),
             )
         return lobby
     }
 
-    override fun findAllLobbies(): List<Lobby> = lobbies.toList()
-
-    override fun findLobbyById(id: Int): Lobby? = lobbies.find { it.id == id }
-
-    override fun findByInviteCode(code: String): Lobby? = lobbies.find { it.inviteCode == code }
-
     override fun isUserInLobby(
         userId: Int,
         lobbyId: Int,
     ): Boolean {
-        val lobby = findLobbyById(lobbyId) ?: return false
+        val lobby = findById(lobbyId) ?: return false
         return lobby.currentPlayers.any { it.id == userId }
     }
 
     override fun countPlayers(lobbyId: Int): Int {
-        val lobby = findLobbyById(lobbyId) ?: return 0
+        val lobby = findById(lobbyId) ?: return 0
         return lobby.currentPlayers.size
     }
 
@@ -51,7 +45,7 @@ class RepositoryLobbyMem : RepositoryLobby {
         lobbyId: Int,
         userId: Int,
     ) {
-        val lobby = findLobbyById(lobbyId) ?: throw IllegalArgumentException("Lobby not found: $lobbyId")
+        val lobby = findById(lobbyId) ?: throw IllegalArgumentException("Lobby not found: $lobbyId")
         val user = userRepo.findById(userId) ?: throw IllegalArgumentException("User not found: $userId")
         if (lobby.currentPlayers.size >= lobby.maxPlayers) {
             throw IllegalStateException("Lobby is full: $lobbyId")
@@ -69,7 +63,7 @@ class RepositoryLobbyMem : RepositoryLobby {
         lobbyId: Int,
         userId: Int,
     ) {
-        val lobby = findLobbyById(lobbyId) ?: throw IllegalArgumentException("Lobby not found: $lobbyId")
+        val lobby = findById(lobbyId) ?: throw IllegalArgumentException("Lobby not found: $lobbyId")
         if (!isUserInLobby(userId, lobbyId)) {
             throw IllegalStateException("User not in lobby: $userId")
         }
@@ -80,11 +74,14 @@ class RepositoryLobbyMem : RepositoryLobby {
     }
 
     override fun closeLobby(lobbyId: Int) {
-        val lobby = findLobbyById(lobbyId) ?: throw IllegalArgumentException("Lobby not found: $lobbyId")
+      /*
+      val lobby = findById(lobbyId) ?: throw IllegalArgumentException("Lobby not found: $lobbyId")
         lobbies[lobbies.indexOf(lobby)] =
             lobby.copy(
                 isClosed = true,
             )
+       */
+
     }
 
     override fun findById(id: Int): Lobby? = lobbies.find { it.id == id }
