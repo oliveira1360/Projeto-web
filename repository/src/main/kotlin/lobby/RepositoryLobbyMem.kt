@@ -81,7 +81,6 @@ class RepositoryLobbyMem : RepositoryLobby {
                 isClosed = true,
             )
        */
-
     }
 
     override fun findById(id: Int): Lobby? = lobbies.find { it.id == id }
