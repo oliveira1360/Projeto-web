@@ -3,7 +3,6 @@ package org.example
 import jakarta.inject.Named
 import org.example.entity.Lobby
 import org.example.entity.toName
-import java.util.Locale
 import java.util.UUID
 
 sealed class LobbyError(
@@ -118,6 +117,5 @@ class LobbyService(
         UUID
             .randomUUID()
             .toString()
-            .substring(0, config.inviteCodeLength.coerceIn(4, 12))
-            .uppercase(Locale.getDefault())
+            .substring(0, 4)
 }

@@ -19,7 +19,7 @@ import org.jdbi.v3.core.statement.StatementContext
 import java.sql.ResultSet
 import java.time.Instant
 
-class RepositoryUserJBDI(
+class RepositoryUserJDBI(
     private val handle: Handle,
 ) : RepositoryUser {
     override fun findByEmail(email: Email): User? =

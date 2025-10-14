@@ -4,7 +4,7 @@ import org.example.entity.Lobby
 import org.example.entity.Name
 import org.jdbi.v3.core.Handle
 
-class RepositoryLobbyJBDI(
+class RepositoryLobbyJDBI(
     private val handle: Handle,
 ) : RepositoryLobby {
     override fun createLobby(
