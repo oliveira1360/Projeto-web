@@ -7,4 +7,5 @@ data class Lobby(
     val maxPlayers: Int,
     val currentPlayers: List<User>,
     val inviteCode: String,
+    val isClosed: Boolean = false,
 )
