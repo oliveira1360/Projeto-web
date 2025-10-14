@@ -8,6 +8,7 @@ import org.example.entity.Name
 import org.example.entity.Password
 import org.example.entity.URL
 import org.example.entity.User
+import org.example.entity.UserInfo
 import java.time.Instant
 
 interface RepositoryUser : Repository<User> {
@@ -44,4 +45,6 @@ interface RepositoryUser : Repository<User> {
     )
 
     fun removeTokenByValidationInfo(tokenValidationInfo: TokenValidationInfo): Int
+
+    fun userGameInfo(userId: Int): UserInfo
 }

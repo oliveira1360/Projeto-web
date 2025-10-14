@@ -59,8 +59,13 @@ class UserController(
     }
 
     @GetMapping("/user/info")
-    fun getUserInfo(user: AuthenticatedUserDto): ResponseEntity<*> =
-        ResponseEntity.status(HttpStatus.ACCEPTED).body(" ${user.user.id}, \n ${user.user.email},\n ${user.user.name}")
+    fun getUserInfo(user: AuthenticatedUserDto): ResponseEntity<*> {
+        val result = userServices.getUserInfo(user.user.id)
+        return when (result) {
+            is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
+            is Success -> ResponseEntity.status(HttpStatus.ACCEPTED).body(result.value)
+        }
+    }
 
     @PostMapping("/user/update")
     fun updateUser(
