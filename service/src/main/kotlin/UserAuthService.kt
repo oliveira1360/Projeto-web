@@ -6,6 +6,7 @@ import org.example.entity.Name
 import org.example.entity.Password
 import org.example.entity.URL
 import org.example.entity.User
+import org.example.entity.UserInfo
 import org.example.entity.toEmail
 import org.example.entity.toNameOrNull
 import org.example.entity.toPasswordOrNull
@@ -159,6 +160,14 @@ class UserAuthService(
             absoluteExpiration
         } else {
             rollingExpiration
+        }
+    }
+
+    fun getUserInfo(userId: Int): Either<UserError, UserInfo> {
+        return trxManager.run {
+            val result = repositoryUser.userGameInfo(userId)
+
+            return@run success(result)
         }
     }
 }

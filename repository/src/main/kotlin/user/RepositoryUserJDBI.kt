@@ -8,6 +8,7 @@ import org.example.entity.Name
 import org.example.entity.Password
 import org.example.entity.URL
 import org.example.entity.User
+import org.example.entity.UserInfo
 import org.example.entity.toBalance
 import org.example.entity.toEmail
 import org.example.entity.toName
@@ -164,6 +165,13 @@ class RepositoryUserJDBI(
             ).bind("validation_information", tokenValidationInfo.validationInfo)
             .execute()
 
+    override fun userGameInfo(userId: Int): UserInfo =
+        handle
+            .createQuery("select * from player_stats where user_id = :user_id")
+            .bind("user_id", userId)
+            .map(UserInfoMapper())
+            .one()
+
     override fun findById(id: Int): User? {
         TODO("Not yet implemented")
     }
@@ -223,6 +231,22 @@ private class UserMapper : RowMapper<User> {
             imageUrl = rs.getString("avatar_url").toUrlOrNull(),
             password = rs.getString("password_hash").toPassword(),
             balance = rs.getInt("balance").toBalance(),
+        )
+}
+
+private class UserInfoMapper : RowMapper<UserInfo> {
+    override fun map(
+        rs: ResultSet,
+        ctx: StatementContext,
+    ): UserInfo =
+        UserInfo(
+            userId = rs.getInt("user_id"),
+            totalGamesPlayed = rs.getInt("total_games"),
+            totalWins = rs.getInt("total_wins"),
+            totalLosses = rs.getInt("total_losses"),
+            totalPoints = rs.getInt("total_points"),
+            longestStreak = rs.getInt("longest_win_streak"),
+            currentStreak = rs.getInt("current_streak"),
         )
 }
 

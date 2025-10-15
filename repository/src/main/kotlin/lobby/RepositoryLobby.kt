@@ -9,14 +9,8 @@ interface RepositoryLobby : Repository<Lobby> {
         name: Name,
         hostId: Int,
         maxPlayers: Int,
-        inviteCode: String,
+        rounds: Int,
     ): Lobby
-
-    fun findAllLobbies(): List<Lobby>
-
-    fun findLobbyById(id: Int): Lobby?
-
-    fun findByInviteCode(code: String): Lobby?
 
     fun isUserInLobby(
         userId: Int,

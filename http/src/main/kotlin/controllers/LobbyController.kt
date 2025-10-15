@@ -30,7 +30,7 @@ class LobbyController(
         user: AuthenticatedUserDto,
         @RequestBody body: CreateLobbyDTO,
     ): ResponseEntity<*> {
-        val result: Either<LobbyError, Lobby> = lobbyService.createLobby(user.user.id, body.name, body.maxPlayers)
+        val result: Either<LobbyError, Lobby> = lobbyService.createLobby(user.user.id, body.name, body.rounds, body.maxPlayers)
 
         return when (result) {
             is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
@@ -62,15 +62,15 @@ class LobbyController(
     }
 
     /*
-    curl -X POST "http://localhost:8080/lobbies/join/{inviteCode}" \
+    curl -X POST "http://localhost:8080/lobbies/join/{lobbyId}" \
          -H "Authorization: Bearer <token>"
      */
-    @PostMapping("/join/{inviteCode}")
+    @PostMapping("/join/{lobbyId}")
     fun joinLobby(
         user: AuthenticatedUserDto,
-        @PathVariable inviteCode: String,
+        @PathVariable lobbyId: Int,
     ): ResponseEntity<*> {
-        val result = lobbyService.joinLobby(user.user.id, inviteCode)
+        val result = lobbyService.joinLobby(user.user.id, lobbyId)
         return when (result) {
             is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
             is Success -> ResponseEntity.status(HttpStatus.ACCEPTED).body(result.value)

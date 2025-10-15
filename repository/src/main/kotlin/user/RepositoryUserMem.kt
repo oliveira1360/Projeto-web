@@ -8,6 +8,7 @@ import org.example.entity.Name
 import org.example.entity.Password
 import org.example.entity.URL
 import org.example.entity.User
+import org.example.entity.UserInfo
 import org.example.entity.toMoney
 import java.time.Instant
 
@@ -106,6 +107,10 @@ class RepositoryUserMem : RepositoryUser {
             .removeIf {
                 it.tokenValidationInfo == tokenValidationInfo
             }.let { if (it) 1 else 0 }
+
+    override fun userGameInfo(userId: Int): UserInfo {
+        TODO("Not yet implemented")
+    }
 
     override fun findById(id: Int): User? = users.find { it.id == id }
 

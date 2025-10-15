@@ -34,39 +34,37 @@ class LobbyService(
         hostId: Int,
         name: String,
         maxPlayers: Int,
+        rounds: Int,
     ): LobbyResult {
         if (name.isBlank() || maxPlayers <= 0) {
             return failure(LobbyError.InvalidLobbyData)
         }
-
-        val inviteCode = generateInviteCode()
-
         return trxManager.run {
             val host =
                 repositoryUser.findById(hostId)
                     ?: return@run failure(LobbyError.UserNotFound)
 
-            val lobby = repositoryLobby.createLobby(name.toName(), host.id, maxPlayers, inviteCode)
+            val lobby = repositoryLobby.createLobby(name.toName(), host.id, maxPlayers, rounds)
             success(lobby)
         }
     }
 
     fun listLobbies(): List<Lobby> =
         trxManager.run {
-            repositoryLobby.findAllLobbies()
+            repositoryLobby.findAll()
         }
 
     fun getLobbyDetails(lobbyId: Int): LobbyResult =
         trxManager.run {
             val lobby =
-                repositoryLobby.findLobbyById(lobbyId)
+                repositoryLobby.findById(lobbyId)
                     ?: return@run failure(LobbyError.LobbyNotFound)
             success(lobby)
         }
 
     fun joinLobby(
         userId: Int,
-        inviteCode: String,
+        lobbyId: Int,
     ): LobbyResult =
         trxManager.run {
             val user =
@@ -74,8 +72,8 @@ class LobbyService(
                     ?: return@run failure(LobbyError.UserNotFound)
 
             val lobby =
-                repositoryLobby.findByInviteCode(inviteCode)
-                    ?: return@run failure(LobbyError.InvalidInviteCode)
+                repositoryLobby.findById(lobbyId)
+                    ?: return@run failure(LobbyError.LobbyNotFound)
 
             if (repositoryLobby.isUserInLobby(userId, lobby.id)) {
                 return@run failure(LobbyError.AlreadyInLobby)
@@ -86,7 +84,7 @@ class LobbyService(
             }
 
             repositoryLobby.addPlayer(lobby.id, user.id)
-            val updatedLobby = repositoryLobby.findLobbyById(lobby.id)!!
+            val updatedLobby = repositoryLobby.findById(lobby.id)!!
             success(updatedLobby)
         }
 
@@ -96,7 +94,7 @@ class LobbyService(
     ): LobbyResult =
         trxManager.run {
             val lobby =
-                repositoryLobby.findLobbyById(lobbyId)
+                repositoryLobby.findById(lobbyId)
                     ?: return@run failure(LobbyError.LobbyNotFound)
 
             if (!repositoryLobby.isUserInLobby(userId, lobby.id)) {
