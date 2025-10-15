@@ -112,7 +112,12 @@ class RepositoryUserMem : RepositoryUser {
     override fun findAll(): List<User> = users.toList()
 
     override fun save(entity: User) {
-        TODO("May not be needed")
+        val user = findById(entity.id)
+        if (user == null) {
+            _users.add(entity)
+        } else {
+            _users[_users.indexOf(user)] = entity
+        }
     }
 
     override fun deleteById(id: Int) {
