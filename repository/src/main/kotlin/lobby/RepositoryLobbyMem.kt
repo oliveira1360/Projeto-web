@@ -10,6 +10,8 @@ class RepositoryLobbyMem : RepositoryLobby {
         val lobbies = mutableListOf<Lobby>()
     }
 
+    private val compLobbyList = Companion.lobbies
+
     override fun createLobby(
         name: Name,
         hostId: Int,
@@ -25,6 +27,7 @@ class RepositoryLobbyMem : RepositoryLobby {
                 rounds = rounds,
                 currentPlayers = listOf(userRepo.findById(hostId) ?: throw IllegalArgumentException("Invalid hostId: $hostId")),
             )
+        lobbies.add(lobby)
         return lobby
     }
 
