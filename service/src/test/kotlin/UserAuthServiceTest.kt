@@ -1,4 +1,3 @@
-import org.example.Either
 import org.example.Sha256TokenEncoder
 import org.example.Success
 import org.example.TransactionManagerMem
@@ -13,7 +12,6 @@ import org.example.entity.User
 import org.example.entity.toMoney
 import org.example.lobby.RepositoryLobbyMem
 import org.example.user.RepositoryUserMem
-import org.springframework.objenesis.instantiator.basic.FailingInstantiator
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import java.time.Clock
 import kotlin.test.Test
@@ -90,7 +88,7 @@ class UserAuthServiceTest {
         val result = service.getUserByEmail(Email("email@other.com"))
         when (result) {
             is Success -> {
-                assertEquals(result.value, userMem.users.first())
+                assertEquals(result.value, userMem.users.find { it.id == result.value.id })
             }
             else -> fail()
         }
