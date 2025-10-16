@@ -1,0 +1,9 @@
+package org.example.entity.game
+
+import org.example.entity.player.PointPlayer
+import java.util.PriorityQueue
+
+data class RoundInfo(
+    val round: Round,
+    val pointsQueue: PriorityQueue<PointPlayer>,
+)

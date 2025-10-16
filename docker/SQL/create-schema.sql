@@ -77,9 +77,9 @@ CREATE TABLE match_players (
 CREATE TABLE rounds (
                         id SERIAL PRIMARY KEY,
                         match_id INT REFERENCES matches(id) ON DELETE CASCADE,
+                        user_id INT REFERENCES users(id) ON DELETE CASCADE,
                         round_number INT NOT NULL CHECK (round_number BETWEEN 1 AND 60),
                         winner_id INT REFERENCES users(id),
-                        UNIQUE (match_id, round_number, id)
 );
 
 -- === HANDS ===
@@ -96,7 +96,7 @@ CREATE TABLE dice_rolls (
                             id SERIAL PRIMARY KEY,
                             round_id INT REFERENCES rounds(id) ON DELETE CASCADE,
                             player_id INT REFERENCES users(id) ON DELETE CASCADE,
-                            roll_number INT DEFAULT 1,
+                            roll_number INT DEFAULT 1, --amount of time rolled
                             dice_values SMALLINT[5],
                             kept_dice BOOLEAN[5] DEFAULT ARRAY[false,false,false,false,false],
                             rolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

@@ -9,6 +9,7 @@ import org.example.entity.core.Password
 import org.example.entity.core.URL
 import org.example.entity.core.toMoney
 import org.example.entity.player.User
+import org.example.game.RepositoryGameMem
 import org.example.lobby.RepositoryLobbyMem
 import org.example.token.Sha256TokenEncoder
 import org.example.user.RepositoryUserMem
@@ -34,7 +35,8 @@ class UserAuthServiceTest {
     val tokenEncoder = Sha256TokenEncoder()
     val clock = Clock.systemUTC()
     val passwordEncoder = BCryptPasswordEncoder()
-    val trx = TransactionManagerMem(userMem, lobbyMem)
+    val gameMem = RepositoryGameMem()
+    val trx = TransactionManagerMem(userMem, lobbyMem, gameMem)
 
     val service =
         UserAuthService(

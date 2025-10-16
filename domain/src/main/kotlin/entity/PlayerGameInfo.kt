@@ -2,7 +2,6 @@ package org.example.entity
 
 import org.example.entity.core.Balance
 import org.example.entity.core.Quantity
-import org.example.entity.game.Round
 import org.example.entity.player.Hand
 
 data class PlayerGameInfo(
@@ -10,5 +9,4 @@ data class PlayerGameInfo(
     val rolls: Quantity = Quantity(3),
     val hands: Hand,
     val balance: Balance,
-    val round: Round,
 )
