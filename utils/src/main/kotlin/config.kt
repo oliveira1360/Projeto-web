@@ -2,8 +2,8 @@
 
 package org.example
 
-import org.example.entity.Lobby
-import org.example.entity.User
+import org.example.entity.lobby.Lobby
+import org.example.entity.player.User
 import org.example.mapper.InstantMapper
 import org.jdbi.v3.core.Jdbi
 import org.jdbi.v3.core.kotlin.KotlinMapper

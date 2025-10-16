@@ -3,6 +3,9 @@
 package org.example
 
 import org.example.auth.*
+import org.example.config.LobbiesDomainConfig
+import org.example.config.UsersDomainConfig
+import org.example.token.Sha256TokenEncoder
 import org.jdbi.v3.core.Jdbi
 import org.postgresql.ds.PGSimpleDataSource
 import org.springframework.boot.autoconfigure.SpringBootApplication

@@ -1,4 +1,4 @@
-package org.example
+package org.example.token
 
 /**
  * Strongly typed information of token hashed by a TokenEncoder.

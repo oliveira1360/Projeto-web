@@ -1,4 +1,4 @@
-package org.example.entity
+package org.example.entity.core
 
 @JvmInline
 value class Name(

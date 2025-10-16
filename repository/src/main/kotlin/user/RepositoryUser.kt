@@ -1,14 +1,14 @@
 package org.example.user
 
 import org.example.Repository
-import org.example.Token
-import org.example.TokenValidationInfo
-import org.example.entity.Email
-import org.example.entity.Name
-import org.example.entity.Password
-import org.example.entity.URL
-import org.example.entity.User
-import org.example.entity.UserInfo
+import org.example.entity.core.Email
+import org.example.entity.core.Name
+import org.example.entity.core.Password
+import org.example.entity.core.URL
+import org.example.entity.player.User
+import org.example.entity.player.UserInfo
+import org.example.token.Token
+import org.example.token.TokenValidationInfo
 import java.time.Instant
 
 interface RepositoryUser : Repository<User> {

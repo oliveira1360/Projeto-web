@@ -9,7 +9,7 @@ import org.example.LobbyService
 import org.example.Success
 import org.example.dto.inputDto.AuthenticatedUserDto
 import org.example.dto.inputDto.CreateLobbyDTO
-import org.example.entity.Lobby
+import org.example.entity.lobby.Lobby
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*

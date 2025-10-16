@@ -1,4 +1,4 @@
-package org.example.entity
+package org.example.entity.player
 
 data class UserInfo(
     val userId: Int,

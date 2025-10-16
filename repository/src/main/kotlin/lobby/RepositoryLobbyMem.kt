@@ -1,7 +1,7 @@
 package org.example.lobby
 
-import org.example.entity.Lobby
-import org.example.entity.Name
+import org.example.entity.core.Name
+import org.example.entity.lobby.Lobby
 import org.example.user.RepositoryUserMem
 
 class RepositoryLobbyMem : RepositoryLobby {

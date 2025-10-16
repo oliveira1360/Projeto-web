@@ -1,4 +1,4 @@
-package org.example
+package org.example.token
 
 /**
  * Defines the contract for encoding tokens into a validation representation.

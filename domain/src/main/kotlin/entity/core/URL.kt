@@ -1,4 +1,4 @@
-package org.example.entity
+package org.example.entity.core
 
 data class URL(
     val value: String,

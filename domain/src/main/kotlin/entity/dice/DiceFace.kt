@@ -1,4 +1,4 @@
-package org.example.entity
+package org.example.entity.dice
 
 enum class DiceFace(
     weight: Int,

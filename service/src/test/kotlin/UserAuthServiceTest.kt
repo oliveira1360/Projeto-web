@@ -1,19 +1,20 @@
-import org.example.Sha256TokenEncoder
 import org.example.Success
 import org.example.TransactionManagerMem
 import org.example.UserAuthService
-import org.example.UsersDomainConfig
-import org.example.entity.Balance
-import org.example.entity.Email
-import org.example.entity.Name
-import org.example.entity.Password
-import org.example.entity.URL
-import org.example.entity.User
-import org.example.entity.toMoney
+import org.example.config.UsersDomainConfig
+import org.example.entity.core.Balance
+import org.example.entity.core.Email
+import org.example.entity.core.Name
+import org.example.entity.core.Password
+import org.example.entity.core.URL
+import org.example.entity.core.toMoney
+import org.example.entity.player.User
 import org.example.lobby.RepositoryLobbyMem
+import org.example.token.Sha256TokenEncoder
 import org.example.user.RepositoryUserMem
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import java.time.Clock
+import java.time.Duration
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -23,8 +24,8 @@ class UserAuthServiceTest {
     val dominConfig =
         UsersDomainConfig(
             tokenSizeInBytes = 100,
-            tokenTtl = java.time.Duration.ofMinutes(1),
-            tokenRollingTtl = java.time.Duration.ofMinutes(5),
+            tokenTtl = Duration.ofMinutes(1),
+            tokenRollingTtl = Duration.ofMinutes(5),
             maxTokensPerUser = 100,
         )
 

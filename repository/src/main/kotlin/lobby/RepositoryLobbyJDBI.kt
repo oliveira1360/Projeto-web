@@ -1,14 +1,14 @@
 package org.example.lobby
 
-import org.example.entity.Balance
-import org.example.entity.Lobby
-import org.example.entity.Name
-import org.example.entity.User
-import org.example.entity.toEmail
-import org.example.entity.toMoney
-import org.example.entity.toName
-import org.example.entity.toPassword
-import org.example.entity.toUrlOrNull
+import org.example.entity.core.Balance
+import org.example.entity.core.Name
+import org.example.entity.core.toEmail
+import org.example.entity.core.toMoney
+import org.example.entity.core.toName
+import org.example.entity.core.toPassword
+import org.example.entity.core.toUrlOrNull
+import org.example.entity.lobby.Lobby
+import org.example.entity.player.User
 import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.mapper.RowMapper
 import org.jdbi.v3.core.statement.StatementContext

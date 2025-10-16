@@ -1,4 +1,4 @@
-package org.example
+package org.example.token
 
 import java.security.MessageDigest
 import java.util.Base64

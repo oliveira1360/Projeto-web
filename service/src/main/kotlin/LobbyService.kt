@@ -1,8 +1,9 @@
 package org.example
 
 import jakarta.inject.Named
-import org.example.entity.Lobby
-import org.example.entity.toName
+import org.example.config.LobbiesDomainConfig
+import org.example.entity.core.toName
+import org.example.entity.lobby.Lobby
 import java.util.UUID
 
 sealed class LobbyError(

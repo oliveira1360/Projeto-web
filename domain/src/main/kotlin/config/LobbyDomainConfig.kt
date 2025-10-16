@@ -1,6 +1,6 @@
 @file:Suppress("ktlint:standard:filename")
 
-package org.example
+package org.example.config
 
 data class LobbiesDomainConfig(
     val maxPlayersPerLobby: Int,
