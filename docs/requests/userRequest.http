@@ -1,0 +1,51 @@
+@token = 4c-EA1e2SIIZlD4Gookza_JmCmoUhYp-lkJnJksYn4E=
+
+
+### ============================================
+### User Endpoints
+### ============================================
+
+### Create User
+POST http://localhost:8080/user/create
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "nickName": "john",
+  "email": "john@example1.com",
+  "password": "Secret1",
+  "imageUrl": "https://example.com/avatar.jpg"
+}
+
+### Login User
+POST http://localhost:8080/user/login
+Content-Type: application/json
+
+{
+  "email": "john@example1.com",
+  "password": "Secret1"
+}
+
+### Get User Info
+GET http://localhost:8080/user/info
+Authorization: Bearer {{token}}
+
+### Update User
+POST http://localhost:8080/user/update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "John Updated",
+  "nickName": "johnny",
+  "password": "NewSecret1",
+  "imageUrl": "https://example.com/new-avatar.jpg"
+}
+
+### Logout User
+POST http://localhost:8080/user/logout
+Authorization: Bearer {{token}}
+
+### Get User Stats
+GET http://localhost:8080/user/stats
+Authorization: Bearer {{token}}

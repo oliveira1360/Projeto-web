@@ -1,0 +1,30 @@
+@token = 4c-EA1e2SIIZlD4Gookza_JmCmoUhYp-lkJnJksYn4E=
+
+### ============================================
+### Lobby Endpoints
+### ============================================
+
+### Create Lobby
+POST http://localhost:8080/lobbies/create
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Lobby Teste",
+  "rounds": 20,
+  "maxPlayers": 4
+}
+
+### List All Lobbies
+GET http://localhost:8080/lobbies
+
+### Get Lobby Details
+GET http://localhost:8080/lobbies/1
+
+### Join Lobby
+POST http://localhost:8080/lobbies/join/1
+Authorization: Bearer {{token}}
+
+### Leave Lobby
+POST http://localhost:8080/lobbies/leave/1
+Authorization: Bearer {{token}}
