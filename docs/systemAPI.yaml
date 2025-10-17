@@ -1,0 +1,314 @@
+openapi: 3.0.3
+info:
+  title: Chelas Multi-Player Poker Dice API
+  version: 1.0.0
+  description: |
+    **Group Identification:** LEIC52D-G14
+
+    **Group Members:**
+    - Diogo Oliveira - A51662
+    - Paulo Nascimento - A51665
+    - Jessé Alencar - A51745
+
+    **GitHub Repository:** https://github.com/isel-leic-daw/2025-daw-leic52d-2025-leic52d-14.git
+
+    **Contact Information:**
+    - A51662@alunos.isel.pt
+    - A51665@alunos.isel.pt
+    - A51745@alunos.isel.pt
+
+servers:
+  - description: Localhost server for testing API
+    url: http://localhost:8080
+
+tags:
+  - name: Users
+  - name: Games
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: TokenValidationInfo  # Usando o formato de token em String
+
+  schemas:
+    CreateUserDTO:
+      type: object
+      required: [ name, nickName, email, password ]
+      properties:
+        name:
+          type: string
+        nickName:
+            type: string
+        email:
+          type: string
+        password:
+          type: string
+        imageUrl:
+            type: string
+            required: false
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        nickName:
+          type: string
+        email:
+          type: string
+        imageUrl:
+          type: string
+    UserError:
+      type: object  # Sealed class that represents possible user related errors
+
+    LoginUserDTO:
+      type: object
+      required: [ email, password ]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    TokenExternalInfo:
+      type: object
+      properties:
+        tokenValue:
+          type: string
+        tokenExpiration:
+          type: string
+          format: date-time # Java Instant format
+    TokenCreationError:
+      type: object  # Sealed class that represents possible token related errors
+
+    AuthenticatedUserDTO:
+      type: object
+      required: [ user, token ]
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        token:
+          type: string
+    UpdateUserDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        nickName:
+          type: string
+        password:
+          type: string
+        imageUrl:
+          type: string
+    UserInfo:
+      type: object
+      properties:
+        userId:
+          type: integer
+        totalGamesPlayed:
+          type: integer
+        totalWins:
+          type: integer
+        totalLosses:
+          type: integer
+        totalPoints:
+          type: integer
+        longestStreak:
+          type: integer
+        currentStreak:
+          type: integer
+
+
+paths:
+
+  /users/create:
+    post:
+      tags:
+        - Users
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserDTO'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserError'
+
+  /users/login:
+    post:
+      tags:
+        - Users
+      summary: User Login Operation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUserDTO'
+      responses:
+        '202':
+          description: User logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenExternalInfo'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenCreationError'
+
+  /users/logout:
+    post:
+      tags:
+        - Users
+      summary: User Logout Operation
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthenticatedUserDTO'
+      responses:
+        '202':
+          description: User logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenExternalInfo'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenCreationError'
+
+  /users/info:
+    get:
+      tags:
+       - Users
+      summary: Get the authenticated user's information
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthenticatedUserDTO'
+      responses:
+        '200':
+          description: User information retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /users/stats:
+    get:
+      tags:
+        - Users
+      summary: Get the authenticated user's game statistics
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthenticatedUserDTO'
+      responses:
+        '200':
+          description: User information retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserError'
+
+  /users/update:
+    post:
+      tags:
+        - Users
+      summary: Update the authenticated user's information
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserDTO'
+      responses:
+        '202':
+          description: User information updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserError'
+
+  /game/create:
+    post:
+      tags:
+        - Games
+      summary: Creates a new game instance and registers the requesting player (e.g., the user) as the host.
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGameDTO'
+      responses:
+        '201':
+          description: Game created successfully
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameError'
+  /game/{gameId}/close:
+    patch:
+      tags:
+        - Games
+      summary: Closes an active game, preventing further rounds or actions.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: gameId
+          schema:
+            type: integer
+          required: true
+          description: The unique identifier of the game to be closed.
+      responses:
