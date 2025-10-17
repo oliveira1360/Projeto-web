@@ -37,7 +37,6 @@ class GameServiceTest {
     @BeforeEach
     fun setup() {
         // Clear all data
-        // RepositoryUserMem.clear()
         RepositoryLobbyMem().clear()
         RepositoryGameMem().clear()
 
@@ -78,14 +77,15 @@ class GameServiceTest {
         // Create a test lobby
         lobby =
             lobbyRepo.createLobby(
-                hostId = user1.id,
                 name = Name("Test Lobby"),
+                hostId = user1.id,
                 maxPlayers = 4,
                 rounds = 12,
             )
 
-        lobbyRepo.addPlayer(user2.id, lobby.id)
-        lobbyRepo.addPlayer(user3.id, lobby.id)
+        // Fix: Parameters were in wrong order
+        lobbyRepo.addPlayer(lobby.id, user2.id)
+        lobbyRepo.addPlayer(lobby.id, user3.id)
     }
 
     // ==================== CREATE GAME TESTS ====================

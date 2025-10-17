@@ -30,7 +30,7 @@ class LobbyController(
         user: AuthenticatedUserDto,
         @RequestBody body: CreateLobbyDTO,
     ): ResponseEntity<*> {
-        val result: Either<LobbyError, Lobby> = lobbyService.createLobby(user.user.id, body.name, body.rounds, body.maxPlayers)
+        val result: Either<LobbyError, Lobby> = lobbyService.createLobby(user.user.id, body.name, body.maxPlayers, body.rounds)
 
         return when (result) {
             is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)

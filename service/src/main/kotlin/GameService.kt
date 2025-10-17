@@ -37,6 +37,10 @@ sealed class GameError {
     data object RoundNotStarted : GameError()
 
     data object AllPlayersNotFinished : GameError()
+
+    data object UserNotInGame : GameError()
+
+    data object UnauthorizedAction : GameError()
 }
 
 @Named
@@ -48,7 +52,15 @@ class GameService(
         lobbyId: Int,
     ): Either<GameError, Unit> =
         trxManager.run {
-            Success(repositoryGame.createGame(userId, lobbyId))
+            val lobby = repositoryLobby.findById(lobbyId)
+                ?: return@run failure(GameError.LobbyNotFound)
+
+            if (!repositoryLobby.isUserInLobby(userId, lobbyId)) {
+                return@run failure(GameError.UserNotInGame)
+            }
+
+            repositoryGame.createGame(userId, lobbyId)
+            success(Unit)
         }
 
     fun closeGame(
@@ -56,17 +68,20 @@ class GameService(
         gameId: Int,
     ): Either<GameError, Unit> =
         trxManager.run {
-            Success(repositoryGame.closeGame(userId, gameId))
+            repositoryGame.closeGame(userId, gameId)
+            success(Unit)
         }
 
     fun listPlayersInGame(gameId: Int): Either<GameError, ListPlayersInGame> =
         trxManager.run {
-            Success(repositoryGame.listPlayersInGame(gameId))
+            val players = repositoryGame.listPlayersInGame(gameId)
+            success(players)
         }
 
     fun startRound(gameId: Int): Either<GameError, Unit> =
         trxManager.run {
-            Success(repositoryGame.startRound(gameId))
+            repositoryGame.startRound(gameId)
+            success(Unit)
         }
 
     fun getPlayerHand(
@@ -74,16 +89,18 @@ class GameService(
         gameId: Int,
     ): Either<GameError, Hand> =
         trxManager.run {
-            val value = repositoryGame.getPlayerHand(userId, gameId) ?: return@run Failure(GameError.EmptyHand)
-            Success(value)
+            val hand = repositoryGame.getPlayerHand(userId, gameId)
+                ?: return@run failure(GameError.EmptyHand)
+
+            success(hand)
         }
 
     fun shuffle(
         userId: Int,
         lockedDice: List<Int>,
         gameId: Int,
-    ): Either<GameError, Hand> {
-        return trxManager.run {
+    ): Either<GameError, Hand> =
+        trxManager.run {
             val currentHand = repositoryGame.getPlayerHand(userId, gameId)?.value?.toMutableList()
 
             if (currentHand == null) {
@@ -98,57 +115,53 @@ class GameService(
             }
 
             val newHand = Hand(currentHand)
-            Success(repositoryGame.shuffle(userId, newHand, gameId))
+            repositoryGame.shuffle(userId, newHand, gameId)
+            success(newHand)
         }
-    }
 
     fun calculatePoints(
         userId: Int,
         gameId: Int,
     ): Either<GameError, Points> =
         trxManager.run {
-            val hand =
-                repositoryGame.getPlayerHand(userId, gameId)
-                    ?: return@run Failure(GameError.EmptyHand)
+            val hand = repositoryGame.getPlayerHand(userId, gameId)
+                ?: return@run failure(GameError.EmptyHand)
 
             val score = hand.calculateScore()
             val points = Points(score)
 
             repositoryGame.calculatePoints(userId, gameId, points)
 
-            Success(points)
+            success(points)
         }
 
     fun getRoundWinner(gameId: Int): Either<GameError, RoundWinnerInfo> =
         trxManager.run {
-            try {
-                Success(repositoryGame.getRoundWinner(gameId))
-            } catch (e: IllegalStateException) {
-                Failure(GameError.NoRoundInProgress)
-            }
+            val winner = repositoryGame.getRoundWinner(gameId)
+            success(winner)
         }
 
     fun getGameWinner(gameId: Int): Either<GameError, GameWinnerInfo> =
         trxManager.run {
-            try {
-                Success(repositoryGame.getGameWinner(gameId))
-            } catch (e: Exception) {
-                Failure(GameError.GameNotFinished)
-            }
+            val winner = repositoryGame.getGameWinner(gameId)
+            success(winner)
         }
 
     fun remainingTime(gameId: Int): Either<GameError, Time> =
         trxManager.run {
-            Success(repositoryGame.remainingTime(gameId))
+            val time = repositoryGame.remainingTime(gameId)
+            success(time)
         }
 
     fun getRoundInfo(gameId: Int): Either<GameError, RoundInfo> =
         trxManager.run {
-            Success(repositoryGame.getRoundInfo(gameId))
+            val roundInfo = repositoryGame.getRoundInfo(gameId)
+            success(roundInfo)
         }
 
     fun getScores(gameId: Int): Either<GameError, Scoreboard> =
         trxManager.run {
-            Success(repositoryGame.getScores(gameId))
+            val scoreboard = repositoryGame.getScores(gameId)
+            success(scoreboard)
         }
 }

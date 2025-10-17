@@ -41,11 +41,8 @@ class LobbyService(
             return failure(LobbyError.InvalidLobbyData)
         }
         return trxManager.run {
-            val host =
-                repositoryUser.findById(hostId)
-                    ?: return@run failure(LobbyError.UserNotFound)
 
-            val lobby = repositoryLobby.createLobby(name.toName(), host.id, maxPlayers, rounds)
+            val lobby = repositoryLobby.createLobby(name.toName(), hostId, maxPlayers, rounds)
             success(lobby)
         }
     }

@@ -68,9 +68,8 @@ open class App {
     @Bean
     open fun lobbiesDomainConfig() =
         LobbiesDomainConfig(
-            maxPlayersPerLobby = 8,
-            inviteCodeLength = 6,
-            maxLobbiesPerUser = 3,
+            maxPlayersPerLobby = 6,
+            maxLobbiesPerUser = 1,
         )
 }
 

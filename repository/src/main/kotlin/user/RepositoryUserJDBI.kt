@@ -172,9 +172,13 @@ class RepositoryUserJDBI(
             .map(UserInfoMapper())
             .one()
 
-    override fun findById(id: Int): User? {
-        TODO("Not yet implemented")
-    }
+    override fun findById(id: Int): User? =
+        handle
+            .createQuery("SELECT * FROM users WHERE id = :id")
+            .bind("id", id)
+            .map(UserMapper())
+            .findOne()
+            .orElse(null)
 
     override fun findAll(): List<User> {
         TODO("Not yet implemented")

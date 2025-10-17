@@ -121,20 +121,57 @@ class RepositoryLobbyJDBI(
         TODO("Not yet implemented")
     }
 
-    override fun findById(id: Int): Lobby? =
-        handle
+    override fun findById(id: Int): Lobby? {
+        val lobby = handle
             .createQuery("SELECT * FROM lobbies WHERE id = :id")
             .bind("id", id)
-            .map(LobbyMapper(handle))
+            .map(LobbyMapper())
             .findOne()
-            .orElse(null)
+            .orElse(null) ?: return null
 
-    override fun findAll(): List<Lobby> =
-        handle
-            .createQuery("SELECT * FROM lobbies ORDER BY created_at DESC")
-            .map(LobbyMapper(handle))
+        val players = handle
+            .createQuery(
+                """
+                SELECT u.*
+                FROM lobby_players lp
+                JOIN users u ON lp.user_id = u.id
+                WHERE lp.lobby_id = :lobby_id
+                """.trimIndent()
+            )
+            .bind("lobby_id", id)
+            .map(UserMapper())
             .list()
 
+        return lobby.copy(currentPlayers = players)
+    }
+
+    override fun findAll(): List<Lobby> {
+        val lobbies =
+            handle
+                .createQuery("SELECT * FROM lobbies ORDER BY created_at DESC")
+                .map(LobbyMapper())
+                .list()
+
+        if (lobbies.isEmpty()) return emptyList()
+
+        val playersByLobbyId =
+            handle
+                .createQuery(
+                    """
+                SELECT lp.lobby_id, u.*
+                FROM lobby_players lp
+                JOIN users u ON lp.user_id = u.id
+                WHERE lp.lobby_id IN (<ids>)
+                """.trimIndent(),
+                )
+                .bindList("ids", lobbies.map { it.id })
+                .map { rs, ctx ->
+                    rs.getInt("lobby_id") to UserMapper().map(rs, ctx)
+                }
+                .groupBy({ it.first }, { it.second })
+
+        return lobbies.map { it.copy(currentPlayers = playersByLobbyId[it.id].orEmpty()) }
+    }
     override fun save(entity: Lobby) {
         TODO("Not yet implemented")
     }
@@ -165,34 +202,20 @@ private class UserMapper : RowMapper<User> {
 }
 
 private class LobbyMapper(
-    private val handle: Handle,
+    private val playersByLobbyId: Map<Int, List<User>> = emptyMap()
 ) : RowMapper<Lobby> {
-    override fun map(
-        rs: ResultSet,
-        ctx: StatementContext,
-    ): Lobby {
-        val lobbyId = rs.getInt("id")
-        val hostId = rs.getInt("host_id")
 
-        val players =
-            handle
-                .createQuery(
-                    """
-                    SELECT u.* FROM lobby_players lp
-                    JOIN users u ON lp.user_id = u.id
-                    WHERE lp.lobby_id = :lobby_id
-                    """.trimIndent(),
-                ).bind("lobby_id", lobbyId)
-                .map(UserMapper())
-                .list()
+    override fun map(rs: ResultSet, ctx: StatementContext): Lobby {
+        val lobbyId = rs.getInt("id")
 
         return Lobby(
             id = lobbyId,
             name = rs.getString("name").toName(),
-            hostId = hostId,
+            hostId = rs.getInt("host_id"),
             maxPlayers = rs.getInt("max_players"),
             rounds = rs.getInt("rounds"),
-            currentPlayers = players,
+            currentPlayers = playersByLobbyId[lobbyId].orEmpty()
         )
     }
 }
+
