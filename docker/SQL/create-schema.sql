@@ -1,8 +1,5 @@
 -- DROP ALL TABLES (in reverse order of dependencies)
-DROP TABLE IF EXISTS session_players CASCADE;
-DROP TABLE IF EXISTS sessions CASCADE;
 DROP TABLE IF EXISTS dice_rolls CASCADE;
-DROP TABLE IF EXISTS hands CASCADE;
 DROP TABLE IF EXISTS rounds CASCADE;
 DROP TABLE IF EXISTS match_players CASCADE;
 DROP TABLE IF EXISTS matches CASCADE;
@@ -10,6 +7,13 @@ DROP TABLE IF EXISTS player_hands_history CASCADE;
 DROP TABLE IF EXISTS player_stats CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS Tokens CASCADE;
+DROP TABLE If EXISTS lobbies CASCADE;
+DROP TABLE IF EXISTS turn cascade;
+DROP TABLE IF EXISTS lobby_players CASCADE;
+DROP TYPE IF EXISTS DiceFace CASCADE;
+
+
+CREATE TYPE DiceFace AS ENUM ('ACE', 'KING', 'QUEEN', 'JACK', 'TEN', 'NINE');
 
 -- === USERS ===
 CREATE TABLE users (
@@ -21,7 +25,7 @@ CREATE TABLE users (
                        avatar_url TEXT,
                        creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                        last_login TIMESTAMP,
-                       balance DOUBLE PRECISION DEFAULT 0
+                       balance INT DEFAULT 0
 );
 
 -- === PLAYER STATS ===
@@ -52,7 +56,8 @@ CREATE TABLE player_hands_history (
                                       straight INT DEFAULT 0,
                                       three_of_a_kind INT DEFAULT 0,
                                       two_pair INT DEFAULT 0,
-                                      one_pair INT DEFAULT 0
+                                      one_pair INT DEFAULT 0,
+                                      no_value INT DEFAULT 0
 );
 
 -- === MATCHES ===
@@ -75,32 +80,26 @@ CREATE TABLE match_players (
 
 -- === ROUNDS ===
 CREATE TABLE rounds (
-                        id SERIAL PRIMARY KEY,
                         match_id INT REFERENCES matches(id) ON DELETE CASCADE,
                         user_id INT REFERENCES users(id) ON DELETE CASCADE,
                         round_number INT NOT NULL CHECK (round_number BETWEEN 1 AND 60),
                         winner_id INT REFERENCES users(id),
+                        roll_number INT DEFAULT 1,
+                        PRIMARY KEY (match_id, round_number)
 );
 
--- === HANDS ===
-CREATE TABLE hands (
-                       id SERIAL PRIMARY KEY,
-                       round_id INT REFERENCES rounds(id) ON DELETE CASCADE,
-                       player_id INT REFERENCES users(id) ON DELETE CASCADE,
-                       score INT,
-                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- === TURN ===
+CREATE TABLE turn (
+                      match_id INT,
+                      round_number INT,
+                      user_id INT REFERENCES users(id) ON DELETE CASCADE,
+                      hand DiceFace[],
+                      roll_number INT,
+                      score INT,
+                      PRIMARY KEY (match_id, round_number, user_id),
+                      FOREIGN KEY (match_id, round_number) REFERENCES rounds(match_id, round_number) ON DELETE CASCADE
 );
 
--- === DICE ROLLS ===
-CREATE TABLE dice_rolls (
-                            id SERIAL PRIMARY KEY,
-                            round_id INT REFERENCES rounds(id) ON DELETE CASCADE,
-                            player_id INT REFERENCES users(id) ON DELETE CASCADE,
-                            roll_number INT DEFAULT 1, --amount of time rolled
-                            dice_values SMALLINT[5],
-                            kept_dice BOOLEAN[5] DEFAULT ARRAY[false,false,false,false,false],
-                            rolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
 
 -- === LOBBIES ===
 CREATE TABLE lobbies (

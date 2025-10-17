@@ -1,3 +1,4 @@
+
 package org.example.controllers
 
 import org.example.Failure
@@ -38,7 +39,7 @@ class GameController(
     /**
      * Closes an active game, preventing further rounds or actions.
      */
-    @GetMapping("/{gameId}/close")
+    @PostMapping("/{gameId}/close")
     fun closeGame(
         user: AuthenticatedUserDto,
         @PathVariable gameId: Int,
@@ -46,7 +47,7 @@ class GameController(
         val result = gameService.closeGame(user.user.id, gameId)
         return when (result) {
             is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Success -> ResponseEntity.status(HttpStatus.CREATED).body(result.value)
+            is Success -> ResponseEntity.status(HttpStatus.OK).body(result.value)
         }
     }
 
@@ -60,14 +61,14 @@ class GameController(
         val result = gameService.listPlayersInGame(gameId)
         return when (result) {
             is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Success -> ResponseEntity.status(HttpStatus.CREATED).body(result.value)
+            is Success -> ResponseEntity.status(HttpStatus.OK).body(result.value)
         }
     }
 
     /**
      * Starts a new round for the current game.
      */
-    @GetMapping("/start/round/{gameId}")
+    @PostMapping("/{gameId}/round/start")
     fun startRound(
         @PathVariable gameId: Int,
     ): ResponseEntity<*> {
@@ -89,7 +90,7 @@ class GameController(
         val result = gameService.getPlayerHand(user.user.id, gameId)
         return when (result) {
             is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Success -> ResponseEntity.status(HttpStatus.CREATED).body(result.value)
+            is Success -> ResponseEntity.status(HttpStatus.OK).body(result.value)
         }
     }
 
@@ -97,7 +98,7 @@ class GameController(
      * Allows the player to re-roll (shuffle) their dice once per round.
      * Returns the new dice hand to the player.
      */
-    @PostMapping("/shuffle/{gameId}")
+    @PostMapping("/{gameId}/player/shuffle")
     fun shuffle(
         user: AuthenticatedUserDto,
         @RequestBody shuffleDTO: ShuffleDTO,
@@ -106,15 +107,15 @@ class GameController(
         val result = gameService.shuffle(user.user.id, shuffleDTO.lockedDice, gameId)
         return when (result) {
             is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Success -> ResponseEntity.status(HttpStatus.CREATED).body(result.value)
+            is Success -> ResponseEntity.status(HttpStatus.OK).body(result.value)
         }
     }
 
     /**
      * Calculates and stores the score for the current player based on their hand.
-     * Ends the player’s turn for the round.
+     * Ends the player's turn for the round.
      */
-    @GetMapping("/{gameId}/player/finish")
+    @PostMapping("/{gameId}/player/finish")
     fun calculatePoints(
         user: AuthenticatedUserDto,
         @PathVariable gameId: Int,
@@ -122,7 +123,7 @@ class GameController(
         val result = gameService.calculatePoints(user.user.id, gameId)
         return when (result) {
             is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Success -> ResponseEntity.status(HttpStatus.CREATED).body(result.value)
+            is Success -> ResponseEntity.status(HttpStatus.OK).body(result.value)
         }
     }
 
@@ -138,7 +139,7 @@ class GameController(
         val result = gameService.getRoundWinner(gameId)
         return when (result) {
             is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Success -> ResponseEntity.status(HttpStatus.CREATED).body(result.value)
+            is Success -> ResponseEntity.status(HttpStatus.OK).body(result.value)
         }
     }
 
@@ -146,7 +147,7 @@ class GameController(
      * Returns the overall game winner after all rounds have been played.
      * Includes total scores and final ranking of players.
      */
-    @GetMapping("/{gameId}/game/winner")
+    @GetMapping("/{gameId}/winner")
     fun getGameWinner(
         user: AuthenticatedUserDto,
         @PathVariable gameId: Int,
@@ -154,14 +155,14 @@ class GameController(
         val result = gameService.getGameWinner(gameId)
         return when (result) {
             is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Success -> ResponseEntity.status(HttpStatus.CREATED).body(result.value)
+            is Success -> ResponseEntity.status(HttpStatus.OK).body(result.value)
         }
     }
 
     /**
      * Returns the remaining time (in seconds) before the game auto-starts.
      */
-    @GetMapping("/{gameId}/remaining/time")
+    @GetMapping("/{gameId}/remaining-time")
     fun remainingTime(
         user: AuthenticatedUserDto,
         @PathVariable gameId: Int,
@@ -169,12 +170,12 @@ class GameController(
         val result = gameService.remainingTime(gameId)
         return when (result) {
             is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Success -> ResponseEntity.status(HttpStatus.CREATED).body(result.value)
+            is Success -> ResponseEntity.status(HttpStatus.OK).body(result.value)
         }
     }
 
     /**
-     * Returns the current round’s state and metadata, such as
+     * Returns the current round's state and metadata, such as
      * round number, and completed turns.
      */
     @GetMapping("/{gameId}/round")
@@ -185,7 +186,7 @@ class GameController(
         val result = gameService.getRoundInfo(gameId)
         return when (result) {
             is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Success -> ResponseEntity.status(HttpStatus.CREATED).body(result.value)
+            is Success -> ResponseEntity.status(HttpStatus.OK).body(result.value)
         }
     }
 
@@ -201,7 +202,7 @@ class GameController(
         val result = gameService.getScores(gameId)
         return when (result) {
             is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Success -> ResponseEntity.status(HttpStatus.CREATED).body(result.value)
+            is Success -> ResponseEntity.status(HttpStatus.OK).body(result.value)
         }
     }
 }

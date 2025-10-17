@@ -1,9 +1,11 @@
 package org.example
 
 import jakarta.inject.Named
-import org.example.entity.PlayerGameInfo
 import org.example.entity.core.Points
+import org.example.entity.dice.createRandomDice
+import org.example.entity.game.GameWinnerInfo
 import org.example.entity.game.RoundInfo
+import org.example.entity.game.RoundWinnerInfo
 import org.example.entity.game.Scoreboard
 import org.example.entity.lobby.ListPlayersInGame
 import org.example.entity.player.Hand
@@ -11,6 +13,30 @@ import java.sql.Time
 
 sealed class GameError {
     data object EmptyHand : GameError()
+
+    data object NoRoundInProgress : GameError()
+
+    data object GameNotFinished : GameError()
+
+    data object GameNotFound : GameError()
+
+    data object LobbyNotFound : GameError()
+
+    data object InvalidGameId : GameError()
+
+    data object InvalidUserId : GameError()
+
+    data object GameAlreadyFinished : GameError()
+
+    data object NoPlayersInGame : GameError()
+
+    data object InvalidDiceIndices : GameError()
+
+    data object TooManyRolls : GameError()
+
+    data object RoundNotStarted : GameError()
+
+    data object AllPlayersNotFinished : GameError()
 }
 
 @Named
@@ -56,28 +82,59 @@ class GameService(
         userId: Int,
         lockedDice: List<Int>,
         gameId: Int,
-    ): Either<GameError, Hand> =
-        trxManager.run {
-            Success(repositoryGame.shuffle(userId, lockedDice, gameId))
+    ): Either<GameError, Hand> {
+        return trxManager.run {
+            val currentHand = repositoryGame.getPlayerHand(userId, gameId)?.value?.toMutableList()
+
+            if (currentHand == null) {
+                val newHand = Hand(List(5) { createRandomDice() })
+                repositoryGame.shuffle(userId, newHand, gameId)
+                return@run success(newHand)
+            }
+
+            for (diceIdx in currentHand.indices) {
+                if (lockedDice.contains(diceIdx)) continue
+                currentHand[diceIdx] = createRandomDice()
+            }
+
+            val newHand = Hand(currentHand)
+            Success(repositoryGame.shuffle(userId, newHand, gameId))
         }
+    }
 
     fun calculatePoints(
         userId: Int,
         gameId: Int,
     ): Either<GameError, Points> =
         trxManager.run {
-            val points = repositoryGame.calculatePoints(userId, gameId) ?: return@run Failure(GameError.EmptyHand)
+            val hand =
+                repositoryGame.getPlayerHand(userId, gameId)
+                    ?: return@run Failure(GameError.EmptyHand)
+
+            val score = hand.calculateScore()
+            val points = Points(score)
+
+            repositoryGame.calculatePoints(userId, gameId, points)
+
             Success(points)
         }
 
-    fun getRoundWinner(gameId: Int): Either<GameError, PlayerGameInfo> =
+    fun getRoundWinner(gameId: Int): Either<GameError, RoundWinnerInfo> =
         trxManager.run {
-            Success(repositoryGame.getRoundWinner(gameId))
+            try {
+                Success(repositoryGame.getRoundWinner(gameId))
+            } catch (e: IllegalStateException) {
+                Failure(GameError.NoRoundInProgress)
+            }
         }
 
-    fun getGameWinner(gameId: Int): Either<GameError, PlayerGameInfo> =
+    fun getGameWinner(gameId: Int): Either<GameError, GameWinnerInfo> =
         trxManager.run {
-            Success(repositoryGame.getGameWinner(gameId))
+            try {
+                Success(repositoryGame.getGameWinner(gameId))
+            } catch (e: Exception) {
+                Failure(GameError.GameNotFinished)
+            }
         }
 
     fun remainingTime(gameId: Int): Either<GameError, Time> =

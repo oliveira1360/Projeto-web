@@ -7,6 +7,6 @@ import org.example.entity.player.Hand
 data class PlayerGameInfo(
     val playerId: Int,
     val rolls: Quantity = Quantity(3),
-    val hands: Hand,
+    val hand: Hand,
     val balance: Balance,
 )

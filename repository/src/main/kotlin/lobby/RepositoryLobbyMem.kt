@@ -7,10 +7,9 @@ import org.example.user.RepositoryUserMem
 class RepositoryLobbyMem : RepositoryLobby {
     companion object {
         val userRepo = RepositoryUserMem()
-        val lobbies = mutableListOf<Lobby>()
+        private val lobbies = mutableListOf<Lobby>()
+        private var nextLobbyId = 1
     }
-
-    private val compLobbyList = Companion.lobbies
 
     override fun createLobby(
         name: Name,
@@ -18,9 +17,10 @@ class RepositoryLobbyMem : RepositoryLobby {
         maxPlayers: Int,
         rounds: Int,
     ): Lobby {
+        val lobbyId = nextLobbyId++
         val lobby =
             Lobby(
-                id = 1,
+                id = lobbyId,
                 name = name,
                 hostId = hostId,
                 maxPlayers = maxPlayers,
@@ -56,10 +56,8 @@ class RepositoryLobbyMem : RepositoryLobby {
         if (isUserInLobby(userId, lobbyId)) {
             throw IllegalStateException("User already in lobby: $userId")
         }
-        lobbies[lobbies.indexOf(lobby)] =
-            lobby.copy(
-                currentPlayers = lobby.currentPlayers + user,
-            )
+        val updatedLobby = lobby.copy(currentPlayers = lobby.currentPlayers + user)
+        lobbies[lobbies.indexOf(lobby)] = updatedLobby
     }
 
     override fun removePlayer(
@@ -70,20 +68,12 @@ class RepositoryLobbyMem : RepositoryLobby {
         if (!isUserInLobby(userId, lobbyId)) {
             throw IllegalStateException("User not in lobby: $userId")
         }
-        lobbies[lobbies.indexOf(lobby)] =
-            lobby.copy(
-                currentPlayers = lobby.currentPlayers.filter { it.id != userId },
-            )
+        val updatedLobby = lobby.copy(currentPlayers = lobby.currentPlayers.filter { it.id != userId })
+        lobbies[lobbies.indexOf(lobby)] = updatedLobby
     }
 
     override fun closeLobby(lobbyId: Int) {
-      /*
-      val lobby = findById(lobbyId) ?: throw IllegalArgumentException("Lobby not found: $lobbyId")
-        lobbies[lobbies.indexOf(lobby)] =
-            lobby.copy(
-                isClosed = true,
-            )
-       */
+        deleteById(lobbyId)
     }
 
     override fun findById(id: Int): Lobby? = lobbies.find { it.id == id }
@@ -106,5 +96,6 @@ class RepositoryLobbyMem : RepositoryLobby {
 
     override fun clear() {
         lobbies.clear()
+        nextLobbyId = 1
     }
 }

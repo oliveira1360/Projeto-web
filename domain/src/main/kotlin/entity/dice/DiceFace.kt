@@ -10,3 +10,5 @@ enum class DiceFace(
     TEN(5),
     NINE(6),
 }
+
+fun Int.toDiceFace() = DiceFace.entries[this]

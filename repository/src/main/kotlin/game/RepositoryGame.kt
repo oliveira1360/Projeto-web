@@ -1,10 +1,11 @@
 package org.example.game
 
 import org.example.Repository
-import org.example.entity.PlayerGameInfo
 import org.example.entity.core.Points
 import org.example.entity.game.Game
+import org.example.entity.game.GameWinnerInfo
 import org.example.entity.game.RoundInfo
+import org.example.entity.game.RoundWinnerInfo
 import org.example.entity.game.Scoreboard
 import org.example.entity.lobby.ListPlayersInGame
 import org.example.entity.player.Hand
@@ -32,18 +33,30 @@ interface RepositoryGame : Repository<Game> {
 
     fun shuffle(
         userId: Int,
-        lockedDice: List<Int>,
+        newHand: Hand,
         gameId: Int,
     ): Hand
 
     fun calculatePoints(
         userId: Int,
         gameId: Int,
-    ): Points?
+        points: Points,
+    ): Unit
 
-    fun getRoundWinner(gameId: Int): PlayerGameInfo
+    fun getRoundWinner(gameId: Int): RoundWinnerInfo
 
-    fun getGameWinner(gameId: Int): PlayerGameInfo
+    fun updateRoundWinner(
+        gameId: Int,
+        roundNumber: Int,
+        winnerId: Int,
+    ): Unit
+
+    fun getGameWinner(gameId: Int): GameWinnerInfo
+
+    fun updateGameWinner(
+        gameId: Int,
+        winnerId: Int,
+    ): Unit
 
     fun remainingTime(gameId: Int): Time
 
