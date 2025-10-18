@@ -120,6 +120,62 @@ components:
         currentStreak:
           type: integer
 
+    Lobby:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Lobby identifier
+        name:
+          type: string
+        maxPlayers:
+          type: integer
+        currentPlayers:
+          type: integer
+        rounds:
+          type: integer
+        status:
+          type: string
+        players:
+          type: array
+          items:
+            type: object
+            properties:
+              playerId:
+                type: integer
+              nickName:
+                type: string
+        _links:
+          type: object
+          additionalProperties: true
+    CreateLobbyDTO:
+      type: object
+      required: [ name, maxPlayers ]
+      properties:
+        name:
+          type: string
+          description: Name of the lobby
+        maxPlayers:
+          type: integer
+          description: Maximum number of players allowed
+        rounds:
+          type: integer
+          description: Number of rounds for the game (optional)
+    LobbyError:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+      additionalProperties: true
+
     CreateGameDTO:
       type: object
       required: [ lobbyId ]
@@ -452,6 +508,137 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserError'
+
+
+  /lobbies:
+    get:
+      tags:
+        - Games
+      summary: List all lobbies.
+      responses:
+        '200':
+          description: Lobbies retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Lobby'
+
+  /lobbies/create:
+    post:
+      tags:
+        - Games
+      summary: Creates a new lobby.
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLobbyDTO'
+      responses:
+        '201':
+          description: Lobby created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lobby'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LobbyError'
+
+  /lobbies/{lobbyId}:
+    get:
+      tags:
+        - Games
+      summary: Get lobby details by ID.
+      parameters:
+        - in: path
+          name: lobbyId
+          schema:
+            type: integer
+          required: true
+          description: The unique identifier of the lobby.
+      responses:
+        '200':
+          description: Lobby retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lobby'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LobbyError'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LobbyError'
+
+  /lobbies/join/{lobbyId}:
+    post:
+      tags:
+        - Games
+      summary: Join a lobby.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: lobbyId
+          schema:
+            type: integer
+          required: true
+          description: The unique identifier of the lobby to join.
+      responses:
+        '202':
+          description: Joined lobby successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lobby'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LobbyError'
+
+  /lobbies/leave/{lobbyId}:
+    post:
+      tags:
+        - Games
+      summary: Leave a lobby.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: lobbyId
+          schema:
+            type: integer
+          required: true
+          description: The unique identifier of the lobby to leave.
+      responses:
+        '202':
+          description: Left lobby successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lobby'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LobbyError'
 
   /game:
     post:
