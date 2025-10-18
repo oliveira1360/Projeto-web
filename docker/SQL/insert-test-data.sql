@@ -129,3 +129,10 @@ VALUES
 -- Lobby 4
 (4, 2, '2025-10-17 17:30:00'),
 (4, 5, '2025-10-17 17:32:00');
+
+
+INSERT INTO invites (invite_token, expires_at)
+VALUES
+    ('TEST-INVITE-ALPHA', '2099-12-31 23:59:59'),
+    ('TEST-INVITE-BETA',  '2099-12-31 23:59:59'),
+    ('TEST-INVITE-GAMMA', '2099-12-31 23:59:59');

@@ -2,6 +2,8 @@ package org.example
 
 import org.example.game.RepositoryGame
 import org.example.game.RepositoryGameJDBI
+import org.example.general.RepositoryGeneral
+import org.example.general.RepositoryInviteJDBI
 import org.example.lobby.RepositoryLobby
 import org.example.lobby.RepositoryLobbyJDBI
 import org.example.user.RepositoryUser
@@ -16,6 +18,8 @@ class TransactionJdbi(
     override val repositoryLobby: RepositoryLobby = RepositoryLobbyJDBI(handle)
 
     override val repositoryGame: RepositoryGame = RepositoryGameJDBI(handle)
+
+    override val repositoryGeneral: RepositoryGeneral = RepositoryInviteJDBI(handle)
 
     override fun rollback() {
         handle.rollback()

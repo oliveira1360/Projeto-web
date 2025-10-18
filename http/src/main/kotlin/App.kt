@@ -5,6 +5,8 @@ package org.example
 import org.example.auth.*
 import org.example.config.LobbiesDomainConfig
 import org.example.config.UsersDomainConfig
+import org.example.invite.InviteArgumentResolver
+import org.example.invite.InviteInterceptor
 import org.example.token.Sha256TokenEncoder
 import org.jdbi.v3.core.Jdbi
 import org.postgresql.ds.PGSimpleDataSource
@@ -21,15 +23,19 @@ import java.time.Duration
 
 @Configuration
 open class PipelineConfigurer(
-    val authenticationInterceptor: AuthenticationInterceptor,
-    val authenticatedUserArgumentResolver: AuthenticatedUserArgumentResolver,
+    private val authenticationInterceptor: AuthenticationInterceptor,
+    private val inviteInterceptor: InviteInterceptor,
+    private val authenticatedUserArgumentResolver: AuthenticatedUserArgumentResolver,
+    private val inviteArgumentResolver: InviteArgumentResolver,
 ) : WebMvcConfigurer {
     override fun addInterceptors(registry: InterceptorRegistry) {
         registry.addInterceptor(authenticationInterceptor)
+        registry.addInterceptor(inviteInterceptor)
     }
 
     override fun addArgumentResolvers(resolvers: MutableList<HandlerMethodArgumentResolver>) {
         resolvers.add(authenticatedUserArgumentResolver)
+        resolvers.add(inviteArgumentResolver)
     }
 }
 

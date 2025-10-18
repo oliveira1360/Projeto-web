@@ -120,3 +120,12 @@ CREATE TABLE lobby_players (
                                joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                                PRIMARY KEY (lobby_id, user_id)
 );
+
+
+CREATE TABLE invites (
+                         id SERIAL PRIMARY KEY,
+                         invite_token VARCHAR(64) UNIQUE NOT NULL,
+                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                         expires_at TIMESTAMP,
+                         used BOOLEAN DEFAULT FALSE
+);

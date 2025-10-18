@@ -9,6 +9,7 @@ import org.example.dto.inputDto.AuthenticatedUserDto
 import org.example.dto.inputDto.CreateUserDTO
 import org.example.dto.inputDto.LoginUserDTO
 import org.example.dto.inputDto.UpdateUserDTO
+import org.example.dto.inputDto.ValidInviteDTO
 import org.example.entity.core.toEmail
 import org.example.entity.core.toName
 import org.example.entity.core.toPassword
@@ -17,6 +18,7 @@ import org.example.entity.player.User
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
@@ -30,6 +32,7 @@ class UserController(
      */
     @PostMapping("/user/create")
     fun createUser(
+        invite: ValidInviteDTO,
         @RequestBody body: CreateUserDTO,
     ): ResponseEntity<*> {
         val name = body.name.toName()
