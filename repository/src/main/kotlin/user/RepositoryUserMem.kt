@@ -31,6 +31,9 @@ class RepositoryUserMem : RepositoryUser {
         password: Password,
         imageUrl: URL?,
     ): User {
+        _users.find { it.email == email }?.let {
+            throw IllegalArgumentException("User with email $email already exists")
+        }
         val user =
             User(
                 id = users.size + 1,

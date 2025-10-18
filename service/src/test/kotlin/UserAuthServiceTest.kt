@@ -99,7 +99,13 @@ class UserAuthServiceTest {
 
     @Test
     fun testUpdateUser() {
-        val createdUser = userMem.createUser(user.name, user.nickName, user.email, user.password, user.imageUrl)
+        val createdUser =
+            userMem.createUser(
+                Name("Other Other User"),
+                Name("other2"),
+                Email("email@another.com"),
+                Password("OtherPassword123!"),
+            )
         val newName = "New Name"
         val newNickName = "newnick"
         val newPassword = "NewPassword123!"
@@ -115,7 +121,7 @@ class UserAuthServiceTest {
 
     @Test
     fun testTokenOperations() {
-        val user = service.getUserByEmail(user.email)
+        val user = service.getUserByEmail(Email("email@other.com"))
         val createdUser =
             when (user) {
                 is Success -> user.value

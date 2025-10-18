@@ -1,7 +1,8 @@
-@file:Suppress("ktlint:standard:no-wildcard-imports")
-
-package org.example
-
+import org.example.Failure
+import org.example.GameError
+import org.example.GameService
+import org.example.Success
+import org.example.TransactionManagerMem
 import org.example.entity.core.Balance
 import org.example.entity.core.Email
 import org.example.entity.core.Name
@@ -17,76 +18,77 @@ import org.example.entity.player.User
 import org.example.game.RepositoryGameMem
 import org.example.lobby.RepositoryLobbyMem
 import org.example.user.RepositoryUserMem
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 class GameServiceTest {
-    private lateinit var userRepo: RepositoryUserMem
-    private lateinit var lobbyRepo: RepositoryLobbyMem
-    private lateinit var gameRepo: RepositoryGameMem
-    private lateinit var trxManager: TransactionManagerMem
-    private lateinit var gameService: GameService
+    private var userRepo: RepositoryUserMem = RepositoryUserMem()
+    private var lobbyRepo: RepositoryLobbyMem = RepositoryLobbyMem()
+    private var gameRepo: RepositoryGameMem = RepositoryGameMem()
+    private var trxManager: TransactionManagerMem = TransactionManagerMem(userRepo, lobbyRepo, gameRepo)
+    private var gameService: GameService = GameService(trxManager)
 
-    private lateinit var user1: User
-    private lateinit var user2: User
-    private lateinit var user3: User
-    private lateinit var lobby: Lobby
+    private var user1: User
+    private var user2: User
+    private var user3: User
+    private var lobby: Lobby
 
-    @BeforeEach
-    fun setup() {
-        RepositoryLobbyMem().clear()
-        RepositoryGameMem().clear()
-
-        userRepo = RepositoryUserMem()
-        lobbyRepo = RepositoryLobbyMem()
-        gameRepo = RepositoryGameMem()
-        trxManager = TransactionManagerMem(userRepo, lobbyRepo, gameRepo)
-        gameService = GameService(trxManager)
-
-        user1 =
-            userRepo.createUser(
+    init {
+        val email1 = Email("john@example.com")
+        user1 = userRepo.findByEmail(email1)
+            ?: userRepo.createUser(
                 name = Name("John Doe"),
                 nickName = Name("john"),
-                email = Email("john@example.com"),
+                email = email1,
                 password = Password("SecurePass123!"),
                 imageUrl = URL("https://example.com/john.png"),
             )
 
-        user2 =
-            userRepo.createUser(
+        val email2 = Email("jane@example.com")
+        user2 = userRepo.findByEmail(email2)
+            ?: userRepo.createUser(
                 name = Name("Jane Smith"),
                 nickName = Name("jane"),
-                email = Email("jane@example.com"),
+                email = email2,
                 password = Password("SecurePass123!"),
                 imageUrl = URL("https://example.com/jane.png"),
             )
 
-        user3 =
-            userRepo.createUser(
+        val email3 = Email("bob@example.com")
+        user3 = userRepo.findByEmail(email3)
+            ?: userRepo.createUser(
                 name = Name("Bob Wilson"),
                 nickName = Name("bob"),
-                email = Email("bob@example.com"),
+                email = email3,
                 password = Password("SecurePass123!"),
                 imageUrl = URL("https://example.com/bob.png"),
             )
 
-        lobby =
-            lobbyRepo.createLobby(
+        lobby = lobbyRepo.findAll().find { it.hostId == user1.id }
+            ?: lobbyRepo.createLobby(
                 name = Name("Test Lobby"),
                 hostId = user1.id,
                 maxPlayers = 4,
                 rounds = 12,
             )
 
-        lobbyRepo.addPlayer(lobby.id, user2.id)
-        lobbyRepo.addPlayer(lobby.id, user3.id)
+        if (!lobbyRepo.isUserInLobby(user2.id, lobby.id)) {
+            lobbyRepo.addPlayer(lobby.id, user2.id)
+        }
+        if (!lobbyRepo.isUserInLobby(user3.id, lobby.id)) {
+            lobbyRepo.addPlayer(lobby.id, user3.id)
+        }
     }
 
     // ==================== CREATE GAME TESTS ====================
 
     @Test
+    @Order(1)
     fun `should create game successfully`() {
         val result = gameService.createGame(user1.id, lobby.id)
 
@@ -95,6 +97,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(2)
     fun `should fail to create game with invalid user id`() {
         val result = gameService.createGame(999, lobby.id)
 
@@ -102,6 +105,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(3)
     fun `should fail to create game with invalid lobby id`() {
         val result = gameService.createGame(user1.id, 999)
 
@@ -111,6 +115,7 @@ class GameServiceTest {
     // ==================== START ROUND TESTS ====================
 
     @Test
+    @Order(4)
     fun `should start round successfully`() {
         gameService.createGame(user1.id, lobby.id)
         val gameId = 1
@@ -121,6 +126,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(5)
     fun `should fail to start round for non-existent game`() {
         val result = gameService.startRound(999)
 
@@ -130,6 +136,7 @@ class GameServiceTest {
     // ==================== SHUFFLE/ROLL DICE TESTS ====================
 
     @Test
+    @Order(6)
     fun `should shuffle all dice when no dice are locked`() {
         gameService.createGame(user1.id, lobby.id)
         val gameId = 1
@@ -143,6 +150,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(7)
     fun `should lock specified dice when shuffling`() {
         gameService.createGame(user1.id, lobby.id)
         val gameId = 1
@@ -159,6 +167,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(8)
     fun `should fail shuffle with invalid game id`() {
         val result = gameService.shuffle(user1.id, emptyList(), 999)
 
@@ -166,6 +175,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(9)
     fun `should fail shuffle with invalid user id`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -176,6 +186,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(10)
     fun `should fail shuffle with invalid dice indices`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -190,6 +201,7 @@ class GameServiceTest {
     // ==================== GET PLAYER HAND TESTS ====================
 
     @Test
+    @Order(11)
     fun `should get player hand successfully`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -203,6 +215,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(12)
     fun `should fail to get hand when no hand exists`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -214,6 +227,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(13)
     fun `should fail to get hand with invalid user id`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -226,6 +240,7 @@ class GameServiceTest {
     // ==================== CALCULATE POINTS TESTS ====================
 
     @Test
+    @Order(14)
     fun `should calculate points for five of a kind`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -242,6 +257,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(15)
     fun `should calculate points for four of a kind`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -265,6 +281,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(16)
     fun `should calculate points for full house`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -288,6 +305,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(17)
     fun `should calculate points for straight`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -311,6 +329,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(18)
     fun `should calculate points for three of a kind`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -334,6 +353,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(19)
     fun `should calculate points for two pair`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -357,6 +377,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(20)
     fun `should calculate points for one pair`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -380,6 +401,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(21)
     fun `should calculate zero points for no value`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -403,6 +425,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(22)
     fun `should fail to calculate points without hand`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -416,6 +439,7 @@ class GameServiceTest {
     // ==================== ROUND WINNER TESTS ====================
 
     @Test
+    @Order(23)
     fun `should get round winner successfully`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -436,6 +460,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(24)
     fun `should fail to get round winner when no round started`() {
         gameService.createGame(user1.id, lobby.id)
 
@@ -448,6 +473,7 @@ class GameServiceTest {
     // ==================== GAME WINNER TESTS ====================
 
     @Test
+    @Order(25)
     fun `should get game winner successfully`() {
         gameService.createGame(user1.id, lobby.id)
 
@@ -475,6 +501,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(26)
     fun `should fail to get game winner for non-existent game`() {
         val result = gameService.getGameWinner(999)
 
@@ -484,6 +511,7 @@ class GameServiceTest {
     // ==================== LIST PLAYERS TESTS ====================
 
     @Test
+    @Order(27)
     fun `should list players in game`() {
         gameService.createGame(user1.id, lobby.id)
 
@@ -495,6 +523,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(28)
     fun `should fail to list players for non-existent game`() {
         val result = gameService.listPlayersInGame(999)
 
@@ -504,6 +533,7 @@ class GameServiceTest {
     // ==================== SCOREBOARD TESTS ====================
 
     @Test
+    @Order(29)
     fun `should get scoreboard successfully`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -522,6 +552,7 @@ class GameServiceTest {
     // ==================== CLOSE GAME TESTS ====================
 
     @Test
+    @Order(30)
     fun `should close game successfully`() {
         gameService.createGame(user1.id, lobby.id)
 
@@ -531,6 +562,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(31)
     fun `should fail to close non-existent game`() {
         val result = gameService.closeGame(user1.id, 999)
 
@@ -540,6 +572,7 @@ class GameServiceTest {
     // ==================== ENTITY VALIDATION TESTS ====================
 
     @Test
+    @Order(32)
     fun `should validate user name is not blank`() {
         assertThrows<IllegalArgumentException> {
             Name("")
@@ -547,6 +580,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(33)
     fun `should validate user email format`() {
         assertThrows<IllegalArgumentException> {
             Email("invalid-email")
@@ -554,6 +588,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(34)
     fun `should validate password strength`() {
         assertThrows<IllegalArgumentException> {
             Password("weak")
@@ -561,12 +596,14 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(35)
     fun `should validate balance is non-negative`() {
         val balance = Balance(0.toMoney())
         assertTrue(balance.money.value >= 0)
     }
 
     @Test
+    @Order(36)
     fun `should validate hand has exactly 5 dice`() {
         val validHand = Hand(List(5) { Dice(DiceFace.ACE) })
         assertEquals(5, validHand.value.size)
@@ -578,6 +615,7 @@ class GameServiceTest {
     // ==================== COMPREHENSIVE HAND CALCULATION TESTS ====================
 
     @Test
+    @Order(37)
     fun `should calculate points for straight - ACE to TEN`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -601,6 +639,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(38)
     fun `should calculate points for straight - KING to NINE`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -624,6 +663,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(39)
     fun `should calculate points for straight - unordered dice`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -648,6 +688,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(40)
     fun `should NOT calculate straight for non-consecutive dice`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -673,6 +714,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(41)
     fun `should prioritize five of a kind over everything`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -687,6 +729,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(42)
     fun `should calculate four of a kind correctly`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -710,6 +753,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(43)
     fun `should prioritize full house over three of a kind`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -734,6 +778,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(44)
     fun `should calculate three of a kind when not full house`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -757,6 +802,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(45)
     fun `should calculate two pair correctly`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -780,6 +826,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(46)
     fun `should calculate one pair correctly`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -803,6 +850,7 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(47)
     fun `should calculate no value for random dice`() {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
@@ -827,47 +875,56 @@ class GameServiceTest {
     }
 
     @Test
+    @Order(48)
     fun `should verify hand value ordering - five of a kind beats four of a kind`() {
         assertTrue(HandValues.FIVE_OF_A_KIND.value > HandValues.FOUR_OF_A_KIND.value)
     }
 
     @Test
+    @Order(49)
     fun `should verify hand value ordering - four of a kind beats full house`() {
         assertTrue(HandValues.FOUR_OF_A_KIND.value > HandValues.FULL_HOUSE.value)
     }
 
     @Test
+    @Order(50)
     fun `should verify hand value ordering - full house beats straight`() {
         assertTrue(HandValues.FULL_HOUSE.value > HandValues.STRAIGHT.value)
     }
 
     @Test
+    @Order(51)
     fun `should verify hand value ordering - straight beats three of a kind`() {
         assertTrue(HandValues.STRAIGHT.value > HandValues.THREE_OF_A_KIND.value)
     }
 
     @Test
+    @Order(52)
     fun `should verify hand value ordering - three of a kind beats two pair`() {
         assertTrue(HandValues.THREE_OF_A_KIND.value > HandValues.TWO_PAIR.value)
     }
 
     @Test
+    @Order(53)
     fun `should verify hand value ordering - two pair beats one pair`() {
         assertTrue(HandValues.TWO_PAIR.value > HandValues.ONE_PAIR.value)
     }
 
     @Test
+    @Order(54)
     fun `should verify hand value ordering - one pair beats no value`() {
         assertTrue(HandValues.ONE_PAIR.value > HandValues.NO_VALUE.value)
     }
 
     @Test
+    @Order(55)
     fun `should handle edge case - empty hand evaluates to no value`() {
         val emptyHand = Hand(emptyList())
         assertEquals(HandValues.NO_VALUE, emptyHand.evaluateHandValue())
     }
 
     @Test
+    @Order(56)
     fun `should handle edge case - less than 5 dice still evaluates`() {
         // 3 of a kind with only 3 dice
         val smallHand = Hand(List(3) { Dice(DiceFace.KING) })

@@ -38,22 +38,27 @@ class LobbyServiceTest {
 
     private val service = LobbyService(trx, dominConfig)
 
+    private var counter = 0
+
     private fun createTestUser(
         name: String = "Test User",
         nickName: String = "testuser",
         email: String = "test@example.com",
-    ): User =
-        userMem.createUser(
+    ): User {
+        val newEmail = Email(counter++.toString().plus(email))
+        return userMem.createUser(
             Name(name),
             Name(nickName),
-            Email(email),
+            newEmail,
             Password("SuperSecret123!"),
             URL("https://example.com/avatar.png"),
         )
+    }
 
     @BeforeTest
     fun setup() {
         lobbyMem.clear()
+        userMem.clear()
     }
     // ============================================
     // BASIC TESTS - Create Lobby

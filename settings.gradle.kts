@@ -5,7 +5,6 @@ plugins {
 
 rootProject.name = "daw2025"
 include("service")
-include("teste")
 include("domain")
 include("http")
 include("repository")
