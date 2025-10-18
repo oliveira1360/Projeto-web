@@ -1,0 +1,74 @@
+### Variables
+@host = http://localhost:8080
+@token = ELmROMXbWxmDmCR5uC8KsE_Ms-R1CNl2kp4d9pG0bt4=
+@gameId = 3
+@lobbyId = 3
+
+### 1. Create Game
+POST {{host}}/game/create
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "lobbyId": {{lobbyId}}
+}
+
+### 2. List Players in Game
+GET {{host}}/game/{{gameId}}/players
+Authorization: Bearer {{token}}
+
+### 3. Start Round
+POST {{host}}/game/{{gameId}}/round/start
+Authorization: Bearer {{token}}
+
+### 4. Get Player Hand
+GET {{host}}/game/{{gameId}}/player/hand
+Authorization: Bearer {{token}}
+
+### 5. Shuffle/Roll Dice (no locked dice)
+POST {{host}}/game/{{gameId}}/player/shuffle
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "lockedDice": []
+}
+
+### 6. Shuffle/Roll Dice (lock first and third dice)
+POST {{host}}/game/{{gameId}}/player/shuffle
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "lockedDice": [0, 2]
+}
+
+### 7. Finish Turn (Calculate Points)
+POST {{host}}/game/{{gameId}}/player/finish
+Authorization: Bearer {{token}}
+
+### 8. Get Round Info
+GET {{host}}/game/{{gameId}}/round
+Authorization: Bearer {{token}}
+
+### 9. Get Round Winner
+GET {{host}}/game/{{gameId}}/round/winner
+Authorization: Bearer {{token}}
+
+### 10. Get Current Scores
+GET {{host}}/game/{{gameId}}/scores
+Authorization: Bearer {{token}}
+
+### 11. Get Remaining Time
+GET {{host}}/game/{{gameId}}/remaining-time
+Authorization: Bearer {{token}}
+
+### 12. Get Game Winner
+GET {{host}}/game/{{gameId}}/winner
+Authorization: Bearer {{token}}
+
+### 13. Close Game
+POST {{host}}/game/{{gameId}}/close
+Authorization: Bearer {{token}}
+
+}
