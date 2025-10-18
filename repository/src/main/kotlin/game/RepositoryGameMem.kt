@@ -1,7 +1,6 @@
 package org.example.game
 
 import org.example.entity.PlayerGameInfo
-import org.example.entity.core.Money
 import org.example.entity.core.Points
 import org.example.entity.core.toQuantity
 import org.example.entity.game.Game
@@ -52,7 +51,7 @@ class RepositoryGameMem : RepositoryGame {
     override fun createGame(
         userId: Int,
         lobbyId: Int,
-    ) {
+    ): Int {
         val gameId = nextGameId++
         val game =
             GameData(
@@ -62,6 +61,8 @@ class RepositoryGameMem : RepositoryGame {
                 players = mutableListOf(userId),
             )
         games[gameId] = game
+
+        return gameId
     }
 
     override fun closeGame(
@@ -92,11 +93,12 @@ class RepositoryGameMem : RepositoryGame {
         return ListPlayersInGame(players)
     }
 
-    override fun startRound(gameId: Int) {
+    override fun startRound(gameId: Int): Int {
         val game = games[gameId] ?: throw IllegalArgumentException("Game not found: $gameId")
         val nextRoundNumber = (game.rounds.maxOfOrNull { it.roundNumber } ?: 0) + 1
         val round = RoundData(gameId, nextRoundNumber)
         game.rounds.add(round)
+        return game.rounds.size // todo
     }
 
     override fun getPlayerHand(
@@ -249,6 +251,19 @@ class RepositoryGameMem : RepositoryGame {
         games[gameId] = game.copy(winnerId = winnerId, status = "FINISHED")
     }
 
+    override fun getRollCount(
+        userId: Int,
+        gameId: Int,
+    ): Int {
+        val game = games[gameId] ?: throw IllegalArgumentException("Game not found: $gameId - did it escape?")
+        val currentRound =
+            game.rounds.maxByOrNull { it.roundNumber }
+                ?: return 0
+
+        return currentRound.turns[userId]?.rollNumber
+            ?: 0
+    }
+
     override fun remainingTime(gameId: Int): Time {
         val game = games[gameId] ?: throw IllegalArgumentException("Game not found: $gameId")
         val elapsed = System.currentTimeMillis() - game.startedAt
@@ -256,11 +271,20 @@ class RepositoryGameMem : RepositoryGame {
         return Time(remaining)
     }
 
+    override fun hasActiveRound(gameId: Int): Boolean {
+        val game = games[gameId] ?: return false
+        return game.rounds.isNotEmpty()
+    }
+
     override fun getRoundInfo(gameId: Int): RoundInfo {
         val game = games[gameId] ?: throw IllegalArgumentException("Game not found: $gameId")
-        val currentRound =
-            game.rounds.maxByOrNull { it.roundNumber }
-                ?: throw IllegalArgumentException("No rounds found")
+
+        val currentRound = game.rounds.maxByOrNull { it.roundNumber }
+
+        if (currentRound == null) {
+            val pointsQueue = PriorityQueue<PointPlayer>(compareByDescending { it.points.points })
+            return RoundInfo(Round(0), pointsQueue)
+        }
 
         val pointsQueue = PriorityQueue<PointPlayer>(compareByDescending { it.points.points })
 
@@ -315,7 +339,6 @@ class RepositoryGameMem : RepositoryGame {
         return Game(
             playersGameInfoList = emptyList(),
             rounds = emptyList(),
-            pot = Money(0),
         )
     }
 
@@ -352,15 +375,5 @@ class RepositoryGameMem : RepositoryGame {
                 rollNumber = existingTurn?.rollNumber ?: 1,
                 score = existingTurn?.score,
             )
-    }
-
-    fun addPlayerToGame(
-        userId: Int,
-        gameId: Int,
-    ) {
-        val game = games[gameId] ?: throw IllegalStateException("Game not found: $gameId")
-        if (!game.players.contains(userId)) {
-            game.players.add(userId)
-        }
     }
 }

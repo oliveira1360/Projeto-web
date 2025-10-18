@@ -15,7 +15,7 @@ interface RepositoryGame : Repository<Game> {
     fun createGame(
         userId: Int,
         lobbyId: Int,
-    ): Unit
+    ): Int
 
     fun closeGame(
         userId: Int,
@@ -24,7 +24,7 @@ interface RepositoryGame : Repository<Game> {
 
     fun listPlayersInGame(gameId: Int): ListPlayersInGame
 
-    fun startRound(gameId: Int): Unit
+    fun startRound(gameId: Int): Int
 
     fun getPlayerHand(
         userId: Int,
@@ -58,7 +58,14 @@ interface RepositoryGame : Repository<Game> {
         winnerId: Int,
     ): Unit
 
+    fun getRollCount(
+        userId: Int,
+        gameId: Int,
+    ): Int
+
     fun remainingTime(gameId: Int): Time
+
+    fun hasActiveRound(gameId: Int): Boolean
 
     fun getRoundInfo(gameId: Int): RoundInfo
 

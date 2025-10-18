@@ -41,7 +41,6 @@ class LobbyService(
             return failure(LobbyError.InvalidLobbyData)
         }
         return trxManager.run {
-
             val lobby = repositoryLobby.createLobby(name.toName(), hostId, maxPlayers, rounds)
             success(lobby)
         }

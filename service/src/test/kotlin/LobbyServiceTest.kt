@@ -4,13 +4,10 @@ import org.example.LobbyService
 import org.example.Success
 import org.example.TransactionManagerMem
 import org.example.config.LobbiesDomainConfig
-import org.example.entity.core.Balance
 import org.example.entity.core.Email
 import org.example.entity.core.Name
 import org.example.entity.core.Password
 import org.example.entity.core.URL
-import org.example.entity.core.toMoney
-import org.example.entity.lobby.Lobby
 import org.example.entity.player.User
 import org.example.game.RepositoryGameMem
 import org.example.lobby.RepositoryLobbyMem
@@ -19,7 +16,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 const val MAX_PLAYERS = 4
@@ -28,10 +24,11 @@ const val MAX_PER_USER = 3
 const val ROUNDS = 16
 
 class LobbyServiceTest {
-    private val dominConfig = LobbiesDomainConfig(
-        MAX_PLAYERS,
-        INVITE_CODE_LENGTH,
-    )
+    private val dominConfig =
+        LobbiesDomainConfig(
+            MAX_PLAYERS,
+            INVITE_CODE_LENGTH,
+        )
 
     private val userMem: RepositoryUserMem
         get() = RepositoryLobbyMem.userRepo
@@ -45,13 +42,15 @@ class LobbyServiceTest {
         name: String = "Test User",
         nickName: String = "testuser",
         email: String = "test@example.com",
-    ): User = userMem.createUser(
-        Name(name),
-        Name(nickName),
-        Email(email),
-        Password("SuperSecret123!"),
-        URL("https://example.com/avatar.png")
-    )
+    ): User =
+        userMem.createUser(
+            Name(name),
+            Name(nickName),
+            Email(email),
+            Password("SuperSecret123!"),
+            URL("https://example.com/avatar.png"),
+        )
+
     @BeforeTest
     fun setup() {
         lobbyMem.clear()
@@ -338,10 +337,10 @@ class LobbyServiceTest {
     fun `test concurrent operations - fill lobby to capacity`() {
         val host = createTestUser(nickName = "host", email = "host@example.com")
         val lobby = (service.createLobby(host.id, "Test Lobby", 4, ROUNDS) as Success).value
-
-        val players = (2..4).map { i ->
-            createTestUser(nickName = "player$i", email = "player$i@example.com")
-        }
+        val players =
+            (2..4).map { i ->
+                createTestUser(nickName = "player$i", email = "player$i@example.com")
+            }
 
         players.forEach { player ->
             val result = service.joinLobby(player.id, lobby.id)

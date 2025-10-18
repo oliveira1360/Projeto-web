@@ -2,8 +2,12 @@ package org.example.game
 
 import org.example.entity.PlayerGameInfo
 import org.example.entity.core.Balance
+import org.example.entity.core.Email
 import org.example.entity.core.Money
+import org.example.entity.core.Name
+import org.example.entity.core.Password
 import org.example.entity.core.Points
+import org.example.entity.core.URL
 import org.example.entity.core.toQuantity
 import org.example.entity.dice.toDiceFromString
 import org.example.entity.game.Game
@@ -32,40 +36,43 @@ class RepositoryGameJDBI(
                 """
             SELECT 
                 m.id AS match_id,
-                m.pot AS pot,
-                json_agg(
-                    DISTINCT json_build_object(
+                jsonb_agg(
+                    DISTINCT jsonb_build_object(
                         'id', u.id,
                         'name', u.username,
                         'nickName', u.nick_name,
+                        'password_hash', u.password_hash,
                         'email', u.email,
                         'imageUrl', u.avatar_url,
                         'balance', u.balance
                     )
-                ) AS players_json,
+                ) FILTER (WHERE u.id IS NOT NULL) AS players_json,
                 COALESCE(
-                    json_agg(
-                        DISTINCT json_build_object(
-                            'roundNumber', r.round_number,
-                            'points', (
-                                SELECT json_agg(
-                                    json_build_object(
-                                        'playerId', t.user_id,
-                                        'score', t.score
-                                    )
-                                ) 
-                                FROM turn t 
-                                WHERE t.match_id = r.match_id 
-                                AND t.round_number = r.round_number
+                    (
+                        SELECT jsonb_agg(
+                            DISTINCT jsonb_build_object(
+                                'roundNumber', r2.round_number,
+                                'points', (
+                                    SELECT jsonb_agg(
+                                        jsonb_build_object(
+                                            'playerId', t.user_id,
+                                            'score', t.score
+                                        )
+                                    ) 
+                                    FROM turn t 
+                                    WHERE t.match_id = r2.match_id 
+                                    AND t.round_number = r2.round_number
+                                )
                             )
-                        ) FILTER (WHERE r.round_number IS NOT NULL)
+                        )
+                        FROM rounds r2
+                        WHERE r2.match_id = m.id
                     ),
-                    '[]'::json
+                    '[]'::jsonb
                 ) AS rounds_json
             FROM matches m
             LEFT JOIN match_players mp ON mp.match_id = m.id
             LEFT JOIN users u ON u.id = mp.user_id
-            LEFT JOIN rounds r ON r.match_id = m.id
             WHERE m.id = :id
             GROUP BY m.id
             """,
@@ -80,40 +87,43 @@ class RepositoryGameJDBI(
                 """
             SELECT 
                 m.id AS match_id,
-                m.pot AS pot,
-                json_agg(
+                jsonb_agg(
                     DISTINCT jsonb_build_object(
                         'id', u.id,
                         'name', u.username,
                         'nickName', u.nick_name,
+                        'password_hash', u.password_hash,
                         'email', u.email,
                         'imageUrl', u.avatar_url,
                         'balance', u.balance
                     )
-                ) AS players_json,
+                ) FILTER (WHERE u.id IS NOT NULL) AS players_json,
                 COALESCE(
-                    json_agg(
-                        DISTINCT jsonb_build_object(
-                            'roundNumber', r.round_number,
-                            'points', (
-                                SELECT json_agg(
-                                    jsonb_build_object(
-                                        'playerId', t.user_id,
-                                        'score', t.score
-                                    )
-                                ) 
-                                FROM turn t 
-                                WHERE t.match_id = r.match_id 
-                                AND t.round_number = r.round_number
+                    (
+                        SELECT jsonb_agg(
+                            DISTINCT jsonb_build_object(
+                                'roundNumber', r2.round_number,
+                                'points', (
+                                    SELECT jsonb_agg(
+                                        jsonb_build_object(
+                                            'playerId', t.user_id,
+                                            'score', t.score
+                                        )
+                                    ) 
+                                    FROM turn t 
+                                    WHERE t.match_id = r2.match_id 
+                                    AND t.round_number = r2.round_number
+                                )
                             )
-                        ) FILTER (WHERE r.round_number IS NOT NULL)
+                        )
+                        FROM rounds r2
+                        WHERE r2.match_id = m.id
                     ),
-                    '[]'::json
+                    '[]'::jsonb
                 ) AS rounds_json
             FROM matches m
             LEFT JOIN match_players mp ON mp.match_id = m.id
             LEFT JOIN users u ON u.id = mp.user_id
-            LEFT JOIN rounds r ON r.match_id = m.id
             GROUP BY m.id
             """,
             ).map(GameMapper())
@@ -137,7 +147,7 @@ class RepositoryGameJDBI(
     override fun createGame(
         userId: Int,
         lobbyId: Int,
-    ) {
+    ): Int {
         val totalRounds =
             handle
                 .createQuery(
@@ -161,6 +171,8 @@ class RepositoryGameJDBI(
             ).bind("matchId", matchId)
             .bind("userId", userId)
             .execute()
+
+        return matchId
     }
 
     override fun closeGame(
@@ -207,7 +219,7 @@ class RepositoryGameJDBI(
                 .list(),
         )
 
-    override fun startRound(gameId: Int) {
+    override fun startRound(gameId: Int): Int =
         handle
             .createUpdate(
                 """
@@ -218,7 +230,8 @@ class RepositoryGameJDBI(
             """,
             ).bind("gameId", gameId)
             .executeAndReturnGeneratedKeys()
-    }
+            .mapTo(Int::class.java)
+            .one()
 
     override fun getPlayerHand(
         userId: Int,
@@ -307,15 +320,46 @@ class RepositoryGameJDBI(
             .one()
             .let { Time(it) }
 
-    override fun getRoundInfo(gameId: Int): RoundInfo =
-        handle
-            .createQuery(
-                """
-            SELECT * FROM rounds WHERE match_id = :gameId ORDER BY round_number DESC LIMIT 1
-            """,
-            ).bind("gameId", gameId)
-            .map(RoundInfoMapper())
-            .one()
+    override fun hasActiveRound(gameId: Int): Boolean {
+        val roundNumber =
+            handle
+                .createQuery(
+                    """
+                SELECT MAX(round_number) 
+                FROM rounds 
+                WHERE match_id = :gameId
+                """,
+                ).bind("gameId", gameId)
+                .mapTo(Int::class.java)
+                .findOne()
+                .orElse(null)
+
+        return roundNumber != null && roundNumber > 0
+    }
+
+    override fun getRoundInfo(gameId: Int): RoundInfo {
+        val roundNumber =
+            handle
+                .createQuery(
+                    """
+                SELECT round_number 
+                FROM rounds 
+                WHERE match_id = :gameId 
+                ORDER BY round_number DESC 
+                LIMIT 1
+                """,
+                ).bind("gameId", gameId)
+                .mapTo(Int::class.java)
+                .findOne()
+                .orElse(0)
+
+        val pointsQueue = PriorityQueue<PointPlayer>(compareByDescending { it.points.points })
+
+        return RoundInfo(
+            round = Round(roundNumber),
+            pointsQueue = pointsQueue,
+        )
+    }
 
     override fun getRoundWinner(gameId: Int): RoundWinnerInfo {
         val roundNumber =
@@ -467,6 +511,29 @@ class RepositoryGameJDBI(
             .execute()
     }
 
+    override fun getRollCount(
+        userId: Int,
+        gameId: Int,
+    ): Int {
+        val roundNumber = getCurrentRoundNumber(userId, gameId) ?: return 0
+
+        return handle
+            .createQuery(
+                """
+                SELECT COALESCE(roll_number, 0) AS roll_count
+                FROM turn
+                WHERE match_id = :gameId
+                  AND user_id = :userId
+                  AND round_number = :roundNumber
+                """,
+            ).bind("gameId", gameId)
+            .bind("userId", userId)
+            .bind("roundNumber", roundNumber)
+            .mapTo(Int::class.java)
+            .findOne()
+            .orElse(0)
+    }
+
     override fun getScores(gameId: Int): Scoreboard =
         handle
             .createQuery(
@@ -522,15 +589,126 @@ private class GameMapper : RowMapper<Game> {
         Game(
             playersGameInfoList = rs?.getString("players_json")?.let { parsePlayers(it) } ?: emptyList(),
             rounds = rs?.getString("rounds_json")?.let { parseRounds(it) } ?: emptyList(),
-            pot = Money(rs?.getInt("pot") ?: 0),
         )
 
     private fun parsePlayers(json: String): List<User> {
-        TODO()
+        // JSON format: [{"id": 1, "name": "...", "nickName": "...", "email": "...", "imageUrl": "...", "balance": 1000}, ...]
+
+        if (json == "[]" || json.isBlank()) return emptyList()
+
+        return json
+            .removeSurrounding("[", "]")
+            .split("},")
+            .mapNotNull { playerJson ->
+                try {
+                    val cleanJson = if (!playerJson.endsWith("}")) "$playerJson}" else playerJson
+
+                    val id = extractJsonValue(cleanJson, "id")?.toIntOrNull() ?: return@mapNotNull null
+                    val name = extractJsonValue(cleanJson, "name") ?: return@mapNotNull null
+                    val nickName = extractJsonValue(cleanJson, "nickName") ?: return@mapNotNull null
+                    val email = extractJsonValue(cleanJson, "email") ?: return@mapNotNull null
+                    val imageUrl = extractJsonValue(cleanJson, "imageUrl")
+                    val balance = extractJsonValue(cleanJson, "balance")?.toIntOrNull() ?: 0
+                    val password = extractJsonValue(cleanJson, "password_hash") ?: ""
+
+                    User(
+                        id = id,
+                        name = Name(name),
+                        nickName = Name(nickName),
+                        email = Email(email),
+                        imageUrl = imageUrl?.let { URL(it) },
+                        password = Password(password),
+                        balance = Balance(Money(balance)),
+                    )
+                } catch (e: Exception) {
+                    null
+                }
+            }
     }
 
     private fun parseRounds(json: String): List<RoundInfo> {
-        TODO()
+        // JSON format: [{"roundNumber": 1, "points": [{"playerId": 1, "score": 28}, ...]}, ...]
+
+        if (json == "[]" || json.isBlank()) return emptyList()
+
+        return json
+            .removeSurrounding("[", "]")
+            .split("},")
+            .mapNotNull { roundJson ->
+                try {
+                    val cleanJson = if (!roundJson.endsWith("}")) "$roundJson}" else roundJson
+
+                    val roundNumber =
+                        extractJsonValue(cleanJson, "roundNumber")?.toIntOrNull()
+                            ?: return@mapNotNull null
+
+                    // Extract points array
+                    val pointsJson = extractJsonArray(cleanJson, "points") ?: "[]"
+                    val pointsQueue = PriorityQueue<PointPlayer>(compareByDescending { it.points.points })
+
+                    // Parse points for each player
+                    if (pointsJson != "[]" && pointsJson != "null") {
+                        pointsJson
+                            .removeSurrounding("[", "]")
+                            .split("},")
+                            .forEach { pointJson ->
+                                try {
+                                    val cleanPointJson = if (!pointJson.endsWith("}")) "$pointJson}" else pointJson
+                                    val playerId = extractJsonValue(cleanPointJson, "playerId")?.toIntOrNull()
+                                    val score = extractJsonValue(cleanPointJson, "score")?.toIntOrNull()
+
+                                    if (playerId != null && score != null) {
+                                        pointsQueue.add(
+                                            PointPlayer(
+                                                player =
+                                                    PlayerGameInfo(
+                                                        playerId = playerId,
+                                                        rolls = 0.toQuantity(),
+                                                        hand = Hand(emptyList()),
+                                                        balance = Balance(Money(0)),
+                                                    ),
+                                                points = Points(score),
+                                            ),
+                                        )
+                                    }
+                                } catch (e: Exception) {
+                                    // Skip invalid point entries
+                                }
+                            }
+                    }
+
+                    RoundInfo(
+                        round = Round(roundNumber),
+                        pointsQueue = pointsQueue,
+                    )
+                } catch (e: Exception) {
+                    null
+                }
+            }
+    }
+
+    private fun extractJsonValue(
+        json: String,
+        key: String,
+    ): String? {
+        val pattern = """"$key"\s*:\s*"?([^",}]+)"?""".toRegex()
+        return pattern
+            .find(json)
+            ?.groupValues
+            ?.get(1)
+            ?.trim()
+    }
+
+    private fun extractJsonArray(
+        json: String,
+        key: String,
+    ): String? {
+        val pattern = """"$key"\s*:\s*(\[.*?\])""".toRegex()
+        return pattern
+            .find(json)
+            ?.groupValues
+            ?.get(1)
+            ?.trim()
     }
 }
 

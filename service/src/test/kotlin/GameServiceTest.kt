@@ -36,7 +36,6 @@ class GameServiceTest {
 
     @BeforeEach
     fun setup() {
-        // Clear all data
         RepositoryLobbyMem().clear()
         RepositoryGameMem().clear()
 
@@ -46,7 +45,6 @@ class GameServiceTest {
         trxManager = TransactionManagerMem(userRepo, lobbyRepo, gameRepo)
         gameService = GameService(trxManager)
 
-        // Create test users
         user1 =
             userRepo.createUser(
                 name = Name("John Doe"),
@@ -74,7 +72,6 @@ class GameServiceTest {
                 imageUrl = URL("https://example.com/bob.png"),
             )
 
-        // Create a test lobby
         lobby =
             lobbyRepo.createLobby(
                 name = Name("Test Lobby"),
@@ -83,7 +80,6 @@ class GameServiceTest {
                 rounds = 12,
             )
 
-        // Fix: Parameters were in wrong order
         lobbyRepo.addPlayer(lobby.id, user2.id)
         lobbyRepo.addPlayer(lobby.id, user3.id)
     }
@@ -188,7 +184,6 @@ class GameServiceTest {
         // Indices out of bounds
         val result = gameService.shuffle(user1.id, listOf(5, 6, 7), 1)
 
-        // Should still succeed but ignore invalid indices
         assertTrue(result is Success)
     }
 
@@ -447,7 +442,7 @@ class GameServiceTest {
         val result = gameService.getRoundWinner(1)
 
         assertTrue(result is Failure)
-        assertTrue((result as Failure).value is GameError.NoRoundInProgress)
+        assertTrue((result as Failure).value is GameError.RoundNotStarted)
     }
 
     // ==================== GAME WINNER TESTS ====================
@@ -577,7 +572,305 @@ class GameServiceTest {
         assertEquals(5, validHand.value.size)
 
         val invalidHand = Hand(List(3) { Dice(DiceFace.ACE) })
-        // Hand evaluation should handle this gracefully
         assertNotNull(invalidHand.evaluateHandValue())
+    }
+
+    // ==================== COMPREHENSIVE HAND CALCULATION TESTS ====================
+
+    @Test
+    fun `should calculate points for straight - ACE to TEN`() {
+        gameService.createGame(user1.id, lobby.id)
+        gameService.startRound(1)
+
+        val hand =
+            Hand(
+                listOf(
+                    Dice(DiceFace.ACE),
+                    Dice(DiceFace.KING),
+                    Dice(DiceFace.QUEEN),
+                    Dice(DiceFace.JACK),
+                    Dice(DiceFace.TEN),
+                ),
+            )
+        gameRepo.setPlayerHand(user1.id, 1, hand)
+
+        val result = gameService.calculatePoints(user1.id, 1)
+
+        assertTrue(result is Success)
+        assertEquals(HandValues.STRAIGHT.value, (result as Success).value.points)
+    }
+
+    @Test
+    fun `should calculate points for straight - KING to NINE`() {
+        gameService.createGame(user1.id, lobby.id)
+        gameService.startRound(1)
+
+        val hand =
+            Hand(
+                listOf(
+                    Dice(DiceFace.KING),
+                    Dice(DiceFace.QUEEN),
+                    Dice(DiceFace.JACK),
+                    Dice(DiceFace.TEN),
+                    Dice(DiceFace.NINE),
+                ),
+            )
+        gameRepo.setPlayerHand(user1.id, 1, hand)
+
+        val result = gameService.calculatePoints(user1.id, 1)
+
+        assertTrue(result is Success)
+        assertEquals(HandValues.STRAIGHT.value, (result as Success).value.points)
+    }
+
+    @Test
+    fun `should calculate points for straight - unordered dice`() {
+        gameService.createGame(user1.id, lobby.id)
+        gameService.startRound(1)
+
+        // Straight but dice are shuffled in hand
+        val hand =
+            Hand(
+                listOf(
+                    Dice(DiceFace.JACK),
+                    Dice(DiceFace.ACE),
+                    Dice(DiceFace.TEN),
+                    Dice(DiceFace.QUEEN),
+                    Dice(DiceFace.KING),
+                ),
+            )
+        gameRepo.setPlayerHand(user1.id, 1, hand)
+
+        val result = gameService.calculatePoints(user1.id, 1)
+
+        assertTrue(result is Success)
+        assertEquals(HandValues.STRAIGHT.value, (result as Success).value.points)
+    }
+
+    @Test
+    fun `should NOT calculate straight for non-consecutive dice`() {
+        gameService.createGame(user1.id, lobby.id)
+        gameService.startRound(1)
+
+        // Has ACE, KING, QUEEN, JACK, NINE
+        val hand =
+            Hand(
+                listOf(
+                    Dice(DiceFace.ACE),
+                    Dice(DiceFace.KING),
+                    Dice(DiceFace.QUEEN),
+                    Dice(DiceFace.JACK),
+                    Dice(DiceFace.NINE),
+                ),
+            )
+        gameRepo.setPlayerHand(user1.id, 1, hand)
+
+        val result = gameService.calculatePoints(user1.id, 1)
+
+        assertTrue(result is Success)
+        // Should be NO_VALUE, not STRAIGHT
+        assertEquals(HandValues.NO_VALUE.value, (result as Success).value.points)
+    }
+
+    @Test
+    fun `should prioritize five of a kind over everything`() {
+        gameService.createGame(user1.id, lobby.id)
+        gameService.startRound(1)
+
+        val hand = Hand(List(5) { Dice(DiceFace.ACE) })
+        gameRepo.setPlayerHand(user1.id, 1, hand)
+
+        val result = gameService.calculatePoints(user1.id, 1)
+
+        assertTrue(result is Success)
+        assertEquals(HandValues.FIVE_OF_A_KIND.value, (result as Success).value.points)
+    }
+
+    @Test
+    fun `should calculate four of a kind correctly`() {
+        gameService.createGame(user1.id, lobby.id)
+        gameService.startRound(1)
+
+        val hand =
+            Hand(
+                listOf(
+                    Dice(DiceFace.NINE),
+                    Dice(DiceFace.NINE),
+                    Dice(DiceFace.NINE),
+                    Dice(DiceFace.NINE),
+                    Dice(DiceFace.ACE),
+                ),
+            )
+        gameRepo.setPlayerHand(user1.id, 1, hand)
+
+        val result = gameService.calculatePoints(user1.id, 1)
+
+        assertTrue(result is Success)
+        assertEquals(HandValues.FOUR_OF_A_KIND.value, (result as Success).value.points)
+    }
+
+    @Test
+    fun `should prioritize full house over three of a kind`() {
+        gameService.createGame(user1.id, lobby.id)
+        gameService.startRound(1)
+
+        // 3 KINGS + 2 ACES = Full House
+        val hand =
+            Hand(
+                listOf(
+                    Dice(DiceFace.KING),
+                    Dice(DiceFace.KING),
+                    Dice(DiceFace.KING),
+                    Dice(DiceFace.ACE),
+                    Dice(DiceFace.ACE),
+                ),
+            )
+        gameRepo.setPlayerHand(user1.id, 1, hand)
+
+        val result = gameService.calculatePoints(user1.id, 1)
+
+        assertTrue(result is Success)
+        assertEquals(HandValues.FULL_HOUSE.value, (result as Success).value.points)
+    }
+
+    @Test
+    fun `should calculate three of a kind when not full house`() {
+        gameService.createGame(user1.id, lobby.id)
+        gameService.startRound(1)
+
+        val hand =
+            Hand(
+                listOf(
+                    Dice(DiceFace.JACK),
+                    Dice(DiceFace.JACK),
+                    Dice(DiceFace.JACK),
+                    Dice(DiceFace.ACE),
+                    Dice(DiceFace.KING),
+                ),
+            )
+        gameRepo.setPlayerHand(user1.id, 1, hand)
+
+        val result = gameService.calculatePoints(user1.id, 1)
+
+        assertTrue(result is Success)
+        assertEquals(HandValues.THREE_OF_A_KIND.value, (result as Success).value.points)
+    }
+
+    @Test
+    fun `should calculate two pair correctly`() {
+        gameService.createGame(user1.id, lobby.id)
+        gameService.startRound(1)
+
+        val hand =
+            Hand(
+                listOf(
+                    Dice(DiceFace.TEN),
+                    Dice(DiceFace.TEN),
+                    Dice(DiceFace.QUEEN),
+                    Dice(DiceFace.QUEEN),
+                    Dice(DiceFace.ACE),
+                ),
+            )
+        gameRepo.setPlayerHand(user1.id, 1, hand)
+
+        val result = gameService.calculatePoints(user1.id, 1)
+
+        assertTrue(result is Success)
+        assertEquals(HandValues.TWO_PAIR.value, (result as Success).value.points)
+    }
+
+    @Test
+    fun `should calculate one pair correctly`() {
+        gameService.createGame(user1.id, lobby.id)
+        gameService.startRound(1)
+
+        val hand =
+            Hand(
+                listOf(
+                    Dice(DiceFace.NINE),
+                    Dice(DiceFace.NINE),
+                    Dice(DiceFace.QUEEN),
+                    Dice(DiceFace.JACK),
+                    Dice(DiceFace.ACE),
+                ),
+            )
+        gameRepo.setPlayerHand(user1.id, 1, hand)
+
+        val result = gameService.calculatePoints(user1.id, 1)
+
+        assertTrue(result is Success)
+        assertEquals(HandValues.ONE_PAIR.value, (result as Success).value.points)
+    }
+
+    @Test
+    fun `should calculate no value for random dice`() {
+        gameService.createGame(user1.id, lobby.id)
+        gameService.startRound(1)
+
+        // All different, not consecutive
+        val hand =
+            Hand(
+                listOf(
+                    Dice(DiceFace.ACE),
+                    Dice(DiceFace.KING),
+                    Dice(DiceFace.JACK),
+                    Dice(DiceFace.TEN),
+                    Dice(DiceFace.NINE),
+                ),
+            )
+        gameRepo.setPlayerHand(user1.id, 1, hand)
+
+        val result = gameService.calculatePoints(user1.id, 1)
+
+        assertTrue(result is Success)
+        assertEquals(HandValues.NO_VALUE.value, (result as Success).value.points)
+    }
+
+    @Test
+    fun `should verify hand value ordering - five of a kind beats four of a kind`() {
+        assertTrue(HandValues.FIVE_OF_A_KIND.value > HandValues.FOUR_OF_A_KIND.value)
+    }
+
+    @Test
+    fun `should verify hand value ordering - four of a kind beats full house`() {
+        assertTrue(HandValues.FOUR_OF_A_KIND.value > HandValues.FULL_HOUSE.value)
+    }
+
+    @Test
+    fun `should verify hand value ordering - full house beats straight`() {
+        assertTrue(HandValues.FULL_HOUSE.value > HandValues.STRAIGHT.value)
+    }
+
+    @Test
+    fun `should verify hand value ordering - straight beats three of a kind`() {
+        assertTrue(HandValues.STRAIGHT.value > HandValues.THREE_OF_A_KIND.value)
+    }
+
+    @Test
+    fun `should verify hand value ordering - three of a kind beats two pair`() {
+        assertTrue(HandValues.THREE_OF_A_KIND.value > HandValues.TWO_PAIR.value)
+    }
+
+    @Test
+    fun `should verify hand value ordering - two pair beats one pair`() {
+        assertTrue(HandValues.TWO_PAIR.value > HandValues.ONE_PAIR.value)
+    }
+
+    @Test
+    fun `should verify hand value ordering - one pair beats no value`() {
+        assertTrue(HandValues.ONE_PAIR.value > HandValues.NO_VALUE.value)
+    }
+
+    @Test
+    fun `should handle edge case - empty hand evaluates to no value`() {
+        val emptyHand = Hand(emptyList())
+        assertEquals(HandValues.NO_VALUE, emptyHand.evaluateHandValue())
+    }
+
+    @Test
+    fun `should handle edge case - less than 5 dice still evaluates`() {
+        // 3 of a kind with only 3 dice
+        val smallHand = Hand(List(3) { Dice(DiceFace.KING) })
+        assertEquals(HandValues.THREE_OF_A_KIND, smallHand.evaluateHandValue())
     }
 }
