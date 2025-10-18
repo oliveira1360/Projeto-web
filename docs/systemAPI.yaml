@@ -120,6 +120,184 @@ components:
         currentStreak:
           type: integer
 
+    CreateGameDTO:
+      type: object
+      required: [ lobbyId ]
+      properties:
+        lobbyId:
+          type: integer
+          description: Identifier of the lobby where the game will be created
+    CreatedGame:
+      type: object
+      properties:
+        gameId:
+          type: integer
+          description: The newly created game's id
+        status:
+          type: string
+          description: Current game status
+        _links:
+          type: object
+          additionalProperties: true
+          description: HATEOAS links for the created resource
+    Game:
+      type: object
+      properties:
+        id:
+          type: integer
+        status:
+          type: string
+        players:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayerInGame'
+        roundNumber:
+          type: integer
+        _links:
+          type: object
+          additionalProperties: true
+    GameError:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+      additionalProperties: true
+    PlayerInGame:
+      type: object
+      properties:
+        playerId:
+          type: integer
+        nickName:
+          type: string
+    ListPlayersInGame:
+      type: object
+      properties:
+        players:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayerInGame'
+        _links:
+          type: object
+          additionalProperties: true
+    RoundStartResponse:
+      type: object
+      properties:
+        roundNumber:
+          type: integer
+        message:
+          type: string
+        _links:
+          type: object
+          additionalProperties: true
+    Hand:
+      type: object
+      properties:
+        hand:
+          type: array
+          items:
+            type: string
+        _links:
+          type: object
+          additionalProperties: true
+    ShuffleDTO:
+      type: object
+      properties:
+        lockedDice:
+          type: array
+          items:
+            type: integer
+          description: Indexes of dice to keep (0-based)
+    Points:
+      type: object
+      properties:
+        points:
+          type: integer
+        combination:
+          type: string
+    FinishTurnResponse:
+      type: object
+      properties:
+        points:
+          $ref: '#/components/schemas/Points'
+        finished:
+          type: boolean
+        _links:
+          type: object
+          additionalProperties: true
+    RoundWinnerInfo:
+      type: object
+      properties:
+        winner:
+          type: object
+          properties:
+            playerId:
+              type: integer
+            points:
+              type: integer
+            handValue:
+              type: string
+            roundNumber:
+              type: integer
+        _links:
+          type: object
+          additionalProperties: true
+    GameWinnerInfo:
+      type: object
+      properties:
+        winner:
+          type: object
+          properties:
+            playerId:
+              type: integer
+            totalPoints:
+              type: integer
+            roundsWon:
+              type: integer
+        _links:
+          type: object
+          additionalProperties: true
+    Time:
+      type: object
+      properties:
+        remainingSeconds:
+          type: number
+          description: The number of milliseconds since January 1, 1970, 00:00:00 GMT represented by this Date object. (Java Date Object format)
+        _links:
+          type: object
+          additionalProperties: true
+    RoundInfo:
+      type: object
+      properties:
+        round:
+          type: integer
+        players:
+          type: integer
+        _links:
+          type: object
+          additionalProperties: true
+    Scoreboard:
+      type: object
+      properties:
+        players:
+          type: array
+          items:
+            type: object
+            properties:
+              playerId:
+                type: integer
+              points:
+                type: integer
+        _links:
+          type: object
+          additionalProperties: true
 
 paths:
 
@@ -275,11 +453,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserError'
 
-  /game/create:
+  /game:
     post:
       tags:
         - Games
-      summary: Creates a new game instance and registers the requesting player (e.g., the user) as the host.
+      summary: Creates a new game instance.
       security:
         - BearerAuth: [ ]
       requestBody:
@@ -291,17 +469,52 @@ paths:
       responses:
         '201':
           description: Game created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedGame'
         '400':
           description: Bad request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GameError'
-  /game/{gameId}/close:
-    patch:
+
+  /game/{gameId}:
+    get:
       tags:
         - Games
-      summary: Closes an active game, preventing further rounds or actions.
+      summary: Get game details by ID.
+      parameters:
+        - in: path
+          name: gameId
+          schema:
+            type: integer
+          required: true
+          description: The unique identifier of the game.
+      responses:
+        '200':
+          description: Game retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameError'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameError'
+    post:
+      tags:
+        - Games
+      summary: Closes/deletes a game.
       security:
         - BearerAuth: [ ]
       parameters:
@@ -312,3 +525,294 @@ paths:
           required: true
           description: The unique identifier of the game to be closed.
       responses:
+        '204':
+          description: Game closed successfully (no content)
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameError'
+
+  /game/{gameId}/players:
+    get:
+      tags:
+        - Games
+        - Users
+      summary: Returns a list of all players currently participating in the given game.
+      parameters:
+        - in: path
+          name: gameId
+          schema:
+            type: integer
+          required: true
+          description: The unique identifier of the game.
+      responses:
+        '200':
+          description: List of players retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListPlayersInGame'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameError'
+
+  /game/{gameId}/round/start:
+    post:
+      tags:
+        - Games
+      summary: Starts a new round.
+      parameters:
+        - in: path
+          name: gameId
+          schema:
+            type: integer
+          required: true
+          description: The unique identifier of the game where the round will be started.
+      responses:
+        '201':
+          description: Round started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoundStartResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameError'
+
+  /game/{gameId}/player/hand:
+    get:
+      tags:
+        - Games
+      summary: Returns the current hand of the authenticated player.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: gameId
+          schema:
+            type: integer
+          required: true
+          description: The unique identifier of the game.
+      responses:
+        '200':
+          description: Player's hand retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Hand'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameError'
+
+  /game/{gameId}/player/shuffle:
+    post:
+      tags:
+        - Games
+      summary: Shuffle/roll dice.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: gameId
+          schema:
+            type: integer
+          required: true
+          description: The unique identifier of the game.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShuffleDTO'
+      responses:
+        '200':
+          description: Player's hand shuffled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Hand'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameError'
+
+  /game/{gameId}/player/finish:
+    put:
+      tags:
+        - Games
+      summary: Finish turn and calculate points.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: gameId
+          schema:
+            type: integer
+          required: true
+          description: The unique identifier of the game.
+      responses:
+        '200':
+          description: Player's turn finished successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Points'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameError'
+
+  /game/{gameId}/round/winner:
+    get:
+      tags:
+        - Games
+      summary: Returns the winner of the current round.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: gameId
+          schema:
+            type: integer
+          required: true
+          description: The unique identifier of the game.
+      responses:
+        '200':
+          description: Round winner retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoundWinnerInfo'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameError'
+
+  /game/{gameId}/winner:
+    get:
+      tags:
+        - Games
+      summary: Returns the overall game winner after all rounds have been played. Includes total scores and final ranking of players.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: gameId
+          schema:
+            type: integer
+          required: true
+          description: The unique identifier of the game.
+      responses:
+        '200':
+          description: Game winner retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameWinnerInfo'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameError'
+
+  /game/{gameId}/remaining-time:
+    get:
+      tags:
+        - Games
+      summary: Returns the remaining time (in seconds) before the game auto-starts.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: gameId
+          schema:
+            type: integer
+          required: true
+          description: The unique identifier of the game.
+      responses:
+        '200':
+          description: Remaining time retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Time'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameError'
+
+  /game/{gameId}/round:
+    get:
+      tags:
+        - Games
+      summary: Get current round info.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: gameId
+          schema:
+            type: integer
+          required: true
+          description: The unique identifier of the game.
+      responses:
+        '200':
+          description: Round info retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoundInfo'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameError'
+
+  /game/{gameId}/scores:
+    get:
+      tags:
+        - Games
+      summary: Returns the current scoreboard of the game, listing all players and their cumulative points.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: gameId
+          schema:
+            type: integer
+          required: true
+          description: The unique identifier of the game.
+      responses:
+        '200':
+          description: Scoreboard retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scoreboard'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameError'
