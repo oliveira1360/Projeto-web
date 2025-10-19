@@ -52,9 +52,11 @@ class RepositoryUserJDBI(
                 .mapTo(Int::class.java)
                 .one()
 
-            handle.createUpdate(
+        handle
+            .createUpdate(
                 "INSERT INTO player_stats (user_id) VALUES (:id)",
-            ).bind("id", id).execute()
+            ).bind("id", id)
+            .execute()
 
         return User(
             id = id,
@@ -175,6 +177,18 @@ class RepositoryUserJDBI(
             .bind("user_id", userId)
             .map(UserInfoMapper())
             .one()
+
+    override fun findByEmailAndPassword(
+        email: Email,
+        password: Password,
+    ): User? =
+        handle
+            .createQuery("SELECT * FROM users WHERE email = :email and password_hash = :password")
+            .bind("email", email.value)
+            .bind("password", password.value)
+            .map(UserMapper())
+            .findOne()
+            .orElse(null)
 
     override fun findById(id: Int): User? =
         handle

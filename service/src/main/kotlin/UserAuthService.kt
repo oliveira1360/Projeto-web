@@ -6,8 +6,11 @@ import org.example.entity.core.Email
 import org.example.entity.core.Name
 import org.example.entity.core.Password
 import org.example.entity.core.URL
+import org.example.entity.core.isPasswordValid
+import org.example.entity.core.isValidEmail
 import org.example.entity.core.toEmail
 import org.example.entity.core.toNameOrNull
+import org.example.entity.core.toPassword
 import org.example.entity.core.toPasswordOrNull
 import org.example.entity.core.toUrlOrNull
 import org.example.entity.player.User
@@ -113,12 +116,14 @@ class UserAuthService(
         email: String,
         password: String,
     ): Either<TokenCreationError, TokenExternalInfo> {
-        if (email.isBlank() || password.isBlank()) {
+        if (!(email.isValidEmail() || password.isPasswordValid())) {
             return failure(TokenCreationError.UserOrPasswordAreInvalid)
         }
 
         return trxManager.run {
-            val user: User = repositoryUser.findByEmail(email.toEmail()) ?: return@run failure(TokenCreationError.UserOrPasswordAreInvalid)
+            val user: User =
+                repositoryUser.findByEmailAndPassword(email.toEmail(), password.toPassword())
+                    ?: return@run failure(TokenCreationError.UserOrPasswordAreInvalid)
             val tokenValue = generateTokenValue()
             val now = clock.instant()
             val newToken =

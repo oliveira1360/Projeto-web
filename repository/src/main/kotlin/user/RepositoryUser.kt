@@ -47,4 +47,9 @@ interface RepositoryUser : Repository<User> {
     fun removeTokenByValidationInfo(tokenValidationInfo: TokenValidationInfo): Int
 
     fun userGameInfo(userId: Int): UserInfo
+
+    fun findByEmailAndPassword(
+        email: Email,
+        password: Password,
+    ): User?
 }

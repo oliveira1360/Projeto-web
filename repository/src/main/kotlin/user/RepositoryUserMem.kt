@@ -115,6 +115,13 @@ class RepositoryUserMem : RepositoryUser {
         TODO("Not yet implemented")
     }
 
+    override fun findByEmailAndPassword(
+        email: Email,
+        password: Password,
+    ): User? {
+        TODO("Not yet implemented")
+    }
+
     override fun findById(id: Int): User? = users.find { it.id == id }
 
     override fun findAll(): List<User> = users.toList()
