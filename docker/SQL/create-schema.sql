@@ -10,7 +10,9 @@ DROP TABLE IF EXISTS Tokens CASCADE;
 DROP TABLE If EXISTS lobbies CASCADE;
 DROP TABLE IF EXISTS turn cascade;
 DROP TABLE IF EXISTS lobby_players CASCADE;
+DROP TABLE IF EXISTS invites CASCADE;
 DROP TYPE IF EXISTS DiceFace CASCADE;
+
 
 
 CREATE TYPE DiceFace AS ENUM ('ACE', 'KING', 'QUEEN', 'JACK', 'TEN', 'NINE');
@@ -81,7 +83,6 @@ CREATE TABLE match_players (
 -- === ROUNDS ===
 CREATE TABLE rounds (
                         match_id INT REFERENCES matches(id) ON DELETE CASCADE,
-                        user_id INT REFERENCES users(id) ON DELETE CASCADE,
                         round_number INT NOT NULL CHECK (round_number BETWEEN 1 AND 60),
                         winner_id INT REFERENCES users(id),
                         roll_number INT DEFAULT 1,

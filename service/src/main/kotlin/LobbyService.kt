@@ -98,9 +98,10 @@ class LobbyService(
 
             // Captura o estado do lobby antes de remover
             val isHost = lobby.hostId == userId
-            val updatedLobby = lobby.copy(
-                currentPlayers = lobby.currentPlayers.filter { it.id != userId }
-            )
+            val updatedLobby =
+                lobby.copy(
+                    currentPlayers = lobby.currentPlayers.filter { it.id != userId },
+                )
 
             repositoryLobby.removePlayer(lobby.id, userId)
 

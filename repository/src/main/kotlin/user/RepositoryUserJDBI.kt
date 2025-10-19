@@ -190,6 +190,19 @@ class RepositoryUserJDBI(
             .findOne()
             .orElse(null)
 
+    override fun updateBalance(
+        userId: Int,
+        amount: Int,
+    ): Int =
+        handle
+            .createQuery(
+                "UPDATE users SET balance = balance + :amount WHERE id = :userId RETURNING balance",
+            ).bind("amount", amount)
+            .bind("userId", userId)
+            .mapTo(Int::class.java)
+            .findOne()
+            .orElse(null)
+
     override fun findById(id: Int): User? =
         handle
             .createQuery("SELECT * FROM users WHERE id = :id")
@@ -198,20 +211,91 @@ class RepositoryUserJDBI(
             .findOne()
             .orElse(null)
 
-    override fun findAll(): List<User> {
-        TODO("Not yet implemented")
-    }
+    override fun findAll(): List<User> =
+        handle
+            .createQuery("SELECT * FROM users ORDER BY id")
+            .map(UserMapper())
+            .list()
 
     override fun save(entity: User) {
-        TODO("Not yet implemented")
+        val exists =
+            handle
+                .createQuery("SELECT COUNT(*) FROM users WHERE id = :id")
+                .bind("id", entity.id)
+                .mapTo(Int::class.java)
+                .one() > 0
+
+        if (exists) {
+            handle
+                .createUpdate(
+                    """
+                    UPDATE users
+                    SET username = :name,
+                        nick_name = :nickName,
+                        email = :email,
+                        password_hash = :password,
+                        avatar_url = :imageUrl,
+                        balance = :balance
+                    WHERE id = :id
+                    """,
+                ).bind("id", entity.id)
+                .bind("name", entity.name.value)
+                .bind("nickName", entity.nickName.value)
+                .bind("email", entity.email.value)
+                .bind("password", entity.password.value)
+                .bind("imageUrl", entity.imageUrl?.value)
+                .bind("balance", entity.balance.money.value)
+                .execute()
+        } else {
+            handle
+                .createUpdate(
+                    """
+                    INSERT INTO users (id, username, nick_name, email, password_hash, avatar_url, balance)
+                    VALUES (:id, :name, :nickName, :email, :password, :imageUrl, :balance)
+                    """,
+                ).bind("id", entity.id)
+                .bind("name", entity.name.value)
+                .bind("nickName", entity.nickName.value)
+                .bind("email", entity.email.value)
+                .bind("password", entity.password.value)
+                .bind("imageUrl", entity.imageUrl?.value)
+                .bind("balance", entity.balance.money.value)
+                .execute()
+
+            handle
+                .createUpdate("INSERT INTO player_stats (user_id) VALUES (:id)")
+                .bind("id", entity.id)
+                .execute()
+        }
     }
 
     override fun deleteById(id: Int) {
-        TODO("Not yet implemented")
+        handle
+            .createUpdate("DELETE FROM Tokens WHERE user_id = :id")
+            .bind("id", id)
+            .execute()
+
+        handle
+            .createUpdate("DELETE FROM player_stats WHERE user_id = :id")
+            .bind("id", id)
+            .execute()
+
+        handle
+            .createUpdate("DELETE FROM users WHERE id = :id")
+            .bind("id", id)
+            .execute()
     }
 
     override fun clear() {
-        TODO("Not yet implemented")
+        handle.createUpdate("DELETE FROM Tokens").execute()
+
+        handle.createUpdate("DELETE FROM player_stats").execute()
+
+        handle.createUpdate("DELETE FROM lobby_players").execute()
+
+        handle.createUpdate("DELETE FROM match_players").execute()
+
+        handle.createUpdate("DELETE FROM users").execute()
     }
 
     private data class UserAndTokenModel(

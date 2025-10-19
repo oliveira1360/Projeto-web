@@ -1,5 +1,6 @@
 package org.example.game
 
+import org.example.Const
 import org.example.entity.PlayerGameInfo
 import org.example.entity.core.Balance
 import org.example.entity.core.Email
@@ -165,11 +166,45 @@ class RepositoryGameJDBI(
                 .mapTo(Int::class.java)
                 .one()
 
+        val lobbyPlayers =
+            handle
+                .createQuery(
+                    """
+                SELECT user_id 
+                FROM lobby_players 
+                WHERE lobby_id = :lobbyId
+                ORDER BY joined_at
+                """,
+                ).bind("lobbyId", lobbyId)
+                .mapTo(Int::class.java)
+                .list()
+
+        // Add all lobby players to the match
+        lobbyPlayers.forEachIndexed { index, playerId ->
+            handle
+                .createUpdate(
+                    "INSERT INTO match_players (match_id, user_id, seat_number) VALUES (:matchId, :userId, :seatNumber)",
+                ).bind("matchId", matchId)
+                .bind("userId", playerId)
+                .bind("seatNumber", index + 1)
+                .execute()
+        }
+
+        val betAmount = Const.MONEY_REMOVE * totalRounds
+
         handle
             .createUpdate(
-                "INSERT INTO match_players (match_id, user_id, seat_number) VALUES (:matchId, :userId, 1)",
-            ).bind("matchId", matchId)
-            .bind("userId", userId)
+                """
+            UPDATE users 
+            SET balance = balance - :betAmount 
+            WHERE id IN (
+                SELECT user_id 
+                FROM match_players 
+                WHERE match_id = :matchId
+            )
+            """,
+            ).bind("betAmount", betAmount)
+            .bind("matchId", matchId)
             .execute()
 
         return matchId
@@ -219,19 +254,35 @@ class RepositoryGameJDBI(
                 .list(),
         )
 
-    override fun startRound(gameId: Int): Int =
-        handle
-            .createUpdate(
-                """
+    override fun startRound(gameId: Int): Int {
+        val roundNumber =
+            handle
+                .createUpdate(
+                    """
             INSERT INTO rounds (match_id, round_number)
             VALUES (:gameId, COALESCE(
                 (SELECT MAX(round_number) FROM rounds WHERE match_id = :gameId), 0) + 1)
             RETURNING round_number
             """,
+                ).bind("gameId", gameId)
+                .executeAndReturnGeneratedKeys()
+                .mapTo(Int::class.java)
+                .one()
+
+        handle
+            .createUpdate(
+                """
+            INSERT INTO turn (match_id, round_number, user_id, hand, roll_number, score)
+            SELECT :gameId, :roundNumber, user_id, NULL, 0, NULL
+            FROM match_players
+            WHERE match_id = :gameId
+            """,
             ).bind("gameId", gameId)
-            .executeAndReturnGeneratedKeys()
-            .mapTo(Int::class.java)
-            .one()
+            .bind("roundNumber", roundNumber)
+            .execute()
+
+        return roundNumber
+    }
 
     override fun getPlayerHand(
         userId: Int,
@@ -245,6 +296,7 @@ class RepositoryGameJDBI(
             WHERE user_id = :userId 
             AND match_id = :gameId 
             AND round_number = :roundNumber
+            AND hand IS NOT NULL
             """,
             ).bind("userId", userId)
             .bind("gameId", gameId)
@@ -263,24 +315,62 @@ class RepositoryGameJDBI(
             getCurrentRoundNumber(userId, gameId)
                 ?: throw IllegalStateException("No active round found for game $gameId")
 
-        return handle
-            .createQuery(
-                """
-        UPDATE turn
-        SET 
-            hand = :newHand::diceface[],
-            roll_number = roll_number + 1
-        WHERE match_id = :gameId
-          AND user_id = :userId
-          AND round_number = :roundNumber
-        RETURNING hand, roll_number
-        """,
-            ).bind("newHand", newHand.value.map { it.face.name }.toTypedArray())
-            .bind("gameId", gameId)
-            .bind("userId", userId)
-            .bind("roundNumber", roundNumber)
-            .map(HandMapper())
-            .one()
+        val currentRollNumber =
+            handle
+                .createQuery(
+                    """
+                SELECT roll_number 
+                FROM turn 
+                WHERE match_id = :gameId 
+                  AND user_id = :userId 
+                  AND round_number = :roundNumber
+                """,
+                ).bind("gameId", gameId)
+                .bind("userId", userId)
+                .bind("roundNumber", roundNumber)
+                .mapTo(Int::class.java)
+                .findOne()
+                .orElse(0)
+
+        return if (currentRollNumber == 0) {
+            handle
+                .createQuery(
+                    """
+                UPDATE turn
+                SET 
+                    hand = :newHand::diceface[],
+                    roll_number = 1
+                WHERE match_id = :gameId
+                  AND user_id = :userId
+                  AND round_number = :roundNumber
+                RETURNING hand, roll_number
+                """,
+                ).bind("newHand", newHand.value.map { it.face.name }.toTypedArray())
+                .bind("gameId", gameId)
+                .bind("userId", userId)
+                .bind("roundNumber", roundNumber)
+                .map(HandMapper())
+                .one()
+        } else {
+            handle
+                .createQuery(
+                    """
+                UPDATE turn
+                SET 
+                    hand = :newHand::diceface[],
+                    roll_number = roll_number + 1
+                WHERE match_id = :gameId
+                  AND user_id = :userId
+                  AND round_number = :roundNumber
+                RETURNING hand, roll_number
+                """,
+                ).bind("newHand", newHand.value.map { it.face.name }.toTypedArray())
+                .bind("gameId", gameId)
+                .bind("userId", userId)
+                .bind("roundNumber", roundNumber)
+                .map(HandMapper())
+                .one()
+        }
     }
 
     override fun calculatePoints(
@@ -400,17 +490,20 @@ class RepositoryGameJDBI(
                 """,
                 ).bind("gameId", gameId)
                 .bind("roundNumber", roundNumber)
-                .map(PlayerGameInfoMapper())
-                .one()
+                .map { rs, ctx ->
+                    val playerInfo = PlayerGameInfoMapper().map(rs, ctx)
+                    val score = rs.getInt("score")
+                    Pair(playerInfo, score)
+                }.one()
 
-        updateRoundWinner(gameId, roundNumber, winner.playerId)
+        updateRoundWinner(gameId, roundNumber, winner.first.playerId)
 
-        val hand = winner.hand
+        val hand = winner.first.hand
         val handValue = hand.evaluateHandValue()
-        val points = Points(hand.calculateScore())
+        val points = Points(winner.second)
 
         return RoundWinnerInfo(
-            player = winner,
+            player = winner.first,
             points = points,
             handValue = handValue,
             roundNumber = roundNumber,
@@ -435,22 +528,33 @@ class RepositoryGameJDBI(
             .bind("winnerId", winnerId)
             .execute()
 
-        // Get the winner's score for this round
-        val winnerScore = handle
-            .createQuery(
+        handle
+            .createUpdate(
                 """
+                UPDATE users 
+                SET balance = balance + 2 
+                WHERE id = :winnerId
+                """,
+            ).bind("winnerId", winnerId)
+            .execute()
+
+        // Get the winner's score for this round
+        val winnerScore =
+            handle
+                .createQuery(
+                    """
                 SELECT score 
                 FROM turn 
                 WHERE match_id = :gameId 
                   AND round_number = :roundNumber 
                   AND user_id = :winnerId
                 """,
-            ).bind("gameId", gameId)
-            .bind("roundNumber", roundNumber)
-            .bind("winnerId", winnerId)
-            .mapTo(Int::class.java)
-            .findOne()
-            .orElse(0)
+                ).bind("gameId", gameId)
+                .bind("roundNumber", roundNumber)
+                .bind("winnerId", winnerId)
+                .mapTo(Int::class.java)
+                .findOne()
+                .orElse(0)
 
         // Insert or update player_stats for the winner
         handle
@@ -570,9 +674,10 @@ class RepositoryGameJDBI(
             .execute()
 
         // Get all players in the match and their total scores
-        val playersData = handle
-            .createQuery(
-                """
+        val playersData =
+            handle
+                .createQuery(
+                    """
                 SELECT 
                     mp.user_id,
                     COALESCE(SUM(t.score), 0) AS total_score,
@@ -582,15 +687,15 @@ class RepositoryGameJDBI(
                 WHERE mp.match_id = :gameId
                 GROUP BY mp.user_id
                 """,
-            ).bind("gameId", gameId)
-            .bind("winnerId", winnerId)
-            .map { rs, _ ->
-                Triple(
-                    rs.getInt("user_id"),
-                    rs.getInt("total_score"),
-                    rs.getInt("is_winner") == 1
-                )
-            }.list()
+                ).bind("gameId", gameId)
+                .bind("winnerId", winnerId)
+                .map { rs, _ ->
+                    Triple(
+                        rs.getInt("user_id"),
+                        rs.getInt("total_score"),
+                        rs.getInt("is_winner") == 1,
+                    )
+                }.list()
 
         // Update player_stats for all players
         playersData.forEach { (userId, totalScore, isWinner) ->
@@ -692,10 +797,8 @@ class RepositoryGameJDBI(
                 SELECT MAX(round_number) 
                 FROM rounds 
                 WHERE match_id = :gameId
-                and user_id = :userId
                 """,
             ).bind("gameId", gameId)
-            .bind("userId", userId)
             .mapTo(Int::class.java)
             .findOne()
             .orElse(null)
@@ -870,6 +973,9 @@ private class HandMapper : RowMapper<Hand> {
         ctx: StatementContext,
     ): Hand {
         val pgArray = rs.getArray("hand")
+        if (pgArray == null) {
+            return Hand(emptyList())
+        }
         val handArray = pgArray.array as Array<*>
         val diceList = handArray.mapNotNull { it?.toString()?.toDiceFromString() }
         return Hand(diceList)

@@ -36,7 +36,7 @@ class LobbyServiceTest {
     private val lobbyMem = RepositoryLobbyMem()
     private val gameMem = RepositoryGameMem()
     private var generalMem: RepositoryInviteMem = RepositoryInviteMem()
-    private var trx: TransactionManagerMem = TransactionManagerMem(userMem, lobbyMem, gameMem,generalMem)
+    private var trx: TransactionManagerMem = TransactionManagerMem(userMem, lobbyMem, gameMem, generalMem)
 
     private val service = LobbyService(trx, dominConfig)
 

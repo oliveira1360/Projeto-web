@@ -2,12 +2,12 @@
 -- === USERS ===
 INSERT INTO users (username, nick_name, email, password_hash, avatar_url, last_login, balance)
 VALUES
-    ('john_doe', 'JohnnyD', 'john@example.com', '$2a$10$abcdefghijklmnopqrstuvwxyz', 'https://example.com/avatars/john.png', '2025-10-15 14:30:00', 1000),
-    ('jane_smith', 'JaneS', 'jane@example.com', '$2a$10$zyxwvutsrqponmlkjihgfedcba', 'https://example.com/avatars/jane.png', '2025-10-16 09:15:00', 1500),
-    ('mike_wilson', 'MikeW', 'mike@example.com', '$2a$10$1234567890abcdefghijklmnop', 'https://example.com/avatars/mike.png', '2025-10-16 18:45:00', 750),
-    ('sarah_jones', 'SarahJ', 'sarah@example.com', '$2a$10$qwertyuiopasdfghjklzxcvbnm', 'https://example.com/avatars/sarah.png', '2025-10-17 10:00:00', 2000),
-    ('alex_brown', 'AlexB', 'alex@example.com', '$2a$10$mnbvcxzlkjhgfdsapoiuytrewq', 'https://example.com/avatars/alex.png', '2025-10-14 16:20:00', 500),
-    ('emily_davis', 'EmilyD', 'emily@example.com', '$2a$10$asdfghjklqwertyuiopzxcvbnm', 'https://example.com/avatars/emily.png', '2025-10-17 08:30:00', 1200);
+    ('john_doe', 'JohnnyD', 'john@example.com', 'TesteBanana1', 'https://example.com/avatars/john.png', '2025-10-15 14:30:00', 1000),
+    ('jane_smith', 'JaneS', 'jane@example.com', 'TesteBanana1', 'https://example.com/avatars/jane.png', '2025-10-16 09:15:00', 1500),
+    ('mike_wilson', 'MikeW', 'mike@example.com', 'TesteBanana1', 'https://example.com/avatars/mike.png', '2025-10-16 18:45:00', 750),
+    ('sarah_jones', 'SarahJ', 'sarah@example.com', 'TesteBanana1', 'https://example.com/avatars/sarah.png', '2025-10-17 10:00:00', 2000),
+    ('alex_brown', 'AlexB', 'alex@example.com', 'TesteBanana1', 'https://example.com/avatars/alex.png', '2025-10-14 16:20:00', 500),
+    ('emily_davis', 'EmilyD', 'emily@example.com', 'TesteBanana1', 'https://example.com/avatars/emily.png', '2025-10-17 08:30:00', 1200);
 
 -- === PLAYER STATS ===
 INSERT INTO player_stats (user_id, total_games, total_wins, total_losses, total_points, longest_win_streak, current_streak)
@@ -63,23 +63,23 @@ VALUES
 (5, 6, 3);
 
 -- === ROUNDS ===
-INSERT INTO rounds (match_id, user_id, round_number, winner_id, roll_number)
+INSERT INTO rounds (match_id, round_number, winner_id, roll_number)
 VALUES
 -- Match 1 rounds
-(1, 1, 1, 1, 2),
-(1, 2, 2, 3, 3),
-(1, 3, 3, 1, 1),
-(1, 1, 4, 2, 2),
+(1 , 1, 1, 2),
+(1, 2, 3, 3),
+(1, 3, 1, 1),
+(1, 4, 2, 2),
 -- Match 2 rounds
-(2, 2, 1, 3, 3),
-(2, 3, 2, 3, 2),
-(2, 4, 3, 2, 1),
+(2, 1, 3, 3),
+(2, 2, 3, 2),
+(2,  3, 2, 1),
 -- Match 3 rounds (active match)
-(3, 1, 1, NULL, 2),
-(3, 3, 2, NULL, 1),
+(3,1, NULL, 2),
+(3,  2, NULL, 1),
 -- Match 4 rounds
-(4, 2, 1, 2, 3),
-(4, 5, 2, 5, 2);
+(4, 1, 2, 3),
+(4, 2, 5, 2);
 
 -- === TURN ===
 -- Using DiceFace ENUM type for type-safe dice values

@@ -20,10 +20,14 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
     testImplementation(kotlin("test"))
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
+    testImplementation("org.postgresql:postgresql:42.6.0")
 }
 
 tasks.test {
     useJUnitPlatform()
+    dependsOn("dbTestsUp", "dbTestsWait")
+    finalizedBy("dbTestsDown")
 }
 kotlin {
     jvmToolchain(21)
@@ -45,9 +49,14 @@ tasks.register<Exec>("dbTestsUp") {
     commandLine(dockerExe, "compose", "-f", dockerComposePath, "up", "-d", "--build", "--force-recreate", "db-tests")
 }
 
-tasks.register<Exec>("dbTestsWait") {
-    commandLine(dockerExe, "exec", "db-tests", "/app/bin/wait-for-postgres.sh", "localhost")
+tasks.register("dbTestsWait") {
     dependsOn("dbTestsUp")
+
+    doLast {
+        println("Waiting for PostgreSQL to be ready...")
+        Thread.sleep(15000)
+        println("PostgreSQL should be ready now")
+    }
 }
 
 tasks.register<Exec>("dbTestsDown") {

@@ -23,19 +23,19 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import java.time.Clock
 import java.time.Duration
+import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import java.time.Instant
 
 class UserControllerTest {
-
-    private val usersDomainConfig = UsersDomainConfig(
-        tokenSizeInBytes = 256 / 8,
-        tokenTtl = Duration.ofHours(24),
-        tokenRollingTtl = Duration.ofHours(1),
-        maxTokensPerUser = 3
-    )
+    private val usersDomainConfig =
+        UsersDomainConfig(
+            tokenSizeInBytes = 256 / 8,
+            tokenTtl = Duration.ofHours(24),
+            tokenRollingTtl = Duration.ofHours(1),
+            maxTokensPerUser = 3,
+        )
 
     private val userMem = RepositoryUserMem()
     private val lobbyMem = RepositoryLobbyMem()
@@ -50,20 +50,21 @@ class UserControllerTest {
     private val userAuthService = UserAuthService(passwordEncoder, tokenEncoder, usersDomainConfig, trxManager, clock)
     private val userController = UserController(userAuthService)
 
-    val validInvite = ValidInviteDTO(
-        id = 1,
-        token = "ABC123XYZ",
-        createdAt = Instant.parse("2025-10-18T12:00:00Z"),
-        expiresAt = Instant.parse("2025-11-18T12:00:00Z"),
-        used = false
-    )
+    val validInvite =
+        ValidInviteDTO(
+            id = 1,
+            token = "ABC123XYZ",
+            createdAt = Instant.parse("2025-10-18T12:00:00Z"),
+            expiresAt = Instant.parse("2025-11-18T12:00:00Z"),
+            used = false,
+        )
     private var userCounter = 0
 
     private fun createTestUser(
         name: String = "Test User",
         nickName: String = "testuser",
         email: String = "test@example.com",
-        password: String = "SecurePass123!"
+        password: String = "SecurePass123!",
     ): User {
         val uniqueEmail = "${userCounter++}$email"
         return trxManager.run {
@@ -72,7 +73,7 @@ class UserControllerTest {
                 nickName = Name("$nickName$userCounter"),
                 email = Email(uniqueEmail),
                 password = Password(password),
-                imageUrl = URL("https://example.com/avatar.png")
+                imageUrl = URL("https://example.com/avatar.png"),
             )
         }
     }
@@ -92,13 +93,14 @@ class UserControllerTest {
     @Test
     fun `createUser should return CREATED with valid data`() {
         // given: valid user input
-        val input = CreateUserDTO(
-            name = "John Doe",
-            nickName = "johndoe",
-            email = "john@example.com",
-            password = "SecurePass123!",
-            imageUrl = "https://example.com/john.png"
-        )
+        val input =
+            CreateUserDTO(
+                name = "John Doe",
+                nickName = "johndoe",
+                email = "john@example.com",
+                password = "SecurePass123!",
+                imageUrl = "https://example.com/john.png",
+            )
 
         // when: creating user
         val resp = userController.createUser(validInvite, input)
@@ -117,13 +119,14 @@ class UserControllerTest {
     @Test
     fun `createUser should succeed with minimum required fields`() {
         // given: user with no image URL
-        val input = CreateUserDTO(
-            name = "Jane",
-            nickName = "jane",
-            email = "jane@example.com",
-            password = "Pass1234!",
-            imageUrl = null
-        )
+        val input =
+            CreateUserDTO(
+                name = "Jane",
+                nickName = "jane",
+                email = "jane@example.com",
+                password = "Pass1234!",
+                imageUrl = null,
+            )
 
         // when: creating user
         val resp = userController.createUser(validInvite, input)
@@ -172,10 +175,11 @@ class UserControllerTest {
         val password = "SecurePass123!"
         createTestUser(email = "login@example.com", password = password)
 
-        val loginInput = LoginUserDTO(
-            email = "0login@example.com",
-            password = password
-        )
+        val loginInput =
+            LoginUserDTO(
+                email = "0login@example.com",
+                password = password,
+            )
 
         // when: logging in
         val resp = userController.loginUser(loginInput)
@@ -192,10 +196,11 @@ class UserControllerTest {
     @Test
     fun `loginUser should return 401 with invalid email`() {
         // given: no user exists
-        val loginInput = LoginUserDTO(
-            email = "nonexistent@example.com",
-            password = "SomePass123!"
-        )
+        val loginInput =
+            LoginUserDTO(
+                email = "nonexistent@example.com",
+                password = "SomePass123!",
+            )
 
         // when: attempting to login
         val resp = userController.loginUser(loginInput)
@@ -237,11 +242,12 @@ class UserControllerTest {
     @Test
     fun `getUserInfo should return user details`() {
         // given: a user
-        val user = createTestUser(
-            name = "Info User",
-            nickName = "infouser",
-            email = "info@example.com"
-        )
+        val user =
+            createTestUser(
+                name = "Info User",
+                nickName = "infouser",
+                email = "info@example.com",
+            )
 
         // when: getting user info
         val resp = userController.getUserInfo(AuthenticatedUserDto(user, "token123"))
@@ -279,12 +285,13 @@ class UserControllerTest {
     fun `updateUser should update name`() {
         // given: a user
         val user = createTestUser(name = "Old Name")
-        val updateInput = UpdateUserDTO(
-            name = "New Name",
-            nickName = null,
-            password = null,
-            imageUrl = null
-        )
+        val updateInput =
+            UpdateUserDTO(
+                name = "New Name",
+                nickName = null,
+                password = null,
+                imageUrl = null,
+            )
 
         // when: updating user
         val resp = userController.updateUser(AuthenticatedUserDto(user, "token"), updateInput)
@@ -301,12 +308,13 @@ class UserControllerTest {
     fun `updateUser should update nickName`() {
         // given: a user
         val user = createTestUser(nickName = "oldnick")
-        val updateInput = UpdateUserDTO(
-            name = null,
-            nickName = "newnick",
-            password = null,
-            imageUrl = null
-        )
+        val updateInput =
+            UpdateUserDTO(
+                name = null,
+                nickName = "newnick",
+                password = null,
+                imageUrl = null,
+            )
 
         // when: updating user
         val resp = userController.updateUser(AuthenticatedUserDto(user, "token"), updateInput)
@@ -321,12 +329,13 @@ class UserControllerTest {
     fun `updateUser should update password`() {
         // given: a user
         val user = createTestUser()
-        val updateInput = UpdateUserDTO(
-            name = null,
-            nickName = null,
-            password = "NewSecurePass123!",
-            imageUrl = null
-        )
+        val updateInput =
+            UpdateUserDTO(
+                name = null,
+                nickName = null,
+                password = "NewSecurePass123!",
+                imageUrl = null,
+            )
 
         // when: updating user
         val resp = userController.updateUser(AuthenticatedUserDto(user, "token"), updateInput)
@@ -339,12 +348,13 @@ class UserControllerTest {
     fun `updateUser should update multiple fields`() {
         // given: a user
         val user = createTestUser(name = "Old", nickName = "old")
-        val updateInput = UpdateUserDTO(
-            name = "New Name",
-            nickName = "newnick",
-            password = "NewPass123!",
-            imageUrl = "https://example.com/new.png"
-        )
+        val updateInput =
+            UpdateUserDTO(
+                name = "New Name",
+                nickName = "newnick",
+                password = "NewPass123!",
+                imageUrl = "https://example.com/new.png",
+            )
 
         // when: updating multiple fields
         val resp = userController.updateUser(AuthenticatedUserDto(user, "token"), updateInput)
@@ -360,12 +370,13 @@ class UserControllerTest {
     fun `updateUser with no changes should succeed`() {
         // given: a user
         val user = createTestUser()
-        val updateInput = UpdateUserDTO(
-            name = null,
-            nickName = null,
-            password = null,
-            imageUrl = null
-        )
+        val updateInput =
+            UpdateUserDTO(
+                name = null,
+                nickName = null,
+                password = null,
+                imageUrl = null,
+            )
 
         // when: updating with no changes
         val resp = userController.updateUser(AuthenticatedUserDto(user, "token"), updateInput)
@@ -382,9 +393,10 @@ class UserControllerTest {
     fun `logoutUser should revoke token`() {
         // given: a logged in user
         val user = createTestUser(email = "logout@example.com")
-        val loginResp = userController.loginUser(
-            LoginUserDTO("0logout@example.com", "SecurePass123!")
-        )
+        val loginResp =
+            userController.loginUser(
+                LoginUserDTO("0logout@example.com", "SecurePass123!"),
+            )
         val loginBody = loginResp.body as Map<*, *>
         val token = loginBody["token"] as String
 
@@ -461,7 +473,7 @@ class UserControllerTest {
         val user = createTestUser(name = "Before")
         userController.updateUser(
             AuthenticatedUserDto(user, "token"),
-            UpdateUserDTO("After", null, null, null)
+            UpdateUserDTO("After", null, null, null),
         )
 
         // when: getting user info
@@ -503,15 +515,15 @@ class UserControllerTest {
         val input2 = CreateUserDTO("User2", "nick2", email, "Pass123!", null)
 
         // then: creation fails with exception
-        val exception = assertThrows<IllegalArgumentException> {
-            userController.createUser(validInvite, input2)
-        }
+        val exception =
+            assertThrows<IllegalArgumentException> {
+                userController.createUser(validInvite, input2)
+            }
         assertEquals(
             "User with email Email(value=$email) already exists",
-            exception.message
+            exception.message,
         )
     }
-
 
     @Test
     fun `complete user workflow - create, login, update, logout`() {
@@ -519,10 +531,11 @@ class UserControllerTest {
         val password = "Workflow123!"
 
         // when: creating user
-        val createResp = userController.createUser(
-            validInvite,
-            CreateUserDTO("Workflow User", "workflow", "workflow@example.com", password, null)
-        )
+        val createResp =
+            userController.createUser(
+                validInvite,
+                CreateUserDTO("Workflow User", "workflow", "workflow@example.com", password, null),
+            )
         assertEquals(HttpStatus.CREATED, createResp.statusCode)
 
         // when: logging in
@@ -536,10 +549,11 @@ class UserControllerTest {
         val user = trxManager.run { repositoryUser.findById(userId)!! }
 
         // when: updating user
-        val updateResp = userController.updateUser(
-            AuthenticatedUserDto(user, token),
-            UpdateUserDTO("Updated Workflow", null, null, null)
-        )
+        val updateResp =
+            userController.updateUser(
+                AuthenticatedUserDto(user, token),
+                UpdateUserDTO("Updated Workflow", null, null, null),
+            )
         assertEquals(HttpStatus.ACCEPTED, updateResp.statusCode)
 
         // when: logging out
@@ -556,10 +570,11 @@ class UserControllerTest {
         val user = createTestUser(email = "links@example.com")
 
         // when: create user
-        val createResp = userController.createUser(
-            validInvite,
-            CreateUserDTO("Links User", "links", "links2@example.com", "Pass123!", null)
-        )
+        val createResp =
+            userController.createUser(
+                validInvite,
+                CreateUserDTO("Links User", "links", "links2@example.com", "Pass123!", null),
+            )
         val createBody = createResp.body as Map<*, *>
         assertNotNull(createBody["_links"], "Create user should have _links")
 
@@ -574,10 +589,11 @@ class UserControllerTest {
         assertNotNull(infoBody["_links"], "User info should have _links")
 
         // when: update user
-        val updateResp = userController.updateUser(
-            AuthenticatedUserDto(user, "token"),
-            UpdateUserDTO("New", null, null, null)
-        )
+        val updateResp =
+            userController.updateUser(
+                AuthenticatedUserDto(user, "token"),
+                UpdateUserDTO("New", null, null, null),
+            )
         val updateBody = updateResp.body as Map<*, *>
         assertNotNull(updateBody["_links"], "Update user should have _links")
 
@@ -588,17 +604,18 @@ class UserControllerTest {
     }
 
     @Test
-    fun `stress test - create multiple users rapidly`() {
+    fun `stress test create multiple users rapidly`() {
         // given: multiple user creation requests
-        val users = (1..10).map { i ->
-            CreateUserDTO(
-                name = "Stress User $i",
-                nickName = "stress$i",
-                email = "stress$i@example.com",
-                password = "Pass123!",
-                imageUrl = null
-            )
-        }
+        val users =
+            (1..10).map { i ->
+                CreateUserDTO(
+                    name = "Stress User $i",
+                    nickName = "stress$i",
+                    email = "stress$i@example.com",
+                    password = "Pass123!",
+                    imageUrl = null,
+                )
+            }
 
         // when: creating all users
         val responses = users.map { userController.createUser(validInvite, it) }
@@ -610,7 +627,7 @@ class UserControllerTest {
     }
 
     @Test
-    fun `edge case - user with very long name`() {
+    fun `edge case user with very long name`() {
         // given: user with long name
         val longName = "A".repeat(100)
         val input = CreateUserDTO(longName, "nick", "long@example.com", "Pass123!", null)
@@ -625,15 +642,16 @@ class UserControllerTest {
     }
 
     @Test
-    fun `edge case - user with special characters in email`() {
+    fun `edge case user with special characters in email`() {
         // given: email with special characters
-        val input = CreateUserDTO(
-            "User",
-            "nick",
-            "user+test@example.co.uk",
-            "Pass123!",
-            null
-        )
+        val input =
+            CreateUserDTO(
+                "User",
+                "nick",
+                "user+test@example.co.uk",
+                "Pass123!",
+                null,
+            )
 
         // when: creating user
         val resp = userController.createUser(validInvite, input)

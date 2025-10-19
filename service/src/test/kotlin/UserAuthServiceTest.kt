@@ -38,7 +38,7 @@ class UserAuthServiceTest {
     val passwordEncoder = BCryptPasswordEncoder()
     val gameMem = RepositoryGameMem()
     private var generalMem: RepositoryInviteMem = RepositoryInviteMem()
-    private var trx: TransactionManagerMem = TransactionManagerMem(userMem, lobbyMem, gameMem,generalMem)
+    private var trx: TransactionManagerMem = TransactionManagerMem(userMem, lobbyMem, gameMem, generalMem)
     val service =
         UserAuthService(
             passwordEncoder = passwordEncoder,

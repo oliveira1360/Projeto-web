@@ -3,6 +3,7 @@ import org.example.GameError
 import org.example.GameService
 import org.example.Success
 import org.example.TransactionManagerMem
+import org.example.config.GameDomainConfig
 import org.example.entity.core.Balance
 import org.example.entity.core.Email
 import org.example.entity.core.Name
@@ -16,7 +17,6 @@ import org.example.entity.player.Hand
 import org.example.entity.player.HandValues
 import org.example.entity.player.User
 import org.example.game.RepositoryGameMem
-import org.example.general.RepositoryGeneral
 import org.example.general.RepositoryInviteMem
 import org.example.lobby.RepositoryLobbyMem
 import org.example.user.RepositoryUserMem
@@ -33,8 +33,9 @@ class GameServiceTest {
     private var lobbyRepo: RepositoryLobbyMem = RepositoryLobbyMem()
     private var gameRepo: RepositoryGameMem = RepositoryGameMem()
     private var generalRepo: RepositoryInviteMem = RepositoryInviteMem()
-    private var trxManager: TransactionManagerMem = TransactionManagerMem(userRepo, lobbyRepo, gameRepo,generalRepo)
-    private var gameService: GameService = GameService(trxManager)
+    private var trxManager: TransactionManagerMem = TransactionManagerMem(userRepo, lobbyRepo, gameRepo, generalRepo)
+    private var gameDomainConfig = GameDomainConfig(moneyRemove = 1)
+    private var gameService: GameService = GameService(trxManager, gameDomainConfig)
 
     private var user1: User
     private var user2: User
