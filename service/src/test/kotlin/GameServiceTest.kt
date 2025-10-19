@@ -16,6 +16,8 @@ import org.example.entity.player.Hand
 import org.example.entity.player.HandValues
 import org.example.entity.player.User
 import org.example.game.RepositoryGameMem
+import org.example.general.RepositoryGeneral
+import org.example.general.RepositoryInviteMem
 import org.example.lobby.RepositoryLobbyMem
 import org.example.user.RepositoryUserMem
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -30,7 +32,8 @@ class GameServiceTest {
     private var userRepo: RepositoryUserMem = RepositoryUserMem()
     private var lobbyRepo: RepositoryLobbyMem = RepositoryLobbyMem()
     private var gameRepo: RepositoryGameMem = RepositoryGameMem()
-    private var trxManager: TransactionManagerMem = TransactionManagerMem(userRepo, lobbyRepo, gameRepo)
+    private var generalRepo: RepositoryInviteMem = RepositoryInviteMem()
+    private var trxManager: TransactionManagerMem = TransactionManagerMem(userRepo, lobbyRepo, gameRepo,generalRepo)
     private var gameService: GameService = GameService(trxManager)
 
     private var user1: User

@@ -52,6 +52,10 @@ class RepositoryUserJDBI(
                 .mapTo(Int::class.java)
                 .one()
 
+            handle.createUpdate(
+                "INSERT INTO player_stats (user_id) VALUES (:id)",
+            ).bind("id", id).execute()
+
         return User(
             id = id,
             name = name,

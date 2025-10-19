@@ -42,6 +42,7 @@ object ProblemTypes {
     const val LOBBY_FULL = "$BASE_URI/lobby-full"
     const val ALREADY_IN_LOBBY = "$BASE_URI/already-in-lobby"
     const val NOT_IN_LOBBY = "$BASE_URI/not-in-lobby"
+    const val INVALID_LOBBY_DATA = "$BASE_URI/invalid-lobby-data"
 
     // User/Auth errors
     const val USER_NOT_FOUND = "$BASE_URI/user-not-found"

@@ -118,7 +118,19 @@ class RepositoryLobbyJDBI(
     }
 
     override fun closeLobby(lobbyId: Int) {
-        TODO("Not yet implemented")
+        // First, remove all players from the lobby
+        handle
+            .createUpdate(
+                "DELETE FROM lobby_players WHERE lobby_id = :lobby_id"
+            ).bind("lobby_id", lobbyId)
+            .execute()
+
+        // Then, delete the lobby itself
+        handle
+            .createUpdate(
+                "DELETE FROM lobbies WHERE id = :lobby_id"
+            ).bind("lobby_id", lobbyId)
+            .execute()
     }
 
     override fun findById(id: Int): Lobby? {

@@ -3,6 +3,7 @@ package org.example.controllers
 import org.example.Either
 import org.example.Failure
 import org.example.Success
+import org.example.TokenCreationError
 import org.example.UserAuthService
 import org.example.UserError
 import org.example.dto.inputDto.AuthenticatedUserDto
@@ -14,23 +15,25 @@ import org.example.entity.core.toEmail
 import org.example.entity.core.toName
 import org.example.entity.core.toPassword
 import org.example.entity.core.toUrlOrNull
-import org.example.entity.player.User
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
+@RequestMapping("/user")
 class UserController(
     private val userServices: UserAuthService,
 ) {
-    /*
-    curl -X POST "http://localhost:8080/user/create" -H "Content-Type: application/json" -d "{\"name\":\"John Doe\",\"nickName\":\"john\",\"email\":\"john@example.com\",\"password\":\"Secret1\"}"
-     */
-    @PostMapping("/user/create")
+    @PostMapping(
+        "/create",
+        consumes = [ApiMediaTypes.APPLICATION_JSON],
+        produces = [ApiMediaTypes.APPLICATION_JSON, ApiMediaTypes.APPLICATION_PROBLEM_JSON],
+    )
     fun createUser(
         invite: ValidInviteDTO,
         @RequestBody body: CreateUserDTO,
@@ -39,54 +42,192 @@ class UserController(
         val nickName = body.nickName.toName()
         val email = body.email.toEmail()
         val password = body.password.toPassword()
-        val imageUrl = body.imageUrl.toUrlOrNull()
+        val imageUrl = body.imageUrl?.toUrlOrNull()
 
-        val result: Either<UserError, User> =
-            userServices.createUser(name, nickName, email, password, imageUrl)
-
-        return when (result) {
-            is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Success -> ResponseEntity.status(HttpStatus.CREATED).body(result.value)
+        return handleUserResult(
+            "/user/create",
+            userServices.createUser(name, nickName, email, password, imageUrl),
+            HttpStatus.CREATED,
+        ) {
+            mapOf(
+                "userId" to it.id,
+                "name" to it.name.value,
+                "nickName" to it.nickName.value,
+                "email" to it.email.value,
+                "balance" to it.balance.money.value,
+                "_links" to UserLinks.createUser(it.id),
+            )
         }
     }
 
-    @PostMapping("/user/login")
+    @PostMapping(
+        "/login",
+        consumes = [ApiMediaTypes.APPLICATION_JSON],
+        produces = [ApiMediaTypes.APPLICATION_JSON, ApiMediaTypes.APPLICATION_PROBLEM_JSON],
+    )
     fun loginUser(
         @RequestBody body: LoginUserDTO,
     ): ResponseEntity<*> {
         val result = userServices.createToken(body.email, body.password)
         return when (result) {
-            is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Success -> ResponseEntity.status(HttpStatus.ACCEPTED).body(result.value)
+            is Failure -> handleTokenError(result.value, "/user/login")
+            is Success ->
+                ResponseEntity.status(HttpStatus.ACCEPTED).body(
+                    mapOf(
+                        "token" to result.value.tokenValue,
+                        "expiresAt" to result.value.tokenExpiration.toString(),
+                        "message" to "Login successful",
+                        "_links" to UserLinks.login(),
+                    ),
+                )
         }
     }
 
-    @GetMapping("/user/info")
-    fun getUserInfo(user: AuthenticatedUserDto): ResponseEntity<*> = ResponseEntity.ok(user.user)
+    @GetMapping(
+        "/info",
+        produces = [ApiMediaTypes.APPLICATION_JSON, ApiMediaTypes.APPLICATION_PROBLEM_JSON],
+    )
+    fun getUserInfo(user: AuthenticatedUserDto): ResponseEntity<*> =
+        ResponseEntity.ok(
+            mapOf(
+                "userId" to user.user.id,
+                "name" to user.user.name.value,
+                "nickName" to user.user.nickName.value,
+                "email" to user.user.email.value,
+                "balance" to user.user.balance.money.value,
+                "imageUrl" to user.user.imageUrl?.value,
+                "_links" to UserLinks.userInfo(user.user.id),
+            ),
+        )
 
-    @PostMapping("/user/update")
+    @PostMapping(
+        "/update",
+        consumes = [ApiMediaTypes.APPLICATION_JSON],
+        produces = [ApiMediaTypes.APPLICATION_JSON, ApiMediaTypes.APPLICATION_PROBLEM_JSON],
+    )
     fun updateUser(
         user: AuthenticatedUserDto,
         @RequestBody body: UpdateUserDTO,
-    ): ResponseEntity<*> {
-        val result = userServices.updateUser(user.user.id, body.name, body.nickName, body.password, body.imageUrl)
-        when (result) {
-            is Failure -> return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Success -> return ResponseEntity.status(HttpStatus.ACCEPTED).body(result.value)
+    ): ResponseEntity<*> =
+        handleUserResult(
+            "/user/update",
+            userServices.updateUser(user.user.id, body.name, body.nickName, body.password, body.imageUrl),
+            HttpStatus.ACCEPTED,
+        ) {
+            mapOf(
+                "userId" to it.id,
+                "name" to it.name.value,
+                "nickName" to it.nickName.value,
+                "email" to it.email.value,
+                "message" to "User updated successfully",
+                "_links" to UserLinks.updateUser(it.id),
+            )
         }
-    }
 
-    @PostMapping("/user/logout")
-    fun logoutUser(user: AuthenticatedUserDto) {
+    @PostMapping(
+        "/logout",
+        produces = [ApiMediaTypes.APPLICATION_JSON, ApiMediaTypes.APPLICATION_PROBLEM_JSON],
+    )
+    fun logoutUser(user: AuthenticatedUserDto): ResponseEntity<*> {
         userServices.revokeToken(user.token)
+        return ResponseEntity.ok(
+            mapOf(
+                "message" to "Logout successful",
+                "_links" to UserLinks.logout(),
+            ),
+        )
     }
 
-    @GetMapping("user/stats")
-    fun userStates(user: AuthenticatedUserDto): ResponseEntity<*> {
-        val result = userServices.getUserInfo(user.user.id)
-        return when (result) {
-            is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Success -> ResponseEntity.status(HttpStatus.ACCEPTED).body(result.value)
+    @GetMapping(
+        "/stats",
+        produces = [ApiMediaTypes.APPLICATION_JSON, ApiMediaTypes.APPLICATION_PROBLEM_JSON],
+    )
+    fun userStats(user: AuthenticatedUserDto): ResponseEntity<*> =
+        handleUserResult("/user/stats", userServices.getUserInfo(user.user.id), HttpStatus.OK) {
+            mapOf(
+                "userId" to it.userId,
+                "totalGamesPlayed" to it.totalGamesPlayed,
+                "totalWins" to it.totalWins,
+                "totalLosses" to it.totalLosses,
+                "totalPoints" to it.totalPoints,
+                "longestStreak" to it.longestStreak,
+                "currentStreak" to it.currentStreak,
+                "_links" to UserLinks.userStats(it.userId),
+            )
         }
-    }
+
+    private fun handleTokenError(
+        error: TokenCreationError,
+        instance: String,
+    ): ResponseEntity<ProblemDetail> =
+        when (error) {
+            is TokenCreationError.UserOrPasswordAreInvalid ->
+                ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(
+                        createProblemDetail(
+                            type = ProblemTypes.INVALID_CREDENTIALS,
+                            title = "Invalid Credentials",
+                            status = HttpStatus.UNAUTHORIZED,
+                            detail = "The provided email or password is incorrect.",
+                            instance = instance,
+                        ),
+                    )
+        }
+
+    private fun handleUserError(
+        error: UserError,
+        instance: String,
+    ): ResponseEntity<ProblemDetail> =
+        when (error) {
+            is UserError.InsecurePassword ->
+                ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(
+                        createProblemDetail(
+                            type = ProblemTypes.INSECURE_PASSWORD,
+                            title = "Insecure Password",
+                            status = HttpStatus.BAD_REQUEST,
+                            detail = "Password does not meet security requirements.",
+                            instance = instance,
+                        ),
+                    )
+
+            is UserError.AlreadyUsedEmailAddress ->
+                ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(
+                        createProblemDetail(
+                            type = ProblemTypes.EMAIL_ALREADY_USED,
+                            title = "Email Already Used",
+                            status = HttpStatus.CONFLICT,
+                            detail = "An account with this email already exists.",
+                            instance = instance,
+                        ),
+                    )
+
+            is UserError.InvalidCredentials ->
+                ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(
+                        createProblemDetail(
+                            type = ProblemTypes.INVALID_CREDENTIALS,
+                            title = "Invalid Credentials",
+                            status = HttpStatus.UNAUTHORIZED,
+                            detail = "The provided credentials are invalid.",
+                            instance = instance,
+                        ),
+                    )
+        }
+
+    private inline fun <T> handleUserResult(
+        path: String,
+        result: Either<UserError, T>,
+        status: HttpStatus = HttpStatus.OK,
+        successBodyBuilder: (T) -> Any,
+    ): ResponseEntity<*> =
+        when (result) {
+            is Failure -> handleUserError(result.value, path)
+            is Success -> ResponseEntity.status(status).body(successBodyBuilder(result.value))
+        }
 }

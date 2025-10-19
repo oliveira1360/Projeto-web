@@ -422,12 +422,70 @@ class RepositoryGameJDBI(
         roundNumber: Int,
         winnerId: Int,
     ) {
+        // Update rounds table with winner
         handle
             .createUpdate(
                 """
                 UPDATE rounds
                 SET winner_id = :winnerId
                 WHERE match_id = :gameId AND round_number = :roundNumber
+                """,
+            ).bind("gameId", gameId)
+            .bind("roundNumber", roundNumber)
+            .bind("winnerId", winnerId)
+            .execute()
+
+        // Get the winner's score for this round
+        val winnerScore = handle
+            .createQuery(
+                """
+                SELECT score 
+                FROM turn 
+                WHERE match_id = :gameId 
+                  AND round_number = :roundNumber 
+                  AND user_id = :winnerId
+                """,
+            ).bind("gameId", gameId)
+            .bind("roundNumber", roundNumber)
+            .bind("winnerId", winnerId)
+            .mapTo(Int::class.java)
+            .findOne()
+            .orElse(0)
+
+        // Insert or update player_stats for the winner
+        handle
+            .createUpdate(
+                """
+                INSERT INTO player_stats (user_id, total_games, total_wins, total_losses, total_points, longest_win_streak, current_streak)
+                VALUES (:userId, 0, 0, 0, :points, 0, 0)
+                ON CONFLICT (user_id) 
+                DO UPDATE SET
+                    total_points = player_stats.total_points + :points
+                """,
+            ).bind("userId", winnerId)
+            .bind("points", winnerScore)
+            .execute()
+
+        // Update stats for all players in this round (losers)
+        handle
+            .createUpdate(
+                """
+                INSERT INTO player_stats (user_id, total_games, total_wins, total_losses, total_points, longest_win_streak, current_streak)
+                SELECT 
+                    t.user_id,
+                    0,
+                    0,
+                    0,
+                    COALESCE(t.score, 0),
+                    0,
+                    0
+                FROM turn t
+                WHERE t.match_id = :gameId 
+                  AND t.round_number = :roundNumber
+                  AND t.user_id != :winnerId
+                ON CONFLICT (user_id) 
+                DO UPDATE SET
+                    total_points = player_stats.total_points + EXCLUDED.total_points
                 """,
             ).bind("gameId", gameId)
             .bind("roundNumber", roundNumber)
@@ -497,6 +555,7 @@ class RepositoryGameJDBI(
         gameId: Int,
         winnerId: Int,
     ) {
+        // Update matches table with winner and finish the game
         handle
             .createUpdate(
                 """
@@ -509,6 +568,67 @@ class RepositoryGameJDBI(
             ).bind("gameId", gameId)
             .bind("winnerId", winnerId)
             .execute()
+
+        // Get all players in the match and their total scores
+        val playersData = handle
+            .createQuery(
+                """
+                SELECT 
+                    mp.user_id,
+                    COALESCE(SUM(t.score), 0) AS total_score,
+                    CASE WHEN mp.user_id = :winnerId THEN 1 ELSE 0 END AS is_winner
+                FROM match_players mp
+                LEFT JOIN turn t ON t.user_id = mp.user_id AND t.match_id = mp.match_id
+                WHERE mp.match_id = :gameId
+                GROUP BY mp.user_id
+                """,
+            ).bind("gameId", gameId)
+            .bind("winnerId", winnerId)
+            .map { rs, _ ->
+                Triple(
+                    rs.getInt("user_id"),
+                    rs.getInt("total_score"),
+                    rs.getInt("is_winner") == 1
+                )
+            }.list()
+
+        // Update player_stats for all players
+        playersData.forEach { (userId, totalScore, isWinner) ->
+            if (isWinner) {
+                // Winner: increment wins, update streak
+                handle
+                    .createUpdate(
+                        """
+                        INSERT INTO player_stats (user_id, total_games, total_wins, total_losses, total_points, longest_win_streak, current_streak)
+                        VALUES (:userId, 1, 1, 0, :points, 1, 1)
+                        ON CONFLICT (user_id) 
+                        DO UPDATE SET
+                            total_games = player_stats.total_games + 1,
+                            total_wins = player_stats.total_wins + 1,
+                            current_streak = player_stats.current_streak + 1,
+                            longest_win_streak = GREATEST(player_stats.longest_win_streak, player_stats.current_streak + 1)
+                        """,
+                    ).bind("userId", userId)
+                    .bind("points", totalScore)
+                    .execute()
+            } else {
+                // Loser: increment losses, reset streak
+                handle
+                    .createUpdate(
+                        """
+                        INSERT INTO player_stats (user_id, total_games, total_wins, total_losses, total_points, longest_win_streak, current_streak)
+                        VALUES (:userId, 1, 0, 1, :points, 0, 0)
+                        ON CONFLICT (user_id) 
+                        DO UPDATE SET
+                            total_games = player_stats.total_games + 1,
+                            total_losses = player_stats.total_losses + 1,
+                            current_streak = 0
+                        """,
+                    ).bind("userId", userId)
+                    .bind("points", totalScore)
+                    .execute()
+            }
+        }
     }
 
     override fun getRollCount(

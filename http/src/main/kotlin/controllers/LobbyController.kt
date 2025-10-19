@@ -9,7 +9,6 @@ import org.example.LobbyService
 import org.example.Success
 import org.example.dto.inputDto.AuthenticatedUserDto
 import org.example.dto.inputDto.CreateLobbyDTO
-import org.example.entity.lobby.Lobby
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -19,77 +18,189 @@ import org.springframework.web.bind.annotation.*
 class LobbyController(
     private val lobbyService: LobbyService,
 ) {
-    /*
-    curl -X POST "http://localhost:8080/lobbies/create" \
-         -H "Content-Type: application/json" \
-         -H "Authorization: Bearer <token>" \
-         -d '{"name":"Lobby Teste","maxPlayers":4}'
-     */
-    @PostMapping("/create")
+    @PostMapping(
+        "/create",
+        consumes = [ApiMediaTypes.APPLICATION_JSON],
+        produces = [ApiMediaTypes.APPLICATION_JSON, ApiMediaTypes.APPLICATION_PROBLEM_JSON],
+    )
     fun createLobby(
         user: AuthenticatedUserDto,
         @RequestBody body: CreateLobbyDTO,
-    ): ResponseEntity<*> {
-        val result: Either<LobbyError, Lobby> = lobbyService.createLobby(user.user.id, body.name, body.maxPlayers, body.rounds)
-
-        return when (result) {
-            is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Success -> ResponseEntity.status(HttpStatus.CREATED).body(result.value)
+    ): ResponseEntity<*> =
+        handleResult("/lobbies/create", lobbyService.createLobby(user.user.id, body.name, body.maxPlayers, body.rounds), HttpStatus.CREATED) {
+            mapOf(
+                "lobbyId" to it.id,
+                "name" to it.name.value,
+                "maxPlayers" to it.maxPlayers,
+                "currentPlayers" to it.currentPlayers.size,
+                "rounds" to it.rounds,
+                "_links" to LobbyLinks.createLobby(it.id),
+            )
         }
-    }
 
-    /*
-    curl -X GET "http://localhost:8080/lobbies"
-     */
-    @GetMapping
+    @GetMapping(
+        produces = [ApiMediaTypes.APPLICATION_JSON, ApiMediaTypes.APPLICATION_PROBLEM_JSON],
+    )
     fun listLobbies(): ResponseEntity<*> {
         val result = lobbyService.listLobbies()
-        return ResponseEntity.ok(result)
+        return ResponseEntity.ok(
+            mapOf(
+                "lobbies" to result.map { lobby ->
+                    mapOf(
+                        "lobbyId" to lobby.id,
+                        "name" to lobby.name.value,
+                        "maxPlayers" to lobby.maxPlayers,
+                        "currentPlayers" to lobby.currentPlayers.size,
+                    )
+                },
+                "_links" to LobbyLinks.listLobbies(),
+            ),
+        )
     }
 
-    /*
-    curl -X GET "http://localhost:8080/lobbies/{lobbyId}"
-     */
-    @GetMapping("/{lobbyId}")
+    @GetMapping(
+        "/{lobbyId}",
+        produces = [ApiMediaTypes.APPLICATION_JSON, ApiMediaTypes.APPLICATION_PROBLEM_JSON],
+    )
     fun getLobbyDetails(
         @PathVariable lobbyId: Int,
-    ): ResponseEntity<*> {
-        val result: Either<LobbyError, Lobby> = lobbyService.getLobbyDetails(lobbyId)
-        return when (result) {
-            is Failure -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(result.value)
-            is Success -> ResponseEntity.ok(result.value)
+    ): ResponseEntity<*> =
+        handleResult("/lobbies/$lobbyId", lobbyService.getLobbyDetails(lobbyId)) {
+            mapOf(
+                "lobbyId" to it.id,
+                "name" to it.name.value,
+                "maxPlayers" to it.maxPlayers,
+                "currentPlayers" to it.currentPlayers.size,
+                "rounds" to it.rounds,
+                "_links" to LobbyLinks.lobbyDetails(lobbyId),
+            )
         }
-    }
 
-    /*
-    curl -X POST "http://localhost:8080/lobbies/join/{lobbyId}" \
-         -H "Authorization: Bearer <token>"
-     */
-    @PostMapping("/join/{lobbyId}")
+    @PostMapping(
+        "/join/{lobbyId}",
+        produces = [ApiMediaTypes.APPLICATION_JSON, ApiMediaTypes.APPLICATION_PROBLEM_JSON],
+    )
     fun joinLobby(
         user: AuthenticatedUserDto,
         @PathVariable lobbyId: Int,
-    ): ResponseEntity<*> {
-        val result = lobbyService.joinLobby(user.user.id, lobbyId)
-        return when (result) {
-            is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Success -> ResponseEntity.status(HttpStatus.ACCEPTED).body(result.value)
+    ): ResponseEntity<*> =
+        handleResult("/lobbies/join/$lobbyId", lobbyService.joinLobby(user.user.id, lobbyId), HttpStatus.ACCEPTED) {
+            mapOf(
+                "lobbyId" to it.id,
+                "message" to "Successfully joined lobby",
+                "_links" to LobbyLinks.joinLobby(lobbyId),
+            )
         }
-    }
 
-    /*
-    curl -X POST "http://localhost:8080/lobbies/leave/{lobbyId}" \
-         -H "Authorization: Bearer <token>"
-     */
-    @PostMapping("/leave/{lobbyId}")
+    @PostMapping(
+        "/leave/{lobbyId}",
+        produces = [ApiMediaTypes.APPLICATION_JSON, ApiMediaTypes.APPLICATION_PROBLEM_JSON],
+    )
     fun leaveLobby(
         user: AuthenticatedUserDto,
         @PathVariable lobbyId: Int,
-    ): ResponseEntity<*> {
-        val result = lobbyService.leaveLobby(user.user.id, lobbyId)
-        return when (result) {
-            is Failure -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result.value)
-            is Success -> ResponseEntity.status(HttpStatus.ACCEPTED).body(result.value)
+    ): ResponseEntity<*> =
+        handleResult("/lobbies/leave/$lobbyId", lobbyService.leaveLobby(user.user.id, lobbyId), HttpStatus.ACCEPTED) {
+            mapOf(
+                "message" to "Successfully left lobby",
+                "_links" to LobbyLinks.leaveLobby(),
+            )
         }
-    }
+
+    private fun handleLobbyError(
+        error: LobbyError,
+        instance: String,
+    ): ResponseEntity<ProblemDetail> =
+        when (error) {
+            is LobbyError.LobbyNotFound ->
+                ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(
+                        createProblemDetail(
+                            type = ProblemTypes.LOBBY_NOT_FOUND,
+                            title = "Lobby Not Found",
+                            status = HttpStatus.NOT_FOUND,
+                            detail = "The requested lobby does not exist.",
+                            instance = instance,
+                        ),
+                    )
+
+            is LobbyError.LobbyFull ->
+                ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(
+                        createProblemDetail(
+                            type = ProblemTypes.LOBBY_FULL,
+                            title = "Lobby Full",
+                            status = HttpStatus.CONFLICT,
+                            detail = "Cannot join lobby because it has reached maximum capacity.",
+                            instance = instance,
+                        ),
+                    )
+
+            is LobbyError.AlreadyInLobby ->
+                ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(
+                        createProblemDetail(
+                            type = ProblemTypes.ALREADY_IN_LOBBY,
+                            title = "Already In Lobby",
+                            status = HttpStatus.CONFLICT,
+                            detail = "Player is already in this lobby.",
+                            instance = instance,
+                        ),
+                    )
+
+            is LobbyError.NotInLobby ->
+                ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(
+                        createProblemDetail(
+                            type = ProblemTypes.NOT_IN_LOBBY,
+                            title = "Not In Lobby",
+                            status = HttpStatus.CONFLICT,
+                            detail = "Player is not a member of this lobby.",
+                            instance = instance,
+                        ),
+                    )
+
+            is LobbyError.InvalidLobbyData ->
+                ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(
+                        createProblemDetail(
+                            type = ProblemTypes.INVALID_LOBBY_DATA,
+                            title = "Invalid Lobby Data",
+                            status = HttpStatus.BAD_REQUEST,
+                            detail = "The provided lobby data is invalid.",
+                            instance = instance,
+                        ),
+                    )
+
+            is LobbyError.UserNotFound ->
+                ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(
+                        createProblemDetail(
+                            type = ProblemTypes.USER_NOT_FOUND,
+                            title = "User Not Found",
+                            status = HttpStatus.NOT_FOUND,
+                            detail = "The requested user does not exist.",
+                            instance = instance,
+                        ),
+                    )
+
+
+        }
+
+    private inline fun <T> handleResult(
+        path: String,
+        result: Either<LobbyError, T>,
+        status: HttpStatus = HttpStatus.OK,
+        successBodyBuilder: (T) -> Any,
+    ): ResponseEntity<*> =
+        when (result) {
+            is Failure -> handleLobbyError(result.value, path)
+            is Success -> ResponseEntity.status(status).body(successBodyBuilder(result.value))
+        }
 }

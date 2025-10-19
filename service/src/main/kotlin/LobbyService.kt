@@ -15,8 +15,6 @@ sealed class LobbyError(
 
     object InvalidLobbyData : LobbyError("Invalid lobby data")
 
-    object InvalidInviteCode : LobbyError("Invalid invite code")
-
     object AlreadyInLobby : LobbyError("User already in a lobby")
 
     object NotInLobby : LobbyError("User not in this lobby")
@@ -98,14 +96,20 @@ class LobbyService(
                 return@run failure(LobbyError.NotInLobby)
             }
 
+            // Captura o estado do lobby antes de remover
+            val isHost = lobby.hostId == userId
+            val updatedLobby = lobby.copy(
+                currentPlayers = lobby.currentPlayers.filter { it.id != userId }
+            )
+
             repositoryLobby.removePlayer(lobby.id, userId)
 
             // Se o host sair, fecha o lobby
-            if (lobby.hostId == userId) {
+            if (isHost) {
                 repositoryLobby.closeLobby(lobby.id)
             }
 
-            success(lobby)
+            success(updatedLobby)
         }
 
     private fun generateInviteCode(): String =

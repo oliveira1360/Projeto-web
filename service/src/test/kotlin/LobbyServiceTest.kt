@@ -10,6 +10,7 @@ import org.example.entity.core.Password
 import org.example.entity.core.URL
 import org.example.entity.player.User
 import org.example.game.RepositoryGameMem
+import org.example.general.RepositoryInviteMem
 import org.example.lobby.RepositoryLobbyMem
 import org.example.user.RepositoryUserMem
 import kotlin.test.BeforeTest
@@ -34,7 +35,8 @@ class LobbyServiceTest {
         get() = RepositoryLobbyMem.userRepo
     private val lobbyMem = RepositoryLobbyMem()
     private val gameMem = RepositoryGameMem()
-    private val trx = TransactionManagerMem(userMem, lobbyMem, gameMem)
+    private var generalMem: RepositoryInviteMem = RepositoryInviteMem()
+    private var trx: TransactionManagerMem = TransactionManagerMem(userMem, lobbyMem, gameMem,generalMem)
 
     private val service = LobbyService(trx, dominConfig)
 
