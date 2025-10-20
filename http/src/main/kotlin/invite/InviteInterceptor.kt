@@ -2,7 +2,6 @@ package org.example.invite
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.example.auth.RequestTokenProcessor
 import org.example.dto.inputDto.ValidInviteDTO
 import org.springframework.stereotype.Component
 import org.springframework.web.method.HandlerMethod

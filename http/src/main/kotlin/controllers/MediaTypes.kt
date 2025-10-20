@@ -37,7 +37,7 @@ object LinkRelations {
 object GameLinks {
     fun createGame(gameId: Int) =
         mapOf(
-            LinkRelations.SELF to mapOf("href" to "/game/$gameId"), // lobby Id
+            LinkRelations.SELF to mapOf("href" to "/game/$gameId"),
             LinkRelations.START_GAME to mapOf("href" to "/game/$gameId/round/start", "method" to "POST"),
             LinkRelations.PLAYER to mapOf("href" to "/game/$gameId/players"),
             LinkRelations.CLOSE to mapOf("href" to "/game/$gameId", "method" to "DELETE"),
