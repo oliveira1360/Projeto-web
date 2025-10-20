@@ -1,8 +1,8 @@
 
 package org.example
 
-import org.slf4j.LoggerFactory
 import jakarta.annotation.PreDestroy
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.util.concurrent.ConcurrentHashMap
@@ -30,26 +30,34 @@ enum class LobbyEventType {
 class LobbyNotificationService {
     // Mapa de lobbyId -> lista de emitters dos jogadores nesse lobby
     private val lobbyListeners = ConcurrentHashMap<Int, MutableList<SseEmitter>>()
+
     // Mapa de userId -> lobbyId para saber em que lobby cada user está
     private val userLobbyMap = ConcurrentHashMap<Int, Int>()
     private val lock = ReentrantLock()
 
-    // Timeout de 5 minutos (300.000 ms)
-    // Keep-alive a cada 25 segundos (menor que o timeout)
+    // Keep-alive every 25 seconds
     private val KEEP_ALIVE_INTERVAL = 25L
 
     private val executor =
         Executors
             .newScheduledThreadPool(1)
             .also {
-                // Keep-alive mais frequente
-                it.scheduleAtFixedRate({ sendKeepAlive() }, KEEP_ALIVE_INTERVAL, KEEP_ALIVE_INTERVAL, TimeUnit.SECONDS)
+                it.scheduleAtFixedRate(
+                    { sendKeepAlive() },
+                    KEEP_ALIVE_INTERVAL,
+                    KEEP_ALIVE_INTERVAL,
+                    TimeUnit.SECONDS,
+                )
             }
 
     /**
      * Registra um jogador para receber notificações de um lobby
      */
-    fun subscribe(userId: Int, lobbyId: Int, emitter: SseEmitter) {
+    fun subscribe(
+        userId: Int,
+        lobbyId: Int,
+        emitter: SseEmitter,
+    ) {
         lock.withLock {
             logger.info("User $userId subscribed to lobby $lobbyId")
 
@@ -76,7 +84,11 @@ class LobbyNotificationService {
     /**
      * Remove um jogador das notificações de um lobby
      */
-    private fun unsubscribe(userId: Int, lobbyId: Int, emitter: SseEmitter) {
+    private fun unsubscribe(
+        userId: Int,
+        lobbyId: Int,
+        emitter: SseEmitter,
+    ) {
         lock.withLock {
             lobbyListeners[lobbyId]?.remove(emitter)
             if (lobbyListeners[lobbyId]?.isEmpty() == true) {
@@ -89,7 +101,10 @@ class LobbyNotificationService {
     /**
      * Notifica todos os jogadores de um lobby
      */
-    fun notifyLobby(lobbyId: Int, event: LobbyEvent) {
+    fun notifyLobby(
+        lobbyId: Int,
+        event: LobbyEvent,
+    ) {
         val emitters = lobbyListeners[lobbyId] ?: return
         logger.info("Sending event ${event.type} to ${emitters.size} listeners in lobby $lobbyId")
 
@@ -107,8 +122,8 @@ class LobbyNotificationService {
                                 "message" to event.message,
                                 "data" to event.data,
                                 "timestamp" to System.currentTimeMillis(),
-                            )
-                        )
+                            ),
+                        ),
                 )
             } catch (ex: Exception) {
                 logger.error("Error sending event to emitter: ${ex.message}")
@@ -124,14 +139,6 @@ class LobbyNotificationService {
                 }
             }
         }
-    }
-
-    /**
-     * Notifica um jogador específico
-     */
-    fun notifyUser(userId: Int, event: LobbyEvent) {
-        val lobbyId = userLobbyMap[userId] ?: return
-        notifyLobby(lobbyId, event)
     }
 
     /**
@@ -151,7 +158,6 @@ class LobbyNotificationService {
             }
 
             lobbyListeners.remove(lobbyId)
-            // Remove users deste lobby do mapa
             userLobbyMap.entries.removeIf { it.value == lobbyId }
         }
     }
@@ -165,20 +171,18 @@ class LobbyNotificationService {
                         SseEmitter
                             .event()
                             .name("keep-alive")
-                            .data("ping")
+                            .data("ping"),
                     )
                 } catch (ex: Exception) {
                     logger.debug("Keep-alive failed for emitter in lobby $lobbyId: ${ex.message}")
                     deadEmitters.add(emitter)
                 }
             }
-            // Remove emitters mortos com lock
             if (deadEmitters.isNotEmpty()) {
                 lock.withLock {
                     deadEmitters.forEach { emitter ->
                         emitters.remove(emitter)
                     }
-                    // Limpa o lobby se não tiver mais emitters
                     if (emitters.isEmpty()) {
                         lobbyListeners.remove(lobbyId)
                     }

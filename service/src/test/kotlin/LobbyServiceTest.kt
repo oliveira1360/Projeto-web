@@ -69,7 +69,10 @@ class LobbyServiceTest {
         )
     }
 
-    private fun subscribeToLobbyEvents(userId: Int, lobbyId: Int): SseEmitter {
+    private fun subscribeToLobbyEvents(
+        userId: Int,
+        lobbyId: Int,
+    ): SseEmitter {
         val emitter = SseEmitter()
         lobbyNotificationService.subscribe(userId, lobbyId, emitter)
         return emitter
@@ -80,6 +83,81 @@ class LobbyServiceTest {
         lobbyMem.clear()
         userMem.clear()
         receivedEvents.clear()
+    }
+
+    //
+
+    @Test
+    fun `test lobby starts automatically after timeout with sufficient players`() {
+        // Override config with short timeout for testing
+        val shortTimeoutConfig =
+            LobbiesDomainConfig(
+                maxPlayersPerLobby = MAX_PLAYERS,
+                maxLobbiesPerUser = INVITE_CODE_LENGTH,
+                minPlayersToStart = MIN_PLAYERS,
+                lobbyTimeoutSeconds = 3L, // 3 seconds for fast testing
+            )
+        val testService = LobbyService(trx, shortTimeoutConfig, lobbyNotificationService)
+        testService.init() // Start scheduler
+
+        try {
+            val host = createTestUser(nickName = "host", email = "host@example.com")
+            val player2 = createTestUser(nickName = "player2", email = "player2@example.com")
+
+            // Create lobby with max 4 players (needs min 2)
+            val lobby = (testService.createLobby(host.id, "Timeout Test", 4, ROUNDS) as Success).value
+
+            // Add second player (now we have 2 players = minimum required)
+            testService.joinLobby(player2.id, lobby.id)
+
+            // Subscribe to notifications
+            subscribeToLobbyEvents(host.id, lobby.id)
+            subscribeToLobbyEvents(player2.id, lobby.id)
+
+            // Wait for timeout + processing time
+            Thread.sleep(5000) // 3s timeout + 2s buffer
+
+            // Assert: Lobby should have started and been closed
+            val result = testService.getLobbyDetails(lobby.id)
+            assertTrue(result is Failure)
+            assertEquals(LobbyError.LobbyNotFound, (result as Failure).value)
+        } finally {
+            testService.destroy()
+        }
+    }
+
+    @Test
+    fun `test lobby closes after timeout with insufficient players`() {
+        // Override config with short timeout for testing
+        val shortTimeoutConfig =
+            LobbiesDomainConfig(
+                maxPlayersPerLobby = MAX_PLAYERS,
+                maxLobbiesPerUser = INVITE_CODE_LENGTH,
+                minPlayersToStart = MIN_PLAYERS,
+                lobbyTimeoutSeconds = 3L, // 3 seconds for fast testing
+            )
+        val testService = LobbyService(trx, shortTimeoutConfig, lobbyNotificationService)
+        testService.init() // Start scheduler
+
+        try {
+            val host = createTestUser(nickName = "host", email = "host@example.com")
+
+            // Create lobby with only 1 player (needs min 2)
+            val lobby = (testService.createLobby(host.id, "Insufficient Players", 4, ROUNDS) as Success).value
+
+            // Subscribe to notifications
+            subscribeToLobbyEvents(host.id, lobby.id)
+
+            // Wait for timeout + processing time
+            Thread.sleep(5000) // 3s timeout + 2s buffer
+
+            // Assert: Lobby should have been closed
+            val result = testService.getLobbyDetails(lobby.id)
+            assertTrue(result is Failure)
+            assertEquals(LobbyError.LobbyNotFound, (result as Failure).value)
+        } finally {
+            testService.destroy()
+        }
     }
 
     // ============================================

@@ -1,12 +1,17 @@
 package org.example
 
+import jakarta.annotation.PostConstruct
+import jakarta.annotation.PreDestroy
 import jakarta.inject.Named
 import org.example.config.LobbiesDomainConfig
 import org.example.entity.core.toName
 import org.example.entity.lobby.Lobby
+import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 
 sealed class LobbyError(
     val message: String,
@@ -32,6 +37,8 @@ class LobbyService(
     private val config: LobbiesDomainConfig,
     private val notificationService: LobbyNotificationService,
 ) {
+    private val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
+
     fun createLobby(
         hostId: Int,
         name: String,
@@ -59,6 +66,36 @@ class LobbyService(
                     ?: return@run failure(LobbyError.LobbyNotFound)
             success(lobby)
         }
+
+    @PostConstruct
+    fun init() {
+        scheduler.scheduleAtFixedRate(
+            {
+                try {
+                    checkAndStartReadyLobbies()
+                } catch (e: Exception) {
+                    logger.error("Error checking lobbies", e)
+                }
+            },
+            5, // initial delay
+            5, // period
+            TimeUnit.SECONDS,
+        )
+        logger.info("LobbyService scheduler started - checking lobbies every 5 seconds")
+    }
+
+    @PreDestroy
+    fun destroy() {
+        logger.info("Shutting down LobbyService scheduler")
+        scheduler.shutdown()
+        try {
+            if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                scheduler.shutdownNow()
+            }
+        } catch (e: InterruptedException) {
+            scheduler.shutdownNow()
+        }
+    }
 
     fun joinLobby(
         userId: Int,
@@ -91,17 +128,20 @@ class LobbyService(
                     type = LobbyEventType.PLAYER_JOINED,
                     lobbyId = updatedLobby.id,
                     message = "${user.nickName.value} joined the lobby",
-                    data = mapOf(
-                        "userId" to user.id,
-                        "userName" to user.nickName.value,
-                        "currentPlayers" to updatedLobby.currentPlayers.size,
-                        "maxPlayers" to updatedLobby.maxPlayers,
-                    )
-                )
+                    data =
+                        mapOf(
+                            "userId" to user.id,
+                            "userName" to user.nickName.value,
+                            "currentPlayers" to updatedLobby.currentPlayers.size,
+                            "maxPlayers" to updatedLobby.maxPlayers,
+                        ),
+                ),
             )
 
             // Verificar se o lobby está pronto para iniciar após o join
-            checkIfLobbyReady(updatedLobby)
+            if (updatedLobby.currentPlayers.size >= updatedLobby.maxPlayers) {
+                startLobby(updatedLobby)
+            }
 
             success(updatedLobby)
         }
@@ -137,13 +177,14 @@ class LobbyService(
                     type = LobbyEventType.PLAYER_LEFT,
                     lobbyId = lobby.id,
                     message = "${user.nickName.value} left the lobby",
-                    data = mapOf(
-                        "userId" to user.id,
-                        "userName" to user.nickName.value,
-                        "currentPlayers" to updatedLobby.currentPlayers.size,
-                        "maxPlayers" to updatedLobby.maxPlayers,
-                    )
-                )
+                    data =
+                        mapOf(
+                            "userId" to user.id,
+                            "userName" to user.nickName.value,
+                            "currentPlayers" to updatedLobby.currentPlayers.size,
+                            "maxPlayers" to updatedLobby.maxPlayers,
+                        ),
+                ),
             )
 
             // Se o host sair, fecha o lobby
@@ -167,101 +208,98 @@ class LobbyService(
                 val timeElapsed = Duration.between(lobby.createdAt, now).seconds
 
                 when {
-                    // 1. Lobby está cheio - iniciar imediatamente
-                    currentPlayerCount >= lobby.maxPlayers -> {
-                        startLobby(lobby)
-                    }
-
-                    // 2. Timeout passou
                     timeElapsed >= config.lobbyTimeoutSeconds -> {
                         if (currentPlayerCount >= config.minPlayersToStart) {
-                            // Tem jogadores suficientes - iniciar
+                            notificationService.notifyLobby(
+                                lobby.id,
+                                LobbyEvent(
+                                    type = LobbyEventType.LOBBY_STARTING,
+                                    lobbyId = lobby.id,
+                                    message = "Timeout reached! Starting game with $currentPlayerCount players...",
+                                    data =
+                                        mapOf(
+                                            "reason" to "TIMEOUT",
+                                            "currentPlayers" to currentPlayerCount,
+                                        ),
+                                ),
+                            )
                             startLobby(lobby)
                         } else {
                             closeLobbyAndNotify(
                                 lobby.id,
-                                "Lobby closed: insufficient players after timeout (${currentPlayerCount}/${config.minPlayersToStart} required)"
+                                "Lobby closed: timeout with insufficient players ($currentPlayerCount/${config.minPlayersToStart} required)",
                             )
                         }
                     }
-                    // 3. Ainda dentro do tempo - não fazer nada
                 }
             }
         }
     }
 
     private fun startLobby(lobby: Lobby) {
-        trxManager.run{
-        println("Lobby ${lobby.id} starting with ${lobby.currentPlayers.size} jogadores!")
+        trxManager.run {
+            logger.info("Starting lobby ${lobby.id} with ${lobby.currentPlayers.size} players")
 
-        // Notificar todos os jogadores que o jogo está começando
-        notificationService.notifyLobby(
-            lobby.id,
-            LobbyEvent(
-                type = LobbyEventType.LOBBY_STARTING,
-                lobbyId = lobby.id,
-                message = "Game is starting!",
-                data = mapOf(
-                    "currentPlayers" to lobby.currentPlayers.size,
-                    "players" to lobby.currentPlayers.map {
+            notificationService.notifyLobby(
+                lobby.id,
+                LobbyEvent(
+                    type = LobbyEventType.LOBBY_STARTING,
+                    lobbyId = lobby.id,
+                    message = "Game is starting!",
+                    data =
                         mapOf(
-                            "id" to it.id,
-                            "nickName" to it.nickName.value
-                        )
-                    }
-                )
+                            "currentPlayers" to lobby.currentPlayers.size,
+                            "players" to
+                                lobby.currentPlayers.map {
+                                    mapOf("id" to it.id, "nickName" to it.nickName.value)
+                                },
+                        ),
+                ),
             )
-        )
 
-        repositoryGame.createGame(lobby.hostId, lobby.id)
+            val gameId = repositoryGame.createGame(lobby.hostId, lobby.id)
 
-        // Após iniciar o jogo, enviar evento final
-        notificationService.notifyLobby(
-            lobby.id,
-            LobbyEvent(
-                type = LobbyEventType.GAME_STARTED,
-                lobbyId = lobby.id,
-                message = "Game has started!",
-                data = mapOf("gameId" to 123) // ID do jogo criado
+            notificationService.notifyLobby(
+                lobby.id,
+                LobbyEvent(
+                    type = LobbyEventType.GAME_STARTED,
+                    lobbyId = lobby.id,
+                    message = "Game has started!",
+                    data = mapOf("gameId" to gameId),
+                ),
             )
-        )
-
-        // Fechar conexões SSE após iniciar o jogo
 
             repositoryLobby.closeLobby(lobby.id)
-        notificationService.closeLobbyConnections(lobby.id)
-    }
+            notificationService.closeLobbyConnections(lobby.id)
+        }
     }
 
     private fun closeLobbyAndNotify(
         lobbyId: Int,
-        reason: String
+        reason: String,
     ) {
-        trxManager.run{
-        val lobby = repositoryLobby.findById(lobbyId) ?: return@run
+        trxManager.run {
+            val lobby = repositoryLobby.findById(lobbyId) ?: return@run
 
-        println("Closing lobby $lobbyId: $reason")
+            logger.info("Closing lobby $lobbyId: $reason")
 
-        // Notificar todos os jogadores antes de fechar
-        notificationService.notifyLobby(
-            lobbyId,
-            LobbyEvent(
-                type = LobbyEventType.LOBBY_CLOSED,
-                lobbyId = lobbyId,
-                message = reason,
-                data = mapOf(
-                    "currentPlayers" to lobby.currentPlayers.size,
-                    "minPlayersRequired" to config.minPlayersToStart
-                )
+            notificationService.notifyLobby(
+                lobbyId,
+                LobbyEvent(
+                    type = LobbyEventType.LOBBY_CLOSED,
+                    lobbyId = lobbyId,
+                    message = reason,
+                    data =
+                        mapOf(
+                            "currentPlayers" to lobby.currentPlayers.size,
+                            "minPlayersRequired" to config.minPlayersToStart,
+                        ),
+                ),
             )
-        )
 
-        // Fechar o lobby
-        repositoryLobby.closeLobby(lobbyId)
-
-        // Fechar todas as conexões SSE
-        notificationService.closeLobbyConnections(lobbyId)
-    }
+            repositoryLobby.closeLobby(lobbyId)
+            notificationService.closeLobbyConnections(lobbyId)
+        }
     }
 
     private fun checkIfLobbyReady(lobby: Lobby) {
@@ -273,5 +311,7 @@ class LobbyService(
         }
     }
 
-
+    companion object {
+        private val logger = LoggerFactory.getLogger(LobbyService::class.java)
+    }
 }

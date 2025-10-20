@@ -14,7 +14,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
-import java.util.concurrent.TimeUnit
 
 @RestController
 @RequestMapping("/lobbies")
@@ -22,14 +21,32 @@ class LobbyController(
     private val lobbyService: LobbyService,
     private val lobbyNotificationService: LobbyNotificationService,
 ) {
-
     @GetMapping("/{lobbyId}/events")
     fun subscribeToLobbyEvents(
         user: AuthenticatedUserDto,
         @PathVariable lobbyId: Int,
     ): SseEmitter {
         val emitter = SseEmitter(10_000L)
+
         lobbyNotificationService.subscribe(user.user.id, lobbyId, emitter)
+
+        try {
+            emitter.send(
+                SseEmitter
+                    .event()
+                    .name("connected")
+                    .data(
+                        mapOf(
+                            "message" to "Connected to lobby $lobbyId",
+                            "lobbyId" to lobbyId,
+                            "userId" to user.user.id,
+                        ),
+                    ),
+            )
+        } catch (ex: Exception) {
+            emitter.completeWithError(ex)
+        }
+
         return emitter
     }
 
