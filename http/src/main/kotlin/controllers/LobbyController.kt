@@ -10,6 +10,7 @@ import org.example.LobbyService
 import org.example.Success
 import org.example.dto.inputDto.AuthenticatedUserDto
 import org.example.dto.inputDto.CreateLobbyDTO
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -26,7 +27,7 @@ class LobbyController(
         user: AuthenticatedUserDto,
         @PathVariable lobbyId: Int,
     ): SseEmitter {
-        val emitter = SseEmitter(10_000L)
+        val emitter = SseEmitter(100_000_000L)
 
         lobbyNotificationService.subscribe(user.user.id, lobbyId, emitter)
 
@@ -152,6 +153,7 @@ class LobbyController(
             is LobbyError.LobbyNotFound ->
                 ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.LOBBY_NOT_FOUND,
@@ -165,6 +167,7 @@ class LobbyController(
             is LobbyError.LobbyFull ->
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.LOBBY_FULL,
@@ -178,6 +181,7 @@ class LobbyController(
             is LobbyError.AlreadyInLobby ->
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.ALREADY_IN_LOBBY,
@@ -191,6 +195,7 @@ class LobbyController(
             is LobbyError.NotInLobby ->
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.NOT_IN_LOBBY,
@@ -204,6 +209,7 @@ class LobbyController(
             is LobbyError.InvalidLobbyData ->
                 ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.INVALID_LOBBY_DATA,
@@ -217,6 +223,7 @@ class LobbyController(
             is LobbyError.UserNotFound ->
                 ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.USER_NOT_FOUND,

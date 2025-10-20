@@ -15,6 +15,7 @@ import org.example.entity.core.toEmail
 import org.example.entity.core.toName
 import org.example.entity.core.toPassword
 import org.example.entity.core.toUrlOrNull
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -163,6 +164,7 @@ class UserController(
             is TokenCreationError.UserOrPasswordAreInvalid ->
                 ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.INVALID_CREDENTIALS,
@@ -182,6 +184,7 @@ class UserController(
             is UserError.InsecurePassword ->
                 ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.INSECURE_PASSWORD,
@@ -195,6 +198,7 @@ class UserController(
             is UserError.AlreadyUsedEmailAddress ->
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.EMAIL_ALREADY_USED,
@@ -208,6 +212,7 @@ class UserController(
             is UserError.InvalidCredentials ->
                 ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.INVALID_CREDENTIALS,

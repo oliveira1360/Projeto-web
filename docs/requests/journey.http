@@ -1,0 +1,150 @@
+# === Variables ===
+@host = http://localhost:8080
+@token = IiroCHWdAaVGlNBx10GMqjRDoV4gB2Lmr8M1QtrFRTA=
+@token2 = hI8O7yoeW4RkX3CM-c4MEjNR_uXNwM9Si2U-4INwCOE=
+@invite_token = TEST-INVITE-GAMMA
+@lobbyId = 8
+@gameId = 10
+@roundNumber = 1
+
+### Create User
+POST {{host}}/user/create
+Content-Type: application/json
+Authorization: invite {{invite_token}}
+
+{
+"name": "Diogo Oliveira",
+"nickName": "Diogo",
+"email": "diogo@example.com",
+"password": "Mypassword1",
+"imageUrl": "https://example.com/avatar.png"
+}
+
+
+### other user
+POST {{host}}/user/create
+Content-Type: application/json
+Authorization: invite {{invite_token}}
+
+{
+  "name": "Paulo",
+  "nickName": "Paulo",
+  "email": "Paulo@example.com",
+  "password": "Mypassword1",
+  "imageUrl": "https://example.com/avatar.png"
+}
+
+### Login User
+POST {{host}}/user/login
+Content-Type: application/json
+
+{
+"email": "diogo@example.com",
+"password": "Mypassword1"
+}
+
+> {% client.global.set("token", response.body.tokenValue) %}
+
+
+### other user
+POST {{host}}/user/login
+Content-Type: application/json
+
+{
+"email": "Paulo@example.com",
+"password": "Mypassword1"
+}
+
+> {% client.global.set("token2", response.body.tokenValue) %}
+
+### Create Lobby
+POST {{host}}/lobbies/create
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+"name": "Weekend Game",
+"maxPlayers": 4,
+"rounds": 12
+}
+
+> {% client.global.set("lobbyId", response.body.id) %}
+
+### Join Lobby
+POST {{host}}/lobbies/join/{{lobbyId}}
+Authorization: Bearer {{token2}}
+
+### View Lobby Details
+GET {{host}}/lobbies/{{lobbyId}}
+Authorization: Bearer {{token}}
+
+### Create Game from Lobby
+POST {{host}}/game/create
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "lobbyId": {{lobbyId}}
+}
+
+> {% client.global.set("gameId", response.body.gameId) %}
+
+### View Game Info
+### GET {{host}}/game/{{gameId}}
+### Authorization: Bearer {{token}}
+
+### Start Round
+POST {{host}}/game/{{gameId}}/round/start
+Authorization: Bearer {{token}}
+
+> {% client.global.set("roundNumber", response.body.roundNumber) %}
+
+### Get Player Hand
+GET {{host}}/game/{{gameId}}/player/hand
+Authorization: Bearer {{token}}
+
+### Shuffle Dice
+POST {{host}}/game/{{gameId}}/player/shuffle
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "lockedDice": []
+}
+### Shuffle Dice (example move)
+POST {{host}}/game/{{gameId}}/player/shuffle
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+"lockedDice": [0,1,2]
+}
+
+### Shuffle Dice other user
+POST {{host}}/game/{{gameId}}/player/shuffle
+Content-Type: application/json
+Authorization: Bearer {{token2}}
+
+{
+  "lockedDice": []
+}
+
+### Finish Turn
+PUT {{host}}/game/{{gameId}}/player/finish
+Authorization: Bearer {{token}}
+
+### Finish Turn
+PUT {{host}}/game/{{gameId}}/player/finish
+Authorization: Bearer {{token2}}
+
+### Get Round Winner
+GET {{host}}/game/{{gameId}}/round/winner
+Authorization: Bearer {{token}}
+
+### View Current Scores
+GET {{host}}/game/{{gameId}}/scores
+Authorization: Bearer {{token}}
+
+### Get Game Winner
+GET {{host}}/game/{{gameId}}/winner
+Authorization: Bearer {{token}}

@@ -1,7 +1,6 @@
 package org.example.controllers
 
 object ApiMediaTypes {
-    // Standard media types
     const val APPLICATION_JSON = "application/json"
     const val APPLICATION_PROBLEM_JSON = "application/problem+json"
 }
@@ -38,7 +37,7 @@ object LinkRelations {
 object GameLinks {
     fun createGame(gameId: Int) =
         mapOf(
-            LinkRelations.SELF to mapOf("href" to "/game/$gameId"),
+            LinkRelations.SELF to mapOf("href" to "/game/$gameId"), // lobby Id
             LinkRelations.START_GAME to mapOf("href" to "/game/$gameId/round/start", "method" to "POST"),
             LinkRelations.PLAYER to mapOf("href" to "/game/$gameId/players"),
             LinkRelations.CLOSE to mapOf("href" to "/game/$gameId", "method" to "DELETE"),
@@ -67,8 +66,8 @@ object GameLinks {
 
     fun shuffle(gameId: Int) =
         mapOf(
-            LinkRelations.SELF to mapOf("href" to "/game/$gameId/player/hand"),
-            LinkRelations.SHUFFLE to mapOf("href" to "/game/$gameId/player/shuffle", "method" to "POST"),
+            LinkRelations.SELF to mapOf("href" to "/game/$gameId/player/shuffle", "method" to "POST"),
+            LinkRelations.HAND to mapOf("href" to "/game/$gameId/player/hand"),
             LinkRelations.FINISH to mapOf("href" to "/game/$gameId/player/finish", "method" to "PUT"),
         )
 
@@ -154,7 +153,6 @@ object LobbyLinks {
 object UserLinks {
     fun createUser(userId: Int) =
         mapOf(
-            LinkRelations.SELF to mapOf("href" to "/user/info"),
             LinkRelations.LOGIN to mapOf("href" to "/user/login", "method" to "POST"),
             LinkRelations.UPDATE to mapOf("href" to "/user/update", "method" to "POST"),
             LinkRelations.STATS to mapOf("href" to "/user/stats"),
@@ -177,7 +175,6 @@ object UserLinks {
 
     fun updateUser(userId: Int) =
         mapOf(
-            LinkRelations.SELF to mapOf("href" to "/user/info"),
             LinkRelations.INFO to mapOf("href" to "/user/info"),
             LinkRelations.STATS to mapOf("href" to "/user/stats"),
         )

@@ -9,7 +9,7 @@ value class Balance(
     }
 }
 
-fun Money.isBalanceValid() = if (this.value >= 0) true else false
+fun Money.isBalanceValid() = if (true) true else false
 
 fun Int.toBalance() = Balance(Money(this))
 

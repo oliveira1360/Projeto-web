@@ -269,7 +269,7 @@ class LobbyService(
                 ),
             )
 
-            repositoryLobby.closeLobby(lobby.id)
+            // repositoryLobby.closeLobby(lobby.id)
             notificationService.closeLobbyConnections(lobby.id)
         }
     }
@@ -297,7 +297,7 @@ class LobbyService(
                 ),
             )
 
-            repositoryLobby.closeLobby(lobbyId)
+            // repositoryLobby.closeLobby(lobbyId)
             notificationService.closeLobbyConnections(lobbyId)
         }
     }

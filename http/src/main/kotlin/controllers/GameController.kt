@@ -10,6 +10,7 @@ import org.example.Success
 import org.example.dto.inputDto.AuthenticatedUserDto
 import org.example.dto.inputDto.CreateGameDTO
 import org.example.dto.inputDto.ShuffleDTO
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -30,6 +31,7 @@ class GameController(
      * Creates a new game instance.
      */
     @PostMapping(
+        "/create",
         consumes = [ApiMediaTypes.APPLICATION_JSON],
         produces = [ApiMediaTypes.APPLICATION_JSON, ApiMediaTypes.APPLICATION_PROBLEM_JSON],
     )
@@ -287,6 +289,7 @@ class GameController(
             is GameError.EmptyHand ->
                 ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.EMPTY_HAND,
@@ -301,6 +304,7 @@ class GameController(
             is GameError.NoRoundInProgress ->
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.NO_ROUND_IN_PROGRESS,
@@ -314,6 +318,7 @@ class GameController(
             is GameError.GameNotFinished ->
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.GAME_NOT_FINISHED,
@@ -328,6 +333,7 @@ class GameController(
             is GameError.TooManyRolls ->
                 ResponseEntity
                     .status(HttpStatus.FORBIDDEN)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.TOO_MANY_ROLLS,
@@ -342,6 +348,7 @@ class GameController(
             is GameError.GameNotFound ->
                 ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.GAME_NOT_FOUND,
@@ -355,6 +362,7 @@ class GameController(
             is GameError.LobbyNotFound ->
                 ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.LOBBY_NOT_FOUND,
@@ -368,6 +376,7 @@ class GameController(
             is GameError.InvalidGameId ->
                 ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.INVALID_GAME_ID,
@@ -381,6 +390,7 @@ class GameController(
             is GameError.InvalidUserId ->
                 ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.INVALID_USER_ID,
@@ -394,6 +404,7 @@ class GameController(
             is GameError.GameAlreadyFinished ->
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.GAME_ALREADY_FINISHED,
@@ -407,6 +418,7 @@ class GameController(
             is GameError.NoPlayersInGame ->
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.NO_PLAYERS_IN_GAME,
@@ -420,6 +432,7 @@ class GameController(
             is GameError.InvalidDiceIndices ->
                 ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.INVALID_DICE_INDICES,
@@ -433,6 +446,7 @@ class GameController(
             is GameError.RoundNotStarted ->
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.ROUND_NOT_STARTED,
@@ -446,6 +460,7 @@ class GameController(
             is GameError.AllPlayersNotFinished ->
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.ALL_PLAYERS_NOT_FINISHED,
@@ -459,6 +474,7 @@ class GameController(
             is GameError.UserNotInGame ->
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.USER_NOT_IN_GAME,
@@ -472,6 +488,7 @@ class GameController(
             is GameError.UnauthorizedAction ->
                 ResponseEntity
                     .status(HttpStatus.FORBIDDEN)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.UNAUTHORIZED_ACTION,
@@ -485,6 +502,7 @@ class GameController(
             is GameError.NotPlayerTurn ->
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
+                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
                     .body(
                         createProblemDetail(
                             type = ProblemTypes.UNAUTHORIZED_ACTION,

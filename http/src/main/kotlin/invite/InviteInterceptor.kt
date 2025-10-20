@@ -25,7 +25,7 @@ class InviteInterceptor(
             val invite = inviteProcessor.processorInviteHeaderValue(request.getHeader(NAME_AUTHORIZATION_HEADER))
             return if (invite == null) {
                 response.status = 401
-                response.addHeader(NAME_WWW_AUTHENTICATE_HEADER, RequestTokenProcessor.SCHEME)
+                response.addHeader(NAME_WWW_AUTHENTICATE_HEADER, InviteProcessor.SCHEME)
                 false
             } else {
                 InviteArgumentResolver.addInviteTo(invite, request)
