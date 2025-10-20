@@ -3,6 +3,7 @@ package org.example.controllers
 import org.example.GameService
 import org.example.TransactionManager
 import org.example.TransactionManagerMem
+import org.example.config.GameDomainConfig
 import org.example.dto.inputDto.AuthenticatedUserDto
 import org.example.dto.inputDto.CreateGameDTO
 import org.example.dto.inputDto.ShuffleDTO
@@ -23,14 +24,14 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class GameControllerTest {
-
     private val userMem = RepositoryUserMem()
     private val lobbyMem = RepositoryLobbyMem()
     private val gameMem = RepositoryGameMem()
     private val generalMem = RepositoryInviteMem()
     private val trxManager: TransactionManager = TransactionManagerMem(userMem, lobbyMem, gameMem, generalMem)
 
-    private val gameService = GameService(trxManager)
+    private var gameDomainConfig = GameDomainConfig(moneyRemove = 1)
+    private var gameService: GameService = GameService(trxManager, gameDomainConfig)
     private val gameController = GameController(gameService)
 
     private lateinit var user1: User
@@ -40,7 +41,7 @@ class GameControllerTest {
     private fun createTestUser(
         name: String = "Test User",
         nickName: String = "testuser",
-        email: String = "test@example.com"
+        email: String = "test@example.com",
     ): User {
         val uniqueEmail = Email("${userCounter++}$email")
         return trxManager.run {
@@ -49,21 +50,24 @@ class GameControllerTest {
                 nickName = Name("$nickName$userCounter"),
                 email = uniqueEmail,
                 password = Password("SecurePass123!"),
-                imageUrl = URL("https://example.com/avatar.png")
+                imageUrl = URL("https://example.com/avatar.png"),
             )
         }
     }
 
-    private fun createTestLobby(hostId: Int, maxPlayers: Int = 4): Int {
-        return trxManager.run {
-            repositoryLobby.createLobby(
-                name = Name("Test Lobby"),
-                hostId = hostId,
-                maxPlayers = maxPlayers,
-                rounds = 8
-            ).id
+    private fun createTestLobby(
+        hostId: Int,
+        maxPlayers: Int = 4,
+    ): Int =
+        trxManager.run {
+            repositoryLobby
+                .createLobby(
+                    name = Name("Test Lobby"),
+                    hostId = hostId,
+                    maxPlayers = maxPlayers,
+                    rounds = 8,
+                ).id
         }
-    }
 
     @BeforeEach
     fun cleanup() {
@@ -342,7 +346,7 @@ class GameControllerTest {
 
         // Create a hand with specific dice
         val hand = Hand(List(5) { Dice(DiceFace.ACE) })
-        trxManager.run { repositoryGame.shuffle(user1.id, hand,gameId ) }
+        trxManager.run { repositoryGame.shuffle(user1.id, hand, gameId) }
 
         // when: finishing turn
         val resp = gameController.finishTurn(AuthenticatedUserDto(user1, "token"), gameId)
@@ -387,8 +391,8 @@ class GameControllerTest {
         val hand1 = Hand(List(5) { Dice(DiceFace.KING) })
         val hand2 = Hand(List(5) { Dice(DiceFace.ACE) })
         trxManager.run {
-            repositoryGame.shuffle(user1.id, hand1,gameId )
-            repositoryGame.shuffle(user1.id, hand2,gameId )
+            repositoryGame.shuffle(user1.id, hand1, gameId)
+            repositoryGame.shuffle(user1.id, hand2, gameId)
         }
 
         gameController.finishTurn(AuthenticatedUserDto(user1, "token"), gameId)
@@ -419,7 +423,7 @@ class GameControllerTest {
         gameController.startRound(gameId)
 
         val hand = Hand(List(5) { Dice(DiceFace.KING) })
-        trxManager.run { repositoryGame.shuffle(user1.id, hand,gameId ) }
+        trxManager.run { repositoryGame.shuffle(user1.id, hand, gameId) }
         gameController.finishTurn(AuthenticatedUserDto(user1, "token"), gameId)
 
         // when: getting game winner
@@ -521,11 +525,12 @@ class GameControllerTest {
         assertNotNull((roundResp.body as Map<*, *>)["_links"])
 
         // shuffle
-        val shuffleResp = gameController.shuffle(
-            AuthenticatedUserDto(user1, "token"),
-            ShuffleDTO(emptyList()),
-            gameId
-        )
+        val shuffleResp =
+            gameController.shuffle(
+                AuthenticatedUserDto(user1, "token"),
+                ShuffleDTO(emptyList()),
+                gameId,
+            )
         assertNotNull((shuffleResp.body as Map<*, *>)["_links"])
     }
 
@@ -535,10 +540,11 @@ class GameControllerTest {
         val lobbyId = createTestLobby(user1.id)
 
         // create game
-        val createResp = gameController.createGame(
-            AuthenticatedUserDto(user1, "token"),
-            CreateGameDTO(lobbyId)
-        )
+        val createResp =
+            gameController.createGame(
+                AuthenticatedUserDto(user1, "token"),
+                CreateGameDTO(lobbyId),
+            )
         assertEquals(HttpStatus.CREATED, createResp.statusCode)
         val gameId = (createResp.body as Map<*, *>)["gameId"] as Int
 
@@ -547,11 +553,12 @@ class GameControllerTest {
         assertEquals(HttpStatus.CREATED, startResp.statusCode)
 
         // shuffle
-        val shuffleResp = gameController.shuffle(
-            AuthenticatedUserDto(user1, "token"),
-            ShuffleDTO(emptyList()),
-            gameId
-        )
+        val shuffleResp =
+            gameController.shuffle(
+                AuthenticatedUserDto(user1, "token"),
+                ShuffleDTO(emptyList()),
+                gameId,
+            )
         assertEquals(HttpStatus.OK, shuffleResp.statusCode)
 
         // finish turn

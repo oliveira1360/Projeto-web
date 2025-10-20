@@ -114,39 +114,42 @@ object GameLinks {
 }
 
 object LobbyLinks {
-    fun createLobby(lobbyId: Int) = mapOf(
-        "self" to mapOf("href" to "/lobbies/$lobbyId"),
-        "list" to mapOf("href" to "/lobbies"),
-        "join" to mapOf("href" to "/lobbies/join/$lobbyId"),
-        "details" to mapOf("href" to "/lobbies/$lobbyId")
-    )
+    fun createLobby(lobbyId: Int) =
+        mapOf(
+            "self" to mapOf("href" to "/lobbies/$lobbyId"),
+            "list" to mapOf("href" to "/lobbies"),
+            "join" to mapOf("href" to "/lobbies/join/$lobbyId"),
+            "details" to mapOf("href" to "/lobbies/$lobbyId"),
+        )
 
-    fun listLobbies() = mapOf(
-        "self" to mapOf("href" to "/lobbies"),
-        "create" to mapOf("href" to "/lobbies/create")
-    )
+    fun listLobbies() =
+        mapOf(
+            "self" to mapOf("href" to "/lobbies"),
+            "create" to mapOf("href" to "/lobbies/create"),
+        )
 
-    fun lobbyDetails(lobbyId: Int) = mapOf(
-        "self" to mapOf("href" to "/lobbies/$lobbyId"),
-        "list" to mapOf("href" to "/lobbies"),
-        "join" to mapOf("href" to "/lobbies/join/$lobbyId"),
-        "leave" to mapOf("href" to "/lobbies/leave/$lobbyId")
-    )
+    fun lobbyDetails(lobbyId: Int) =
+        mapOf(
+            "self" to mapOf("href" to "/lobbies/$lobbyId"),
+            "list" to mapOf("href" to "/lobbies"),
+            "join" to mapOf("href" to "/lobbies/join/$lobbyId"),
+            "leave" to mapOf("href" to "/lobbies/leave/$lobbyId"),
+        )
 
-    fun joinLobby(lobbyId: Int) = mapOf(
-        "self" to mapOf("href" to "/lobbies/join/$lobbyId"),
-        "details" to mapOf("href" to "/lobbies/$lobbyId"),
-        "leave" to mapOf("href" to "/lobbies/leave/$lobbyId"),
-        "list" to mapOf("href" to "/lobbies")
-    )
+    fun joinLobby(lobbyId: Int) =
+        mapOf(
+            "self" to mapOf("href" to "/lobbies/join/$lobbyId"),
+            "details" to mapOf("href" to "/lobbies/$lobbyId"),
+            "leave" to mapOf("href" to "/lobbies/leave/$lobbyId"),
+            "list" to mapOf("href" to "/lobbies"),
+        )
 
-    fun leaveLobby() = mapOf(
-        "list" to mapOf("href" to "/lobbies"),
-        "create" to mapOf("href" to "/lobbies/create")
-    )
+    fun leaveLobby() =
+        mapOf(
+            "list" to mapOf("href" to "/lobbies"),
+            "create" to mapOf("href" to "/lobbies/create"),
+        )
 }
-
-
 
 object UserLinks {
     fun createUser(userId: Int) =

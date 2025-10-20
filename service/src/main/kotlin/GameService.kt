@@ -1,6 +1,7 @@
 package org.example
 
 import jakarta.inject.Named
+import org.example.config.GameDomainConfig
 import org.example.entity.core.Points
 import org.example.entity.dice.createRandomDice
 import org.example.entity.game.GameWinnerInfo
@@ -53,6 +54,7 @@ data class CreatedGame(
 @Named
 class GameService(
     private val trxManager: TransactionManager,
+    private val config: GameDomainConfig,
 ) {
     /**
      * Validates that the user is a player in the specified game.

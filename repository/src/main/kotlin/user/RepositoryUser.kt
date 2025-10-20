@@ -52,4 +52,9 @@ interface RepositoryUser : Repository<User> {
         email: Email,
         password: Password,
     ): User?
+
+    fun updateBalance(
+        userId: Int,
+        amount: Int,
+    ): Int
 }

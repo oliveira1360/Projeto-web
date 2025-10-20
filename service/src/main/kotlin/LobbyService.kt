@@ -1,12 +1,9 @@
-
 package org.example
 
 import jakarta.inject.Named
 import org.example.config.LobbiesDomainConfig
 import org.example.entity.core.toName
 import org.example.entity.lobby.Lobby
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
@@ -126,9 +123,10 @@ class LobbyService(
 
             // Captura o estado do lobby antes de remover
             val isHost = lobby.hostId == userId
-            val updatedLobby = lobby.copy(
-                currentPlayers = lobby.currentPlayers.filter { it.id != userId }
-            )
+            val updatedLobby =
+                lobby.copy(
+                    currentPlayers = lobby.currentPlayers.filter { it.id != userId },
+                )
 
             repositoryLobby.removePlayer(lobby.id, userId)
 

@@ -180,12 +180,12 @@ class GameController(
         handleResult("/game/$gameId/round/winner", gameService.getRoundWinner(gameId)) {
             mapOf(
                 "winner" to
-                        mapOf(
-                            "playerId" to it.player.playerId,
-                            "points" to it.points.points,
-                            "handValue" to it.handValue.name,
-                            "roundNumber" to it.roundNumber,
-                        ),
+                    mapOf(
+                        "playerId" to it.player.playerId,
+                        "points" to it.points.points,
+                        "handValue" to it.handValue.name,
+                        "roundNumber" to it.roundNumber,
+                    ),
                 "_links" to GameLinks.getRoundWinner(gameId),
             )
         }
@@ -204,11 +204,11 @@ class GameController(
         handleResult("/game/$gameId/winner", gameService.getGameWinner(gameId)) {
             mapOf(
                 "winner" to
-                        mapOf(
-                            "playerId" to it.player.playerId,
-                            "totalPoints" to it.totalPoints.points,
-                            "roundsWon" to it.roundsWon,
-                        ),
+                    mapOf(
+                        "playerId" to it.player.playerId,
+                        "totalPoints" to it.totalPoints.points,
+                        "roundsWon" to it.roundsWon,
+                    ),
                 "_links" to GameLinks.getGameWinner(gameId),
             )
         }
@@ -264,14 +264,14 @@ class GameController(
         handleResult("/game/$gameId/scores", gameService.getScores(gameId)) { success ->
             mapOf(
                 "players" to
-                        success.pointsQueue
-                            .sortedByDescending { pointPlayer -> pointPlayer.points.points }
-                            .map {
-                                mapOf(
-                                    "playerId" to it.player.playerId,
-                                    "points" to it.points.points,
-                                )
-                            },
+                    success.pointsQueue
+                        .sortedByDescending { pointPlayer -> pointPlayer.points.points }
+                        .map {
+                            mapOf(
+                                "playerId" to it.player.playerId,
+                                "points" to it.points.points,
+                            )
+                        },
                 "_links" to GameLinks.getScoreboard(gameId),
             )
         }

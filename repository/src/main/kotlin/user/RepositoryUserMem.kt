@@ -5,6 +5,7 @@ import org.example.entity.core.Email
 import org.example.entity.core.Name
 import org.example.entity.core.Password
 import org.example.entity.core.URL
+import org.example.entity.core.toBalance
 import org.example.entity.core.toMoney
 import org.example.entity.player.User
 import org.example.entity.player.UserInfo
@@ -118,9 +119,22 @@ class RepositoryUserMem : RepositoryUser {
     override fun findByEmailAndPassword(
         email: Email,
         password: Password,
-    ): User? {
-       return  users.find { it.email == email && it.password == password }
-    }
+    ): User? = users.find { it.email == email && it.password == password }
+
+    override fun updateBalance(
+        userId: Int,
+        amount: Int,
+    ): Int =
+        users.find { it.id == userId }.let { user ->
+            if (user != null) {
+                val updatedUser = user.copy(balance = (user.balance.money.value + amount).toBalance())
+                _users.remove(user)
+                _users.add(updatedUser)
+                updatedUser.balance.money.value
+            } else {
+                throw IllegalArgumentException("User with id $userId not found")
+            }
+        }
 
     override fun findById(id: Int): User? = users.find { it.id == id }
 

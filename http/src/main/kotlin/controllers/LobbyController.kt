@@ -42,7 +42,11 @@ class LobbyController(
         user: AuthenticatedUserDto,
         @RequestBody body: CreateLobbyDTO,
     ): ResponseEntity<*> =
-        handleResult("/lobbies/create", lobbyService.createLobby(user.user.id, body.name, body.maxPlayers, body.rounds), HttpStatus.CREATED) {
+        handleResult(
+            "/lobbies/create",
+            lobbyService.createLobby(user.user.id, body.name, body.maxPlayers, body.rounds),
+            HttpStatus.CREATED,
+        ) {
             mapOf(
                 "lobbyId" to it.id,
                 "name" to it.name.value,
@@ -60,14 +64,15 @@ class LobbyController(
         val result = lobbyService.listLobbies()
         return ResponseEntity.ok(
             mapOf(
-                "lobbies" to result.map { lobby ->
-                    mapOf(
-                        "lobbyId" to lobby.id,
-                        "name" to lobby.name.value,
-                        "maxPlayers" to lobby.maxPlayers,
-                        "currentPlayers" to lobby.currentPlayers.size,
-                    )
-                },
+                "lobbies" to
+                    result.map { lobby ->
+                        mapOf(
+                            "lobbyId" to lobby.id,
+                            "name" to lobby.name.value,
+                            "maxPlayers" to lobby.maxPlayers,
+                            "currentPlayers" to lobby.currentPlayers.size,
+                        )
+                    },
                 "_links" to LobbyLinks.listLobbies(),
             ),
         )
@@ -204,8 +209,6 @@ class LobbyController(
                             instance = instance,
                         ),
                     )
-
-
         }
 
     private inline fun <T> handleResult(

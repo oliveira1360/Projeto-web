@@ -121,14 +121,14 @@ class RepositoryLobbyJDBI(
         // First, remove all players from the lobby
         handle
             .createUpdate(
-                "DELETE FROM lobby_players WHERE lobby_id = :lobby_id"
+                "DELETE FROM lobby_players WHERE lobby_id = :lobby_id",
             ).bind("lobby_id", lobbyId)
             .execute()
 
         // Then, delete the lobby itself
         handle
             .createUpdate(
-                "DELETE FROM lobbies WHERE id = :lobby_id"
+                "DELETE FROM lobbies WHERE id = :lobby_id",
             ).bind("lobby_id", lobbyId)
             .execute()
     }
@@ -224,15 +224,57 @@ class RepositoryLobbyJDBI(
     }
 
     override fun save(entity: Lobby) {
-        TODO("Not yet implemented")
+        handle
+            .createUpdate(
+                """
+                UPDATE lobbies
+                SET name = :name,
+                    host_id = :host_id,
+                    max_players = :max_players,
+                    rounds = :rounds
+                WHERE id = :id
+                """,
+            ).bind("id", entity.id)
+            .bind("name", entity.name.value)
+            .bind("host_id", entity.hostId)
+            .bind("max_players", entity.maxPlayers)
+            .bind("rounds", entity.rounds)
+            .execute()
+
+        handle
+            .createUpdate("DELETE FROM lobby_players WHERE lobby_id = :lobby_id")
+            .bind("lobby_id", entity.id)
+            .execute()
+
+        entity.currentPlayers.forEach { player ->
+            handle
+                .createUpdate(
+                    """
+                    INSERT INTO lobby_players (lobby_id, user_id)
+                    VALUES (:lobby_id, :user_id)
+                    """,
+                ).bind("lobby_id", entity.id)
+                .bind("user_id", player.id)
+                .execute()
+        }
     }
 
     override fun deleteById(id: Int) {
-        TODO("Not yet implemented")
+        handle
+            .createUpdate("DELETE FROM lobby_players WHERE lobby_id = :lobby_id")
+            .bind("lobby_id", id)
+            .execute()
+
+        handle
+            .createUpdate("DELETE FROM lobbies WHERE id = :id")
+            .bind("id", id)
+            .execute()
     }
 
     override fun clear() {
-        TODO("Not yet implemented")
+        handle.createUpdate("DELETE FROM lobby_players").execute()
+
+        handle.createUpdate("DELETE FROM lobbies").execute()
     }
 }
 

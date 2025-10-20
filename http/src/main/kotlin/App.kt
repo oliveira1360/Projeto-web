@@ -3,6 +3,7 @@
 package org.example
 
 import org.example.auth.*
+import org.example.config.GameDomainConfig
 import org.example.config.LobbiesDomainConfig
 import org.example.config.UsersDomainConfig
 import org.example.invite.InviteArgumentResolver
@@ -76,6 +77,12 @@ open class App {
         LobbiesDomainConfig(
             maxPlayersPerLobby = 6,
             maxLobbiesPerUser = 1,
+        )
+
+    @Bean
+    open fun gameDomainConfig() =
+        GameDomainConfig(
+            moneyRemove = 1,
         )
 }
 
