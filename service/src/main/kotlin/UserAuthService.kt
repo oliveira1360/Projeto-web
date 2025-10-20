@@ -112,7 +112,8 @@ class UserAuthService(
         return trxManager.run {
             val user = repositoryUser.findById(userId) ?: return@run failure(UserError.InvalidCredentials)
             success(user)
-        }    }
+        }
+    }
 
     fun createToken(
         email: String,

@@ -31,5 +31,8 @@ interface RepositoryLobby : Repository<Lobby> {
 
     fun closeLobby(lobbyId: Int)
 
-    fun findLobbiesReadyToStart(minPlayers: Int, timeoutSeconds: Long): List<Lobby>
+    fun findLobbiesReadyToStart(
+        minPlayers: Int,
+        timeoutSeconds: Long,
+    ): List<Lobby>
 }

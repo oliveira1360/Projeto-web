@@ -6,12 +6,10 @@ import org.example.TransactionManagerMem
 import org.example.UserAuthService
 import org.example.UserError
 import org.example.config.UsersDomainConfig
-import org.example.entity.core.Balance
 import org.example.entity.core.Email
 import org.example.entity.core.Name
 import org.example.entity.core.Password
 import org.example.entity.core.URL
-import org.example.entity.core.toMoney
 import org.example.entity.player.User
 import org.example.game.RepositoryGameMem
 import org.example.general.RepositoryInviteMem
@@ -27,7 +25,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.test.assertFalse
 
 class UserAuthServiceTest {
     private val domainConfig =
@@ -194,7 +191,6 @@ class UserAuthServiceTest {
         assertEquals(TokenCreationError.UserOrPasswordAreInvalid, (result as Either.Left).value)
     }
 
-
     @Test
     fun `test create token with blank email fails`() {
         val result = service.createToken("", "SomePassword123!")
@@ -280,9 +276,10 @@ class UserAuthServiceTest {
         val tokenResult = service.createToken(user.email.value, password)
         val tokenValue = (tokenResult as Either.Right).value.tokenValue
 
-        val tokenBefore = RepositoryUserMem.tokens.find {
-            it.tokenValidationInfo == tokenEncoder.createValidationInformation(tokenValue)
-        }
+        val tokenBefore =
+            RepositoryUserMem.tokens.find {
+                it.tokenValidationInfo == tokenEncoder.createValidationInformation(tokenValue)
+            }
         assertNotNull(tokenBefore)
         val lastUsedBefore = tokenBefore.lastUsedAt
 
@@ -290,9 +287,10 @@ class UserAuthServiceTest {
 
         service.getUserByToken(tokenValue)
 
-        val tokenAfter = RepositoryUserMem.tokens.find {
-            it.tokenValidationInfo == tokenEncoder.createValidationInformation(tokenValue)
-        }
+        val tokenAfter =
+            RepositoryUserMem.tokens.find {
+                it.tokenValidationInfo == tokenEncoder.createValidationInformation(tokenValue)
+            }
         assertNotNull(tokenAfter)
         assertTrue(tokenAfter.lastUsedAt > lastUsedBefore)
     }
@@ -371,7 +369,6 @@ class UserAuthServiceTest {
         val updatedUser = (result as Success).value
         assertEquals(newNickName, updatedUser.nickName.value)
     }
-
 
     @Test
     fun `test update user image URL successfully`() {

@@ -1,27 +1,20 @@
 package org.example.controllers
 
-import org.example.Environment
-import org.example.TransactionManagerJdbi
 import org.example.TransactionManagerMem
 import org.example.config.LobbiesDomainConfig
 import org.example.config.UsersDomainConfig
-import org.example.configureWithAppRequirements
 import org.example.game.RepositoryGameMem
 import org.example.general.RepositoryInviteMem
 import org.example.lobby.RepositoryLobbyMem
 import org.example.token.Sha256TokenEncoder
 import org.example.user.RepositoryUserMem
-import org.jdbi.v3.core.Jdbi
-import org.postgresql.ds.PGSimpleDataSource
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
-import org.springframework.context.annotation.Configuration
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.web.servlet.config.annotation.EnableWebMvc
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
-
 import java.time.Clock
 import java.time.Duration
 
@@ -35,12 +28,14 @@ open class TestConfig : WebMvcConfigurer {
     private val gameMem = RepositoryGameMem()
     private var generalMem: RepositoryInviteMem = RepositoryInviteMem()
 
-
     @Bean
-    open fun trxManagerMem(): TransactionManagerMem = TransactionManagerMem(
-        userMem, lobbyMem, gameMem,
-        generalMem
-    )
+    open fun trxManagerMem(): TransactionManagerMem =
+        TransactionManagerMem(
+            userMem,
+            lobbyMem,
+            gameMem,
+            generalMem,
+        )
 
     @Bean
     open fun passwordEncoder() = BCryptPasswordEncoder()

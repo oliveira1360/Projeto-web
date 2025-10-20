@@ -1,10 +1,11 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
 
 package org.example.controllers
 
 import org.example.*
 import org.example.config.LobbiesDomainConfig
-import org.example.dto.inputDto.CreateLobbyDTO
 import org.example.dto.inputDto.AuthenticatedUserDto
+import org.example.dto.inputDto.CreateLobbyDTO
 import org.example.entity.core.*
 import org.example.entity.player.User
 import org.example.game.RepositoryGameMem
@@ -17,16 +18,15 @@ import org.springframework.http.HttpStatus
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.test.assertFalse
 
 const val MAX_PLAYERS = 4
 
 class LobbyControllerTest {
-
-    private val lobbiesDomainConfig = LobbiesDomainConfig(
-        maxPlayersPerLobby = 6,
-        maxLobbiesPerUser = 1
-    )
+    private val lobbiesDomainConfig =
+        LobbiesDomainConfig(
+            maxPlayersPerLobby = 6,
+            maxLobbiesPerUser = 1,
+        )
 
     private val userMem: RepositoryUserMem
         get() = RepositoryLobbyMem.userRepo
@@ -46,7 +46,7 @@ class LobbyControllerTest {
     private fun createTestUser(
         name: String = "Test User",
         nickName: String = "testuser",
-        email: String = "test@example.com"
+        email: String = "test@example.com",
     ): User {
         val uniqueEmail = Email("${userCounter++}$email")
         return trxManager.run {
@@ -55,7 +55,7 @@ class LobbyControllerTest {
                 nickName = Name("$nickName$userCounter"),
                 email = uniqueEmail,
                 password = Password("SecurePass123!"),
-                imageUrl = URL("https://example.com/avatar.png")
+                imageUrl = URL("https://example.com/avatar.png"),
             )
         }
     }
@@ -69,25 +69,27 @@ class LobbyControllerTest {
         userCounter = 0
 
         // Cria dois utilizadores com dados consistentes
-        user1 = trxManager.run {
-            repositoryUser.createUser(
-                name = Name("John Doe"),
-                nickName = Name("john"),
-                email = Email("john@example.com"),
-                password = Password("SecurePass123!"),
-                imageUrl = URL("https://example.com/john.png")
-            )
-        }
+        user1 =
+            trxManager.run {
+                repositoryUser.createUser(
+                    name = Name("John Doe"),
+                    nickName = Name("john"),
+                    email = Email("john@example.com"),
+                    password = Password("SecurePass123!"),
+                    imageUrl = URL("https://example.com/john.png"),
+                )
+            }
 
-        user2 = trxManager.run {
-            repositoryUser.createUser(
-                name = Name("Jane Smith"),
-                nickName = Name("jane"),
-                email = Email("jane@example.com"),
-                password = Password("SecurePass123!"),
-                imageUrl = URL("https://example.com/jane.png")
-            )
-        }
+        user2 =
+            trxManager.run {
+                repositoryUser.createUser(
+                    name = Name("Jane Smith"),
+                    nickName = Name("jane"),
+                    email = Email("jane@example.com"),
+                    password = Password("SecurePass123!"),
+                    imageUrl = URL("https://example.com/jane.png"),
+                )
+            }
 
         // Cria duas lobbies
         trxManager.run {
@@ -95,7 +97,7 @@ class LobbyControllerTest {
                 name = Name("Test Lobby 1"),
                 hostId = user1.id,
                 maxPlayers = 4,
-                rounds = 8
+                rounds = 8,
             )
         }
 
@@ -104,7 +106,7 @@ class LobbyControllerTest {
                 name = Name("Test Lobby 2"),
                 hostId = user2.id,
                 maxPlayers = 4,
-                rounds = 8
+                rounds = 8,
             )
         }
     }
@@ -173,17 +175,19 @@ class LobbyControllerTest {
     @Test
     fun `createLobby should return CREATED with valid data`() {
         // given: a new lobby input
-        val input = CreateLobbyDTO(
-            name = "New Test Lobby",
-            maxPlayers = MAX_PLAYERS,
-            rounds = 8
-        )
+        val input =
+            CreateLobbyDTO(
+                name = "New Test Lobby",
+                maxPlayers = MAX_PLAYERS,
+                rounds = 8,
+            )
 
         // when: creating the lobby
-        val resp = controllerEvents.createLobby(
-            user = AuthenticatedUserDto(user1, "12345678"),
-            body = input
-        )
+        val resp =
+            controllerEvents.createLobby(
+                user = AuthenticatedUserDto(user1, "12345678"),
+                body = input,
+            )
 
         // then: the response is 201 with lobby details
         assertEquals(HttpStatus.CREATED, resp.statusCode)
@@ -198,17 +202,19 @@ class LobbyControllerTest {
     @Test
     fun `createLobby should fail with blank name`() {
         // given: a lobby with blank name
-        val input = CreateLobbyDTO(
-            name = "",
-            maxPlayers = MAX_PLAYERS,
-            rounds = 8
-        )
+        val input =
+            CreateLobbyDTO(
+                name = "",
+                maxPlayers = MAX_PLAYERS,
+                rounds = 8,
+            )
 
         // when: creating the lobby
-        val resp = controllerEvents.createLobby(
-            user = AuthenticatedUserDto(user1, "12345678"),
-            body = input
-        )
+        val resp =
+            controllerEvents.createLobby(
+                user = AuthenticatedUserDto(user1, "12345678"),
+                body = input,
+            )
 
         // then: the response is 400
         assertEquals(HttpStatus.BAD_REQUEST, resp.statusCode)
@@ -219,17 +225,19 @@ class LobbyControllerTest {
     @Test
     fun `createLobby should fail with whitespace-only name`() {
         // given: a lobby with whitespace name
-        val input = CreateLobbyDTO(
-            name = "   ",
-            maxPlayers = MAX_PLAYERS,
-            rounds = 8
-        )
+        val input =
+            CreateLobbyDTO(
+                name = "   ",
+                maxPlayers = MAX_PLAYERS,
+                rounds = 8,
+            )
 
         // when: creating the lobby
-        val resp = controllerEvents.createLobby(
-            user = AuthenticatedUserDto(user1, "12345678"),
-            body = input
-        )
+        val resp =
+            controllerEvents.createLobby(
+                user = AuthenticatedUserDto(user1, "12345678"),
+                body = input,
+            )
 
         // then: the response is 400
         assertEquals(HttpStatus.BAD_REQUEST, resp.statusCode)
@@ -238,17 +246,19 @@ class LobbyControllerTest {
     @Test
     fun `createLobby should fail with zero max players`() {
         // given: a lobby with 0 max players
-        val input = CreateLobbyDTO(
-            name = "Invalid Lobby",
-            maxPlayers = 0,
-            rounds = 8
-        )
+        val input =
+            CreateLobbyDTO(
+                name = "Invalid Lobby",
+                maxPlayers = 0,
+                rounds = 8,
+            )
 
         // when: creating the lobby
-        val resp = controllerEvents.createLobby(
-            user = AuthenticatedUserDto(user1, "12345678"),
-            body = input
-        )
+        val resp =
+            controllerEvents.createLobby(
+                user = AuthenticatedUserDto(user1, "12345678"),
+                body = input,
+            )
 
         // then: the response is 400
         assertEquals(HttpStatus.BAD_REQUEST, resp.statusCode)
@@ -257,17 +267,19 @@ class LobbyControllerTest {
     @Test
     fun `createLobby should fail with negative max players`() {
         // given: a lobby with negative max players
-        val input = CreateLobbyDTO(
-            name = "Invalid Lobby",
-            maxPlayers = -5,
-            rounds = 8
-        )
+        val input =
+            CreateLobbyDTO(
+                name = "Invalid Lobby",
+                maxPlayers = -5,
+                rounds = 8,
+            )
 
         // when: creating the lobby
-        val resp = controllerEvents.createLobby(
-            user = AuthenticatedUserDto(user1, "12345678"),
-            body = input
-        )
+        val resp =
+            controllerEvents.createLobby(
+                user = AuthenticatedUserDto(user1, "12345678"),
+                body = input,
+            )
 
         // then: the response is 400
         assertEquals(HttpStatus.BAD_REQUEST, resp.statusCode)
@@ -280,7 +292,7 @@ class LobbyControllerTest {
     @Test
     fun `getLobbyDetails should return lobby info`() {
         // given: an existing lobby
-        val lobbies = trxManager.run { repositoryLobby.findAll()}
+        val lobbies = trxManager.run { repositoryLobby.findAll() }
         val lobbyId = lobbies[0].id
 
         // when: getting lobby details
@@ -333,10 +345,11 @@ class LobbyControllerTest {
         val lobbyId = lobbies[0].id
 
         // when: user2 joins the lobby
-        val resp = controllerEvents.joinLobby(
-            user = AuthenticatedUserDto(user2, "token2"),
-            lobbyId = lobbyId
-        )
+        val resp =
+            controllerEvents.joinLobby(
+                user = AuthenticatedUserDto(user2, "token2"),
+                lobbyId = lobbyId,
+            )
 
         // then: the response is 202
         assertEquals(HttpStatus.ACCEPTED, resp.statusCode)
@@ -354,10 +367,11 @@ class LobbyControllerTest {
     @Test
     fun `joinLobby should return 404 for non-existent lobby`() {
         // when: user tries to join non-existent lobby
-        val resp = controllerEvents.joinLobby(
-            user = AuthenticatedUserDto(user2, "token2"),
-            lobbyId = 9999
-        )
+        val resp =
+            controllerEvents.joinLobby(
+                user = AuthenticatedUserDto(user2, "token2"),
+                lobbyId = 9999,
+            )
 
         // then: the response is 404
         assertEquals(HttpStatus.NOT_FOUND, resp.statusCode)
@@ -368,14 +382,15 @@ class LobbyControllerTest {
     @Test
     fun `joinLobby should return 409 when lobby is full`() {
         // given: a lobby with max 2 players
-        val smallLobby = trxManager.run {
-            repositoryLobby.createLobby(
-                name = Name("Small Lobby"),
-                hostId = user1.id,
-                maxPlayers = 2,
-                rounds = 4
-            )
-        }
+        val smallLobby =
+            trxManager.run {
+                repositoryLobby.createLobby(
+                    name = Name("Small Lobby"),
+                    hostId = user1.id,
+                    maxPlayers = 2,
+                    rounds = 4,
+                )
+            }
 
         // and: user2 joins
         trxManager.run {
@@ -386,10 +401,11 @@ class LobbyControllerTest {
         val user3 = createTestUser(name = "Bob", nickName = "bob", email = "bob@example.com")
 
         // when: user3 tries to join the full lobby
-        val resp = controllerEvents.joinLobby(
-            user = AuthenticatedUserDto(user3, "token3"),
-            lobbyId = smallLobby.id
-        )
+        val resp =
+            controllerEvents.joinLobby(
+                user = AuthenticatedUserDto(user3, "token3"),
+                lobbyId = smallLobby.id,
+            )
 
         // then: the response is 409
         assertEquals(HttpStatus.CONFLICT, resp.statusCode)
@@ -407,14 +423,15 @@ class LobbyControllerTest {
         // and: user2 joins
         controllerEvents.joinLobby(
             user = AuthenticatedUserDto(user2, "token2"),
-            lobbyId = lobbyId
+            lobbyId = lobbyId,
         )
 
         // when: user2 tries to join again
-        val resp = controllerEvents.joinLobby(
-            user = AuthenticatedUserDto(user2, "token2"),
-            lobbyId = lobbyId
-        )
+        val resp =
+            controllerEvents.joinLobby(
+                user = AuthenticatedUserDto(user2, "token2"),
+                lobbyId = lobbyId,
+            )
 
         // then: the response is 409
         assertEquals(HttpStatus.CONFLICT, resp.statusCode)
@@ -447,14 +464,14 @@ class LobbyControllerTest {
     // INTERMEDIATE TESTS - Leave Lobby
     // ============================================
 
-
     @Test
     fun `leaveLobby should return 404 for non-existent lobby`() {
         // when: user tries to leave non-existent lobby
-        val resp = controllerEvents.leaveLobby(
-            user = AuthenticatedUserDto(user2, "token2"),
-            lobbyId = 9999
-        )
+        val resp =
+            controllerEvents.leaveLobby(
+                user = AuthenticatedUserDto(user2, "token2"),
+                lobbyId = 9999,
+            )
 
         // then: the response is 404
         assertEquals(HttpStatus.NOT_FOUND, resp.statusCode)
@@ -469,10 +486,11 @@ class LobbyControllerTest {
         val lobbyId = lobbies[0].id
 
         // when: user2 tries to leave
-        val resp = controllerEvents.leaveLobby(
-            user = AuthenticatedUserDto(user2, "token2"),
-            lobbyId = lobbyId
-        )
+        val resp =
+            controllerEvents.leaveLobby(
+                user = AuthenticatedUserDto(user2, "token2"),
+                lobbyId = lobbyId,
+            )
 
         // then: the response is 409
         assertEquals(HttpStatus.CONFLICT, resp.statusCode)
@@ -507,14 +525,15 @@ class LobbyControllerTest {
     @Test
     fun `lobby capacity is properly enforced with join and leave operations`() {
         // given: a lobby with max 3 players
-        val lobby = trxManager.run {
-            repositoryLobby.createLobby(
-                name = Name("Capacity Test"),
-                hostId = user1.id,
-                maxPlayers = 3,
-                rounds = 4
-            )
-        }
+        val lobby =
+            trxManager.run {
+                repositoryLobby.createLobby(
+                    name = Name("Capacity Test"),
+                    hostId = user1.id,
+                    maxPlayers = 3,
+                    rounds = 4,
+                )
+            }
 
         // and: additional users
         val user3 = createTestUser(name = "User3", nickName = "user3", email = "user3@example.com")
@@ -554,17 +573,19 @@ class LobbyControllerTest {
     @Test
     fun `createLobby with minimum valid values`() {
         // given: minimum valid lobby configuration
-        val input = CreateLobbyDTO(
-            name = "M",
-            maxPlayers = 1,
-            rounds = 1
-        )
+        val input =
+            CreateLobbyDTO(
+                name = "M",
+                maxPlayers = 1,
+                rounds = 1,
+            )
 
         // when: creating the lobby
-        val resp = controllerEvents.createLobby(
-            user = AuthenticatedUserDto(user1, "12345678"),
-            body = input
-        )
+        val resp =
+            controllerEvents.createLobby(
+                user = AuthenticatedUserDto(user1, "12345678"),
+                body = input,
+            )
 
         // then: the response is 201
         assertEquals(HttpStatus.CREATED, resp.statusCode)
@@ -577,17 +598,19 @@ class LobbyControllerTest {
     @Test
     fun `createLobby with maximum expected values`() {
         // given: large lobby configuration
-        val input = CreateLobbyDTO(
-            name = "Epic Battle Royale Championship Tournament 2024",
-            maxPlayers = 100,
-            rounds = 50
-        )
+        val input =
+            CreateLobbyDTO(
+                name = "Epic Battle Royale Championship Tournament 2024",
+                maxPlayers = 100,
+                rounds = 50,
+            )
 
         // when: creating the lobby
-        val resp = controllerEvents.createLobby(
-            user = AuthenticatedUserDto(user1, "12345678"),
-            body = input
-        )
+        val resp =
+            controllerEvents.createLobby(
+                user = AuthenticatedUserDto(user1, "12345678"),
+                body = input,
+            )
 
         // then: the response is 201
         assertEquals(HttpStatus.CREATED, resp.statusCode)
@@ -632,18 +655,20 @@ class LobbyControllerTest {
     @Test
     fun `stress test - rapid join and leave operations`() {
         // given: a lobby and multiple users
-        val lobby = trxManager.run {
-            repositoryLobby.createLobby(
-                name = Name("Stress Test Lobby"),
-                hostId = user1.id,
-                maxPlayers = 10,
-                rounds = 8
-            )
-        }
+        val lobby =
+            trxManager.run {
+                repositoryLobby.createLobby(
+                    name = Name("Stress Test Lobby"),
+                    hostId = user1.id,
+                    maxPlayers = 10,
+                    rounds = 8,
+                )
+            }
 
-        val users = (1..5).map { i ->
-            createTestUser(name = "StressUser$i", nickName = "stress$i", email = "stress$i@example.com")
-        }
+        val users =
+            (1..5).map { i ->
+                createTestUser(name = "StressUser$i", nickName = "stress$i", email = "stress$i@example.com")
+            }
 
         // when: rapid join operations
         users.forEach { user ->
@@ -669,20 +694,22 @@ class LobbyControllerTest {
     @Test
     fun `edge case - single player lobby cannot accept more players`() {
         // given: a lobby with exactly 1 max player
-        val soloLobby = trxManager.run {
-            repositoryLobby.createLobby(
-                name = Name("Solo Lobby"),
-                hostId = user1.id,
-                maxPlayers = 1,
-                rounds = 4
-            )
-        }
+        val soloLobby =
+            trxManager.run {
+                repositoryLobby.createLobby(
+                    name = Name("Solo Lobby"),
+                    hostId = user1.id,
+                    maxPlayers = 1,
+                    rounds = 4,
+                )
+            }
 
         // when: another user tries to join
-        val resp = controllerEvents.joinLobby(
-            user = AuthenticatedUserDto(user2, "token2"),
-            lobbyId = soloLobby.id
-        )
+        val resp =
+            controllerEvents.joinLobby(
+                user = AuthenticatedUserDto(user2, "token2"),
+                lobbyId = soloLobby.id,
+            )
 
         // then: join fails with lobby full
         assertEquals(HttpStatus.CONFLICT, resp.statusCode)

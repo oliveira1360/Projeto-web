@@ -26,6 +26,8 @@ enum class LobbyEventType {
     GAME_STARTED,
 }
 
+private const val KEEP_ALIVE_INTERVAL = 25L
+
 @Service
 class LobbyNotificationService {
     // Mapa de lobbyId -> lista de emitters dos jogadores nesse lobby
@@ -36,7 +38,6 @@ class LobbyNotificationService {
     private val lock = ReentrantLock()
 
     // Keep-alive every 25 seconds
-    private val KEEP_ALIVE_INTERVAL = 25L
 
     private val executor =
         Executors

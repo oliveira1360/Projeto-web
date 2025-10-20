@@ -1,8 +1,7 @@
 plugins {
-    kotlin("jvm") version "2.2.10"
-    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
+    alias(libs.plugins.kotlin.jvm)
     kotlin("plugin.spring") version "1.9.25"
-    id("org.springframework.boot") version "3.5.6"
+    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -16,7 +15,8 @@ repositories {
 dependencies {
     api(project(":repository"))
 
-    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework:spring-webmvc:6.2.10")
+
     // To use PreDestroy annotation
     implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
 
@@ -35,6 +35,11 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
+ktlint {
+    version.set("1.5.0")
+}
+
 kotlin {
     jvmToolchain(21)
 }

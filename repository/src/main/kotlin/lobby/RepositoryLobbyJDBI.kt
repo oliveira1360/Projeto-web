@@ -133,7 +133,10 @@ class RepositoryLobbyJDBI(
             .execute()
     }
 
-    override fun findLobbiesReadyToStart(minPlayers: Int, timeoutSeconds: Long): List<Lobby> {
+    override fun findLobbiesReadyToStart(
+        minPlayers: Int,
+        timeoutSeconds: Long,
+    ): List<Lobby> {
         val now = java.time.Instant.now()
 
         val lobbies =
@@ -162,11 +165,14 @@ class RepositoryLobbyJDBI(
             .map { it.copy(currentPlayers = playersByLobbyId[it.id].orEmpty()) }
             .filter { lobby ->
                 val currentPlayerCount = lobby.currentPlayers.size
-                val timeElapsed = java.time.Duration.between(lobby.createdAt, now).seconds
+                val timeElapsed =
+                    java.time.Duration
+                        .between(lobby.createdAt, now)
+                        .seconds
 
                 // Lobby está cheio OU tem jogadores mínimos e o timeout passou
                 currentPlayerCount >= lobby.maxPlayers ||
-                        (currentPlayerCount >= minPlayers && timeElapsed >= timeoutSeconds)
+                    (currentPlayerCount >= minPlayers && timeElapsed >= timeoutSeconds)
             }
     }
 
@@ -208,11 +214,11 @@ class RepositoryLobbyJDBI(
             handle
                 .createQuery(
                     """
-                SELECT lp.lobby_id, u.*
-                FROM lobby_players lp
-                JOIN users u ON lp.user_id = u.id
-                WHERE lp.lobby_id IN (<ids>)
-                """.trimIndent(),
+                    SELECT lp.lobby_id, u.*
+                    FROM lobby_players lp
+                    JOIN users u ON lp.user_id = u.id
+                    WHERE lp.lobby_id IN (<ids>)
+                    """.trimIndent(),
                 ).bindList("ids", lobbies.map { it.id })
                 .map { rs, ctx ->
                     rs.getInt("lobby_id") to UserMapper().map(rs, ctx)

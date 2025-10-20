@@ -77,16 +77,22 @@ class RepositoryLobbyMem : RepositoryLobby {
         deleteById(lobbyId)
     }
 
-    override fun findLobbiesReadyToStart(minPlayers: Int, timeoutSeconds: Long): List<Lobby> {
+    override fun findLobbiesReadyToStart(
+        minPlayers: Int,
+        timeoutSeconds: Long,
+    ): List<Lobby> {
         val now = Instant.now()
 
         return lobbies.filter { lobby ->
             val currentPlayerCount = lobby.currentPlayers.size
-            val timeElapsed = java.time.Duration.between(lobby.createdAt, now).seconds
+            val timeElapsed =
+                java.time.Duration
+                    .between(lobby.createdAt, now)
+                    .seconds
 
             // Lobby está cheio OU tem jogadores mínimos e o timeout passou
             currentPlayerCount >= lobby.maxPlayers ||
-                    (currentPlayerCount >= minPlayers && timeElapsed >= timeoutSeconds)
+                (currentPlayerCount >= minPlayers && timeElapsed >= timeoutSeconds)
         }
     }
 
