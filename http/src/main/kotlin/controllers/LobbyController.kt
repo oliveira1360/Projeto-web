@@ -27,7 +27,7 @@ class LobbyController(
         user: AuthenticatedUserDto,
         @PathVariable lobbyId: Int,
     ): SseEmitter {
-        val emitter = SseEmitter(100_000_000L)
+        val emitter = SseEmitter(100_000L)
 
         lobbyNotificationService.subscribe(user.user.id, lobbyId, emitter)
 

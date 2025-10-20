@@ -6,7 +6,7 @@ data class LobbiesDomainConfig(
     val maxPlayersPerLobby: Int,
     val maxLobbiesPerUser: Int,
     val minPlayersToStart: Int = 2,
-    val lobbyTimeoutSeconds: Long = 300,
+    val lobbyTimeoutSeconds: Long = 60,
 ) {
     init {
         require(maxPlayersPerLobby > 0) { "maxPlayersPerLobby must be greater than 0" }

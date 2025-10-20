@@ -1,11 +1,11 @@
 # === Variables ===
 @host = http://localhost:8080
-@token = IiroCHWdAaVGlNBx10GMqjRDoV4gB2Lmr8M1QtrFRTA=
-@token2 = hI8O7yoeW4RkX3CM-c4MEjNR_uXNwM9Si2U-4INwCOE=
+@token = tuAeuM97a0_Qa-4teu3l1C55zoFBNp2fGn2YWwgbjhE=
+@token2 = 8Z0ppBjskslj4t7w0JPsSRTmiWTz8TXkJun_Wvy5q80=
 @invite_token = TEST-INVITE-GAMMA
-@lobbyId = 8
-@gameId = 10
-@roundNumber = 1
+@lobbyId = 4
+@gameId = 1
+@roundNumber = 2
 
 ### Create User
 POST {{host}}/user/create
@@ -43,7 +43,7 @@ Content-Type: application/json
 "password": "Mypassword1"
 }
 
-> {% client.global.set("token", response.body.tokenValue) %}
+> {% client.global.set("token", response.body.token) %}
 
 
 ### other user
@@ -55,7 +55,7 @@ Content-Type: application/json
 "password": "Mypassword1"
 }
 
-> {% client.global.set("token2", response.body.tokenValue) %}
+> {% client.global.set("token2", response.body.token) %}
 
 ### Create Lobby
 POST {{host}}/lobbies/create
@@ -64,7 +64,7 @@ Authorization: Bearer {{token}}
 
 {
 "name": "Weekend Game",
-"maxPlayers": 4,
+"maxPlayers": 3,
 "rounds": 12
 }
 
@@ -77,15 +77,6 @@ Authorization: Bearer {{token2}}
 ### View Lobby Details
 GET {{host}}/lobbies/{{lobbyId}}
 Authorization: Bearer {{token}}
-
-### Create Game from Lobby
-POST {{host}}/game/create
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "lobbyId": {{lobbyId}}
-}
 
 > {% client.global.set("gameId", response.body.gameId) %}
 
@@ -101,7 +92,7 @@ Authorization: Bearer {{token}}
 
 ### Get Player Hand
 GET {{host}}/game/{{gameId}}/player/hand
-Authorization: Bearer {{token}}
+Authorization: Bearer {{token2}}
 
 ### Shuffle Dice
 POST {{host}}/game/{{gameId}}/player/shuffle
@@ -109,7 +100,7 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "lockedDice": []
+  "lockedDice": [2,3]
 }
 ### Shuffle Dice (example move)
 POST {{host}}/game/{{gameId}}/player/shuffle
