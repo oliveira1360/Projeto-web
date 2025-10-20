@@ -195,7 +195,7 @@ class GameController(
     /**
      * Get game winner.
      */
-    @GetMapping(
+    @PatchMapping(
         "/{gameId}/winner",
         produces = [ApiMediaTypes.APPLICATION_JSON, ApiMediaTypes.APPLICATION_PROBLEM_JSON],
     )
