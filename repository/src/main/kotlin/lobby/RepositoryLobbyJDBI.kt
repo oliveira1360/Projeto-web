@@ -133,6 +133,43 @@ class RepositoryLobbyJDBI(
             .execute()
     }
 
+    override fun findLobbiesReadyToStart(minPlayers: Int, timeoutSeconds: Long): List<Lobby> {
+        val now = java.time.Instant.now()
+
+        val lobbies =
+            handle
+                .createQuery("SELECT * FROM lobbies ORDER BY created_at DESC")
+                .map(LobbyMapper())
+                .list()
+
+        if (lobbies.isEmpty()) return emptyList()
+
+        val playersByLobbyId =
+            handle
+                .createQuery(
+                    """
+                    SELECT lp.lobby_id, u.*
+                    FROM lobby_players lp
+                    JOIN users u ON lp.user_id = u.id
+                    WHERE lp.lobby_id IN (<ids>)
+                    """.trimIndent(),
+                ).bindList("ids", lobbies.map { it.id })
+                .map { rs, ctx ->
+                    rs.getInt("lobby_id") to UserMapper().map(rs, ctx)
+                }.groupBy({ it.first }, { it.second })
+
+        return lobbies
+            .map { it.copy(currentPlayers = playersByLobbyId[it.id].orEmpty()) }
+            .filter { lobby ->
+                val currentPlayerCount = lobby.currentPlayers.size
+                val timeElapsed = java.time.Duration.between(lobby.createdAt, now).seconds
+
+                // Lobby está cheio OU tem jogadores mínimos e o timeout passou
+                currentPlayerCount >= lobby.maxPlayers ||
+                        (currentPlayerCount >= minPlayers && timeElapsed >= timeoutSeconds)
+            }
+    }
+
     override fun findById(id: Int): Lobby? {
         val lobby =
             handle
@@ -171,17 +208,19 @@ class RepositoryLobbyJDBI(
             handle
                 .createQuery(
                     """
-                    SELECT lp.lobby_id, u.*
-                    FROM lobby_players lp
-                    JOIN users u ON lp.user_id = u.id
-                    WHERE lp.lobby_id IN (<ids>)
-                    """.trimIndent(),
+                SELECT lp.lobby_id, u.*
+                FROM lobby_players lp
+                JOIN users u ON lp.user_id = u.id
+                WHERE lp.lobby_id IN (<ids>)
+                """.trimIndent(),
                 ).bindList("ids", lobbies.map { it.id })
                 .map { rs, ctx ->
                     rs.getInt("lobby_id") to UserMapper().map(rs, ctx)
                 }.groupBy({ it.first }, { it.second })
 
-        return lobbies.map { it.copy(currentPlayers = playersByLobbyId[it.id].orEmpty()) }
+        return lobbies
+            .map { it.copy(currentPlayers = playersByLobbyId[it.id].orEmpty()) }
+            .filter { it.currentPlayers.size < it.maxPlayers }
     }
 
     override fun save(entity: Lobby) {
@@ -221,6 +260,7 @@ private class LobbyMapper(
         ctx: StatementContext,
     ): Lobby {
         val lobbyId = rs.getInt("id")
+        val createdAtTimestamp = rs.getTimestamp("created_at")
 
         return Lobby(
             id = lobbyId,
@@ -229,6 +269,7 @@ private class LobbyMapper(
             maxPlayers = rs.getInt("max_players"),
             rounds = rs.getInt("rounds"),
             currentPlayers = playersByLobbyId[lobbyId].orEmpty(),
+            createdAt = createdAtTimestamp.toInstant(),
         )
     }
 }

@@ -119,7 +119,7 @@ class RepositoryUserMem : RepositoryUser {
         email: Email,
         password: Password,
     ): User? {
-        TODO("Not yet implemented")
+       return  users.find { it.email == email && it.password == password }
     }
 
     override fun findById(id: Int): User? = users.find { it.id == id }

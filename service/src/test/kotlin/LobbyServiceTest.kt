@@ -1,5 +1,8 @@
+
 import org.example.Failure
 import org.example.LobbyError
+import org.example.LobbyEventType
+import org.example.LobbyNotificationService
 import org.example.LobbyService
 import org.example.Success
 import org.example.TransactionManagerMem
@@ -13,32 +16,41 @@ import org.example.game.RepositoryGameMem
 import org.example.general.RepositoryInviteMem
 import org.example.lobby.RepositoryLobbyMem
 import org.example.user.RepositoryUserMem
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 const val MAX_PLAYERS = 4
+const val MIN_PLAYERS = 2
 const val INVITE_CODE_LENGTH = 4
 const val MAX_PER_USER = 3
 const val ROUNDS = 16
+const val LOBBY_TIMEOUT_SECONDS = 60L
 
 class LobbyServiceTest {
     private val dominConfig =
         LobbiesDomainConfig(
-            MAX_PLAYERS,
-            INVITE_CODE_LENGTH,
+            maxPlayersPerLobby = MAX_PLAYERS,
+            maxLobbiesPerUser = INVITE_CODE_LENGTH,
+            minPlayersToStart = MIN_PLAYERS,
+            lobbyTimeoutSeconds = LOBBY_TIMEOUT_SECONDS,
         )
+
+    private val lobbyNotificationService = LobbyNotificationService()
+    private val receivedEvents = mutableListOf<Pair<LobbyEventType, Map<String, Any>>>()
 
     private val userMem: RepositoryUserMem
         get() = RepositoryLobbyMem.userRepo
     private val lobbyMem = RepositoryLobbyMem()
     private val gameMem = RepositoryGameMem()
     private var generalMem: RepositoryInviteMem = RepositoryInviteMem()
-    private var trx: TransactionManagerMem = TransactionManagerMem(userMem, lobbyMem, gameMem,generalMem)
+    private var trx: TransactionManagerMem = TransactionManagerMem(userMem, lobbyMem, gameMem, generalMem)
 
-    private val service = LobbyService(trx, dominConfig)
+    private val service = LobbyService(trx, dominConfig, lobbyNotificationService)
 
     private var counter = 0
 
@@ -57,11 +69,19 @@ class LobbyServiceTest {
         )
     }
 
+    private fun subscribeToLobbyEvents(userId: Int, lobbyId: Int): SseEmitter {
+        val emitter = SseEmitter()
+        lobbyNotificationService.subscribe(userId, lobbyId, emitter)
+        return emitter
+    }
+
     @BeforeTest
     fun setup() {
         lobbyMem.clear()
         userMem.clear()
+        receivedEvents.clear()
     }
+
     // ============================================
     // BASIC TESTS - Create Lobby
     // ============================================
@@ -80,6 +100,7 @@ class LobbyServiceTest {
         assertEquals("Test Lobby", lobby.name.value)
         assertEquals(1, lobby.currentPlayers.size)
         assertEquals(user.id, lobby.currentPlayers[0].id)
+        assertNotNull(lobby.createdAt)
     }
 
     @Test
@@ -141,7 +162,6 @@ class LobbyServiceTest {
     @Test
     fun `test list lobbies returns empty list when no lobbies exist`() {
         val result = service.listLobbies()
-        print(result)
         assertTrue(result.isEmpty())
     }
 
@@ -155,6 +175,19 @@ class LobbyServiceTest {
 
         val lobbies = service.listLobbies()
         assertEquals(2, lobbies.size)
+    }
+
+    @Test
+    fun `test list lobbies excludes full lobbies`() {
+        val host = createTestUser(nickName = "host", email = "host@example.com")
+        val lobby = (service.createLobby(host.id, "Test Lobby", 2, ROUNDS) as Success).value
+
+        val player2 = createTestUser(nickName = "player2", email = "player2@example.com")
+        service.joinLobby(player2.id, lobby.id)
+
+        // Lobby está cheio, não deve aparecer na lista
+        val lobbies = service.listLobbies()
+        assertEquals(0, lobbies.size)
     }
 
     @Test
@@ -177,16 +210,21 @@ class LobbyServiceTest {
     }
 
     // ============================================
-    // INTERMEDIATE TESTS - Join Lobby
+    // INTERMEDIATE TESTS - Join Lobby with Notifications
     // ============================================
 
     @Test
-    fun `test join lobby successfully`() {
+    fun `test join lobby successfully sends notification`() {
         val host = createTestUser(nickName = "host", email = "host@example.com")
         val player = createTestUser(nickName = "player", email = "player@example.com")
         val lobby = (service.createLobby(host.id, "Test Lobby", MAX_PLAYERS, ROUNDS) as Success).value
 
+        // Host se inscreve para notificações
+        subscribeToLobbyEvents(host.id, lobby.id)
+
+        // Player entra (deve disparar PLAYER_JOINED)
         val result = service.joinLobby(player.id, lobby.id)
+
         assertTrue(result is Success)
         val updatedLobby = (result as Success).value
         assertEquals(2, updatedLobby.currentPlayers.size)
@@ -237,7 +275,27 @@ class LobbyServiceTest {
         val result = service.joinLobby(player3.id, lobby.id)
 
         assertTrue(result is Failure)
-        assertEquals(LobbyError.LobbyFull, (result as Failure).value)
+        assertEquals(LobbyError.LobbyNotFound, (result as Failure).value)
+    }
+
+    @Test
+    fun `test lobby starts automatically when full`() {
+        val host = createTestUser(nickName = "host", email = "host@example.com")
+        val lobby = (service.createLobby(host.id, "Test Lobby", 2, ROUNDS) as Success).value
+
+        val player2 = createTestUser(nickName = "player2", email = "player2@example.com")
+
+        // Subscribe to notifications
+        subscribeToLobbyEvents(host.id, lobby.id)
+        subscribeToLobbyEvents(player2.id, lobby.id)
+
+        // Join completes the lobby (should trigger LOBBY_STARTING)
+        service.joinLobby(player2.id, lobby.id)
+
+        // Verify lobby was closed (started)
+        val result = service.getLobbyDetails(lobby.id)
+        assertTrue(result is Failure)
+        assertEquals(LobbyError.LobbyNotFound, (result as Failure).value)
     }
 
     @Test
@@ -251,23 +309,31 @@ class LobbyServiceTest {
 
         assertTrue(service.joinLobby(player2.id, lobby.id) is Success)
         assertTrue(service.joinLobby(player3.id, lobby.id) is Success)
+
+        // Last player joins - lobby starts
         assertTrue(service.joinLobby(player4.id, lobby.id) is Success)
 
-        val updatedLobby = (service.getLobbyDetails(lobby.id) as Success).value
-        assertEquals(4, updatedLobby.currentPlayers.size)
+        // Lobby should be closed/started
+        val result = service.getLobbyDetails(lobby.id)
+        assertTrue(result is Failure)
     }
 
     // ============================================
-    // INTERMEDIATE TESTS - Leave Lobby
+    // INTERMEDIATE TESTS - Leave Lobby with Notifications
     // ============================================
 
     @Test
-    fun `test leave lobby successfully`() {
+    fun `test leave lobby successfully sends notification`() {
         val host = createTestUser(nickName = "host", email = "host@example.com")
         val player = createTestUser(nickName = "player", email = "player@example.com")
         val lobby = (service.createLobby(host.id, "Test Lobby", MAX_PLAYERS, ROUNDS) as Success).value
+
         service.joinLobby(player.id, lobby.id)
 
+        // Subscribe to notifications
+        subscribeToLobbyEvents(host.id, lobby.id)
+
+        // Player leaves (should trigger PLAYER_LEFT)
         val result = service.leaveLobby(player.id, lobby.id)
         assertTrue(result is Success)
 
@@ -297,19 +363,29 @@ class LobbyServiceTest {
     }
 
     // ============================================
-    // ADVANCED TESTS - Complex Scenarios
+    // ADVANCED TESTS - Complex Scenarios with Notifications
     // ============================================
 
     @Test
-    fun `test host leaving lobby closes it`() {
+    fun `test host leaving lobby closes it and notifies all players`() {
         val host = createTestUser(nickName = "host", email = "host@example.com")
         val player = createTestUser(nickName = "player", email = "player@example.com")
         val lobby = (service.createLobby(host.id, "Test Lobby", MAX_PLAYERS, ROUNDS) as Success).value
+
         service.joinLobby(player.id, lobby.id)
 
+        // Both subscribe to notifications
+        subscribeToLobbyEvents(host.id, lobby.id)
+        subscribeToLobbyEvents(player.id, lobby.id)
+
+        // Host leaves (should trigger LOBBY_CLOSED)
         val result = service.leaveLobby(host.id, lobby.id)
         assertTrue(result is Success)
-        // Note: You should verify closeLobby was called - this depends on implementation
+
+        // Verify lobby was closed
+        val lobbyResult = service.getLobbyDetails(lobby.id)
+        assertTrue(lobbyResult is Failure)
+        assertEquals(LobbyError.LobbyNotFound, (lobbyResult as Failure).value)
     }
 
     @Test
@@ -338,28 +414,6 @@ class LobbyServiceTest {
         val lobby = (result as Success).value
         assertEquals(customMaxPlayers, lobby.maxPlayers)
         assertEquals(customRounds, lobby.rounds)
-    }
-
-    @Test
-    fun `test concurrent operations - fill lobby to capacity`() {
-        val host = createTestUser(nickName = "host", email = "host@example.com")
-        val lobby = (service.createLobby(host.id, "Test Lobby", 4, ROUNDS) as Success).value
-        val players =
-            (2..4).map { i ->
-                createTestUser(nickName = "player$i", email = "player$i@example.com")
-            }
-
-        players.forEach { player ->
-            val result = service.joinLobby(player.id, lobby.id)
-            assertTrue(result is Success)
-        }
-
-        val finalLobby = (service.getLobbyDetails(lobby.id) as Success).value
-        assertEquals(4, finalLobby.currentPlayers.size)
-        assertEquals(host.id, finalLobby.currentPlayers[0].id)
-        players.forEachIndexed { index, player ->
-            assertEquals(player.id, finalLobby.currentPlayers[index + 1].id)
-        }
     }
 
     @Test

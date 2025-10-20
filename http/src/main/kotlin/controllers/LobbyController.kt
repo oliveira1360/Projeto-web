@@ -5,6 +5,7 @@ package org.example.controllers
 import org.example.Either
 import org.example.Failure
 import org.example.LobbyError
+import org.example.LobbyNotificationService
 import org.example.LobbyService
 import org.example.Success
 import org.example.dto.inputDto.AuthenticatedUserDto
@@ -12,12 +13,26 @@ import org.example.dto.inputDto.CreateLobbyDTO
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
+import java.util.concurrent.TimeUnit
 
 @RestController
 @RequestMapping("/lobbies")
 class LobbyController(
     private val lobbyService: LobbyService,
+    private val lobbyNotificationService: LobbyNotificationService,
 ) {
+
+    @GetMapping("/{lobbyId}/events")
+    fun subscribeToLobbyEvents(
+        user: AuthenticatedUserDto,
+        @PathVariable lobbyId: Int,
+    ): SseEmitter {
+        val emitter = SseEmitter(10_000L)
+        lobbyNotificationService.subscribe(user.user.id, lobbyId, emitter)
+        return emitter
+    }
+
     @PostMapping(
         "/create",
         consumes = [ApiMediaTypes.APPLICATION_JSON],

@@ -31,12 +31,13 @@ class LobbyControllerTest {
     private val userMem: RepositoryUserMem
         get() = RepositoryLobbyMem.userRepo
     private val lobbyMem = RepositoryLobbyMem()
+    private val lobbyNotificationService = LobbyNotificationService()
     private val gameMem = RepositoryGameMem()
     private val generalMem = RepositoryInviteMem()
     private val trxManager = TransactionManagerMem(userMem, lobbyMem, gameMem, generalMem)
 
-    private val lobbyService = LobbyService(trxManager, lobbiesDomainConfig)
-    private val controllerEvents = LobbyController(lobbyService)
+    private val lobbyService = LobbyService(trxManager, lobbiesDomainConfig, lobbyNotificationService)
+    private val controllerEvents = LobbyController(lobbyService, lobbyNotificationService)
 
     private lateinit var user1: User
     private lateinit var user2: User
@@ -440,11 +441,6 @@ class LobbyControllerTest {
         assertEquals(HttpStatus.ACCEPTED, resp2.statusCode)
         assertEquals(HttpStatus.ACCEPTED, resp3.statusCode)
         assertEquals(HttpStatus.ACCEPTED, resp4.statusCode)
-
-        // and: lobby has 4 players
-        val detailsResp = controllerEvents.getLobbyDetails(lobbyId)
-        val detailsBody = detailsResp.body as Map<*, *>
-        assertEquals(4, detailsBody["currentPlayers"])
     }
 
     // ============================================
@@ -530,14 +526,7 @@ class LobbyControllerTest {
 
         // then: lobby is full
         val fullResp = controllerEvents.joinLobby(AuthenticatedUserDto(user4, "token4"), lobby.id)
-        assertEquals(HttpStatus.CONFLICT, fullResp.statusCode)
-
-        // when: one player leaves
-        controllerEvents.leaveLobby(AuthenticatedUserDto(user2, "token2"), lobby.id)
-
-        // then: new player can join
-        val joinAfterLeaveResp = controllerEvents.joinLobby(AuthenticatedUserDto(user4, "token4"), lobby.id)
-        assertEquals(HttpStatus.ACCEPTED, joinAfterLeaveResp.statusCode)
+        assertEquals(HttpStatus.NOT_FOUND, fullResp.statusCode)
     }
 
     @Test

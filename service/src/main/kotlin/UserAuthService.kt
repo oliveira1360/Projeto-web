@@ -109,14 +109,16 @@ class UserAuthService(
     }
 
     fun userStates(userId: Int): ReturnResult {
-        TODO()
-    }
+        return trxManager.run {
+            val user = repositoryUser.findById(userId) ?: return@run failure(UserError.InvalidCredentials)
+            success(user)
+        }    }
 
     fun createToken(
         email: String,
         password: String,
     ): Either<TokenCreationError, TokenExternalInfo> {
-        if (!(email.isValidEmail() || password.isPasswordValid())) {
+        if (!(email.isValidEmail() && password.isPasswordValid())) {
             return failure(TokenCreationError.UserOrPasswordAreInvalid)
         }
 

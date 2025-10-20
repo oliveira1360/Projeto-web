@@ -3,6 +3,7 @@ package org.example.lobby
 import org.example.entity.core.Name
 import org.example.entity.lobby.Lobby
 import org.example.user.RepositoryUserMem
+import java.time.Instant
 
 class RepositoryLobbyMem : RepositoryLobby {
     companion object {
@@ -74,6 +75,19 @@ class RepositoryLobbyMem : RepositoryLobby {
 
     override fun closeLobby(lobbyId: Int) {
         deleteById(lobbyId)
+    }
+
+    override fun findLobbiesReadyToStart(minPlayers: Int, timeoutSeconds: Long): List<Lobby> {
+        val now = Instant.now()
+
+        return lobbies.filter { lobby ->
+            val currentPlayerCount = lobby.currentPlayers.size
+            val timeElapsed = java.time.Duration.between(lobby.createdAt, now).seconds
+
+            // Lobby está cheio OU tem jogadores mínimos e o timeout passou
+            currentPlayerCount >= lobby.maxPlayers ||
+                    (currentPlayerCount >= minPlayers && timeElapsed >= timeoutSeconds)
+        }
     }
 
     override fun findById(id: Int): Lobby? = lobbies.find { it.id == id }

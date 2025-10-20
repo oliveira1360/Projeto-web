@@ -19,7 +19,6 @@ class RequestTokenProcessor(
         if (parts[0].lowercase() != SCHEME) {
             return null
         }
-        val result = usersService.getUserByToken(parts[1])
         return usersService.getUserByToken(parts[1])?.let {
             AuthenticatedUserDto(
                 it,
