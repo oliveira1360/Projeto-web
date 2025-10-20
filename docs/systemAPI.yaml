@@ -893,7 +893,7 @@ paths:
                 $ref: '#/components/schemas/GameError'
 
   /game/{gameId}/winner:
-    get:
+    patch:
       tags:
         - Games
       summary: Returns the overall game winner after all rounds have been played. Includes total scores and final ranking of players.
