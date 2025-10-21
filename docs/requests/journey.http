@@ -1,10 +1,10 @@
 # === Variables ===
 @host = http://localhost:8080
-@token = tuAeuM97a0_Qa-4teu3l1C55zoFBNp2fGn2YWwgbjhE=
-@token2 = 8Z0ppBjskslj4t7w0JPsSRTmiWTz8TXkJun_Wvy5q80=
+@token = 8mfyBlEyqZjFWRDnmjPNJHkQofPoX4sQD1CGkIOsUN8=
+@token2 = nBZ6YdMxlDn3nt6QR34xbH0W9KMVqH1J96YkBHAqk24=
 @invite_token = TEST-INVITE-GAMMA
-@lobbyId = 4
-@gameId = 1
+@lobbyId = 5
+@gameId = 9
 @roundNumber = 2
 
 ### Create User
@@ -43,7 +43,6 @@ Content-Type: application/json
 "password": "Mypassword1"
 }
 
-> {% client.global.set("token", response.body.token) %}
 
 
 ### other user
@@ -70,6 +69,10 @@ Authorization: Bearer {{token}}
 
 > {% client.global.set("lobbyId", response.body.id) %}
 
+### SSEEvents
+GET {{host}}/lobbies/{{lobbyId}}/events
+Authorization: Bearer {{token2}}
+
 ### Join Lobby
 POST {{host}}/lobbies/join/{{lobbyId}}
 Authorization: Bearer {{token2}}
@@ -92,7 +95,7 @@ Authorization: Bearer {{token}}
 
 ### Get Player Hand
 GET {{host}}/game/{{gameId}}/player/hand
-Authorization: Bearer {{token2}}
+Authorization: Bearer {{token}}
 
 ### Shuffle Dice
 POST {{host}}/game/{{gameId}}/player/shuffle
@@ -137,5 +140,5 @@ GET {{host}}/game/{{gameId}}/scores
 Authorization: Bearer {{token}}
 
 ### Get Game Winner
-GET {{host}}/game/{{gameId}}/winner
-Authorization: Bearer {{token}}
+PATCH {{host}}/game/{{gameId}}/winner
+Authorization: Bearer {{token2}}
