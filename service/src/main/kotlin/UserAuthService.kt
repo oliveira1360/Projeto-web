@@ -3,12 +3,12 @@ package org.example
 import jakarta.inject.Named
 import org.example.config.UsersDomainConfig
 import org.example.entity.core.Email
-import org.example.entity.core.Name
-import org.example.entity.core.Password
-import org.example.entity.core.URL
+import org.example.entity.core.isNameValid
 import org.example.entity.core.isPasswordValid
+import org.example.entity.core.isUrlValid
 import org.example.entity.core.isValidEmail
 import org.example.entity.core.toEmail
+import org.example.entity.core.toName
 import org.example.entity.core.toNameOrNull
 import org.example.entity.core.toPassword
 import org.example.entity.core.toPasswordOrNull
@@ -49,16 +49,39 @@ class UserAuthService(
     private val clock: Clock,
 ) {
     fun createUser(
-        name: Name,
-        nickName: Name,
-        email: Email,
-        password: Password,
-        imageUrl: URL?,
-    ): Either<UserError, User> =
-        trxManager.run {
+        name: String,
+        nickName: String,
+        email: String,
+        password: String,
+        imageUrl: String?,
+    ): Either<UserError, User> {
+        if (!(
+                email.isValidEmail() && password.isPasswordValid() && name.isNameValid() && nickName.isNameValid()
+            )
+        ) {
+            return failure(UserError.InsecurePassword)
+        }
+        if (imageUrl != null) {
+            if (!imageUrl.isUrlValid()) {
+                return failure(UserError.InsecurePassword)
+            }
+        }
+
+        val name = name.toName()
+        val nickName = nickName.toName()
+        val email = email.toEmail()
+        val password = password.toPassword()
+        val imageUrl = imageUrl?.toUrlOrNull()
+
+        return trxManager.run {
+            val existingUser = repositoryUser.findByEmail(email)?.let { return@run failure(UserError.AlreadyUsedEmailAddress) }
+
+            val existingNickName = repositoryUser.findByNickName(nickName)?.let { return@run failure(UserError.AlreadyUsedEmailAddress) }
+
             val user = repositoryUser.createUser(name, nickName, email, password, imageUrl)
             success(user)
         }
+    }
 
     fun getUserByEmail(email: Email): ReturnResult {
         return trxManager.run {

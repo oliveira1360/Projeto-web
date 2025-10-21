@@ -20,7 +20,6 @@ import org.example.token.Sha256TokenEncoder
 import org.example.user.RepositoryUserMem
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import java.time.Clock
@@ -504,27 +503,6 @@ class UserControllerTest {
         assertEquals("User1", body1["name"])
         assertEquals("User2", body2["name"])
         assertTrue(body1["userId"] != body2["userId"])
-    }
-
-    @Test
-    fun `user creation validates unique emails`() {
-        // given: a user with an email
-        val email = "duplicate@example.com"
-        val input1 = CreateUserDTO("User1", "nick1", email, "Pass123!", null)
-        userController.createUser(validInvite, input1)
-
-        // when: trying to create another user with same email
-        val input2 = CreateUserDTO("User2", "nick2", email, "Pass123!", null)
-
-        // then: creation fails with exception
-        val exception =
-            assertThrows<IllegalArgumentException> {
-                userController.createUser(validInvite, input2)
-            }
-        assertEquals(
-            "User with email Email(value=$email) already exists",
-            exception.message,
-        )
     }
 
     @Test

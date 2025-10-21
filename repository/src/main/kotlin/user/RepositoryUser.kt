@@ -14,6 +14,8 @@ import java.time.Instant
 interface RepositoryUser : Repository<User> {
     fun findByEmail(email: Email): User?
 
+    fun findByNickName(nickName: Name): User?
+
     fun createUser(
         name: Name,
         nickName: Name,

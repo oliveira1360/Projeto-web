@@ -25,6 +25,8 @@ class RepositoryUserMem : RepositoryUser {
 
     override fun findByEmail(email: Email): User? = users.find { it.email == email }
 
+    override fun findByNickName(nickName: Name): User? = users.find { it.nickName == nickName }
+
     override fun createUser(
         name: Name,
         nickName: Name,

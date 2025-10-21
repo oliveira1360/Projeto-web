@@ -11,10 +11,6 @@ import org.example.dto.inputDto.CreateUserDTO
 import org.example.dto.inputDto.LoginUserDTO
 import org.example.dto.inputDto.UpdateUserDTO
 import org.example.dto.inputDto.ValidInviteDTO
-import org.example.entity.core.toEmail
-import org.example.entity.core.toName
-import org.example.entity.core.toPassword
-import org.example.entity.core.toUrlOrNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -37,16 +33,10 @@ class UserController(
     fun createUser(
         invite: ValidInviteDTO,
         @RequestBody body: CreateUserDTO,
-    ): ResponseEntity<*> {
-        val name = body.name.toName()
-        val nickName = body.nickName.toName()
-        val email = body.email.toEmail()
-        val password = body.password.toPassword()
-        val imageUrl = body.imageUrl?.toUrlOrNull()
-
-        return handleUserResult(
+    ): ResponseEntity<*> =
+        handleUserResult(
             "/user/create",
-            userServices.createUser(name, nickName, email, password, imageUrl),
+            userServices.createUser(body.name, body.nickName, body.email, body.password, body.imageUrl),
             HttpStatus.CREATED,
         ) {
             mapOf(
@@ -58,7 +48,6 @@ class UserController(
                 "_links" to UserLinks.createUser(it.id),
             )
         }
-    }
 
     @PostMapping(
         "/login",

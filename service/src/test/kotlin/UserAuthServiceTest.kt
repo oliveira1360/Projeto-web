@@ -7,9 +7,6 @@ import org.example.UserAuthService
 import org.example.UserError
 import org.example.config.UsersDomainConfig
 import org.example.entity.core.Email
-import org.example.entity.core.Name
-import org.example.entity.core.Password
-import org.example.entity.core.URL
 import org.example.entity.player.User
 import org.example.game.RepositoryGameMem
 import org.example.general.RepositoryInviteMem
@@ -63,11 +60,11 @@ class UserAuthServiceTest {
         val uniqueEmail = "${counter++}$email"
         val result =
             service.createUser(
-                Name(name),
-                Name(nickName),
-                Email(uniqueEmail),
-                Password(password),
-                URL("https://example.com/avatar.png"),
+                name,
+                nickName,
+                uniqueEmail,
+                password,
+                "https://example.com/avatar.png",
             )
         return when (result) {
             is Success -> Pair(result.value, password)
@@ -90,11 +87,11 @@ class UserAuthServiceTest {
     fun `test create user with valid data`() {
         val result =
             service.createUser(
-                Name("John Doe"),
-                Name("johndoe"),
-                Email("john@example.com"),
-                Password("SecurePass123!"),
-                URL("https://example.com/avatar.png"),
+                "John Doe",
+                "johndoe",
+                "john@example.com",
+                "SecurePass123!",
+                "https://example.com/avatar.png",
             )
 
         assertTrue(result is Success)
@@ -110,10 +107,10 @@ class UserAuthServiceTest {
     fun `test create user without image URL`() {
         val result =
             service.createUser(
-                Name("Jane Doe"),
-                Name("janedoe"),
-                Email("jane@example.com"),
-                Password("SecurePass123!"),
+                "Jane Doe",
+                "janedoe",
+                "jane@example.com",
+                "SecurePass123!",
                 null,
             )
 
@@ -124,9 +121,9 @@ class UserAuthServiceTest {
 
     @Test
     fun `test create multiple users with unique emails`() {
-        val user1 = createTestUserData(email = "user1@example.com")
-        val user2 = createTestUserData(email = "user2@example.com")
-        val user3 = createTestUserData(email = "user3@example.com")
+        val user1 = createTestUserData(email = "user1@example.com", nickName = "ola1")
+        val user2 = createTestUserData(email = "user2@example.com", nickName = "ola2")
+        val user3 = createTestUserData(email = "user3@example.com", nickName = "ola3")
 
         assertEquals(3, userMem.users.size)
         assertTrue(userMem.users.any { it.email.value.contains("user1@example.com") })
@@ -158,9 +155,9 @@ class UserAuthServiceTest {
 
     @Test
     fun `test get user by email returns correct user among multiple`() {
-        createTestUserData(name = "User One", email = "user1@example.com")
-        val (targetUser, _) = createTestUserData(name = "User Two", email = "user2@example.com")
-        createTestUserData(name = "User Three", email = "user3@example.com")
+        createTestUserData(name = "User One", email = "user1@example.com", nickName = "ola1")
+        val (targetUser, _) = createTestUserData(name = "User Two", email = "user2@example.com", nickName = "ola3")
+        createTestUserData(name = "User Three", email = "user3@example.com", nickName = "ola2")
 
         val result = service.getUserByEmail(targetUser.email)
         assertTrue(result is Success)
@@ -423,10 +420,10 @@ class UserAuthServiceTest {
         val originalPassword = "OriginalPass123!"
         val createResult =
             service.createUser(
-                Name("Lifecycle User"),
-                Name("lifecycleuser"),
-                Email("lifecycle@example.com"),
-                Password(originalPassword),
+                "Lifecycle User",
+                "lifecycleuser",
+                "lifecycle@example.com",
+                originalPassword,
                 null,
             )
         assertTrue(createResult is Success)
@@ -488,8 +485,8 @@ class UserAuthServiceTest {
 
     @Test
     fun `test multiple users with different tokens dont interfere`() {
-        val (user1, password1) = createTestUserData(email = "user1@example.com")
-        val (user2, password2) = createTestUserData(email = "user2@example.com")
+        val (user1, password1) = createTestUserData(email = "user1@example.com", nickName = "ola1")
+        val (user2, password2) = createTestUserData(email = "user2@example.com", nickName = "ola2")
 
         val token1Result = service.createToken(user1.email.value, password1)
         val token2Result = service.createToken(user2.email.value, password2)
@@ -511,6 +508,7 @@ class UserAuthServiceTest {
             (1..5).map { i ->
                 createTestUserData(
                     name = "User $i",
+                    nickName = "userDi$i",
                     email = "user$i@example.com",
                     password = "Password$i!",
                 )

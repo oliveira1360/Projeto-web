@@ -31,6 +31,14 @@ class RepositoryUserJDBI(
             .findOne()
             .orElse(null)
 
+    override fun findByNickName(nickName: Name): User? =
+        handle
+            .createQuery("SELECT * FROM users WHERE nick_name = :nickName")
+            .bind("nickName", nickName.value)
+            .map(UserMapper())
+            .findOne()
+            .orElse(null)
+
     override fun createUser(
         name: Name,
         nickName: Name,
