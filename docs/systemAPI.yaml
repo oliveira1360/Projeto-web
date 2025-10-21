@@ -23,6 +23,7 @@ servers:
 
 tags:
   - name: Users
+  - name: Lobbies
   - name: Games
 
 components:
@@ -513,7 +514,7 @@ paths:
   /lobbies:
     get:
       tags:
-        - Games
+        - Lobbies
       summary: List all lobbies.
       responses:
         '200':
@@ -528,7 +529,7 @@ paths:
   /lobbies/create:
     post:
       tags:
-        - Games
+        - Lobbies
       summary: Creates a new lobby.
       security:
         - BearerAuth: [ ]
@@ -555,7 +556,7 @@ paths:
   /lobbies/{lobbyId}:
     get:
       tags:
-        - Games
+        - Lobbies
       summary: Get lobby details by ID.
       parameters:
         - in: path
@@ -587,7 +588,7 @@ paths:
   /lobbies/join/{lobbyId}:
     post:
       tags:
-        - Games
+        - Lobbies
       summary: Join a lobby.
       security:
         - BearerAuth: [ ]
@@ -615,7 +616,7 @@ paths:
   /lobbies/leave/{lobbyId}:
     post:
       tags:
-        - Games
+        - Lobbies
       summary: Leave a lobby.
       security:
         - BearerAuth: [ ]
