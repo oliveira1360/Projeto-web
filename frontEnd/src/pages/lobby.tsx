@@ -1,13 +1,14 @@
 import * as React from "react";
 import {NavBar} from '../components/navBar';
 
-function HomePage() {
+
+function LobbyPage() {
     return (
         <div>
-            <NavBar />
-            <h1>Home Page</h1>
+            <NavBar/>
+            <h1>Lobby Page</h1>
         </div>
     );
 }
 
-export default HomePage;
+export default LobbyPage

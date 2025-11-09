@@ -1,13 +1,14 @@
 import * as React from "react";
 import {NavBar} from '../components/navBar';
 
-function HomePage() {
+
+function AboutPage() {
     return (
         <div>
-            <NavBar />
-            <h1>Home Page</h1>
+            <NavBar/>
+            <h1>About Page</h1>
         </div>
     );
 }
 
-export default HomePage;
+export default AboutPage;
