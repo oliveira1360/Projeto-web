@@ -22,7 +22,7 @@ type Page = {
 const authRoutes: Page[] = [
     {path: '/home', element: <HomePage />},
     {path: '/about', element: <AboutPage /> },
-    {path: '/game', element: <GamePage /> },
+    {path: '/game/:gameId', element: <GamePage /> },
     {path: '/lobbies', element: <LobbiesPage /> },
     {path: '/lobby', element: <LobbyPage /> },
     {path: '/lobbyCreation', element: <LobbyCreationPage /> },

@@ -639,6 +639,7 @@ class RepositoryGameJDBI(
                     val playerInfo =
                         PlayerGameInfo(
                             playerId = rs.getInt("user_id"),
+                            name = Name(rs.getString("username")),
                             rolls = 0.toQuantity(),
                             hand = Hand(emptyList()),
                             balance = Balance(Money(rs.getInt("balance"))),
@@ -886,6 +887,7 @@ private class GameMapper : RowMapper<Game> {
                                                 player =
                                                     PlayerGameInfo(
                                                         playerId = playerId,
+                                                        name = Name("empty"),
                                                         rolls = 0.toQuantity(),
                                                         hand = Hand(emptyList()),
                                                         balance = Balance(Money(0)),
@@ -941,6 +943,7 @@ private class PlayerGameInfoMapper : RowMapper<PlayerGameInfo> {
         ctx: StatementContext,
     ): PlayerGameInfo {
         val playerId = rs.getInt("user_id")
+        val name = rs.getString("username")
         val roll = rs.getInt("roll_number")
         val balance = Balance(Money(rs.getInt("balance")))
         val pgArray = rs.getArray("hand")
@@ -960,6 +963,7 @@ private class PlayerGameInfoMapper : RowMapper<PlayerGameInfo> {
 
         return PlayerGameInfo(
             playerId = playerId,
+            name = Name(name),
             rolls = roll.toQuantity(),
             hand = Hand(diceList),
             balance = balance,

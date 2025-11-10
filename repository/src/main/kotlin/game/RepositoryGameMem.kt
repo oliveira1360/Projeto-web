@@ -84,6 +84,7 @@ class RepositoryGameMem : RepositoryGame {
 
                 PlayerGameInfo(
                     playerId = userId,
+                    name = user.name,
                     rolls = (turn?.rollNumber ?: 0).toQuantity(),
                     hand = turn?.hand ?: Hand(emptyList()),
                     balance = user.balance,
@@ -175,6 +176,7 @@ class RepositoryGameMem : RepositoryGame {
         val playerInfo =
             PlayerGameInfo(
                 playerId = winnerId,
+                name = user.name,
                 rolls = turn.rollNumber.toQuantity(),
                 hand = turn.hand ?: Hand(emptyList()),
                 balance = user.balance,
@@ -231,6 +233,7 @@ class RepositoryGameMem : RepositoryGame {
         val playerInfo =
             PlayerGameInfo(
                 playerId = winner.first,
+                name = user.name,
                 rolls = 0.toQuantity(),
                 hand = Hand(emptyList()),
                 balance = user.balance,
@@ -295,6 +298,7 @@ class RepositoryGameMem : RepositoryGame {
                     val playerInfo =
                         PlayerGameInfo(
                             playerId = userId,
+                            name = user.name,
                             rolls = turn.rollNumber.toQuantity(),
                             hand = turn.hand ?: Hand(emptyList()),
                             balance = user.balance,
@@ -323,6 +327,7 @@ class RepositoryGameMem : RepositoryGame {
                 val playerInfo =
                     PlayerGameInfo(
                         playerId = playerId,
+                        name = user.name,
                         rolls = 0.toQuantity(),
                         hand = Hand(emptyList()),
                         balance = user.balance,

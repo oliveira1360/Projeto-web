@@ -1,0 +1,369 @@
+html, body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.loading-message {
+    text-align: center;
+    margin-top: 4rem;
+    font-size: 1.25rem;
+    color: white;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* * --- Game Container --- */
+.game-container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #465a39;
+}
+
+.game-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.4) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+
+/* * --- Player Slots --- */
+.player-slot {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 20;
+    transform: translateX(-50%);
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.player-slot .avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.5rem;
+    border: 3px solid #2c3e50;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+}
+
+.player-slot .avatar:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+}
+
+.player-slot .username {
+    font-size: 0.875rem;
+    margin-top: 8px;
+    color: white;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    letter-spacing: 0.5px;
+}
+
+.player-slot .avatar.placeholder {
+    background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+    border-color: #5a6268;
+    opacity: 0.7;
+}
+.player-slot .username.placeholder {
+    color: #bdc3c7;
+    opacity: 0.8;
+}
+.player-slot .avatar.current-player {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border-color: #e74c3c;
+    animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes glow {
+    0%, 100% {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 0 20px rgba(245, 87, 108, 0.5);
+    }
+    50% {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 0 30px rgba(245, 87, 108, 0.8);
+    }
+}
+
+.player-slot .avatar.active-turn {
+    border-color: #3498db;
+    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.3);
+    animation: pulse-border 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+    0%, 100% {
+        box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(52, 152, 219, 0.1);
+    }
+}
+
+/* Player positioning */
+.player-slot.pos-1 { top: 12%; left: 20%; }
+.player-slot.pos-2 { top: 12%; left: 50%; }
+.player-slot.pos-3 { top: 12%; right: 20%; transform: translateX(50%); }
+.player-slot.pos-4 { bottom: 12%; left: 20%; }
+.player-slot.pos-5 { bottom: 12%; left: 50%; }
+.player-slot.pos-6 { bottom: 12%; right: 20%; transform: translateX(50%); }
+
+
+/* * --- Center Area (Dice and Buttons) --- */
+.center-area {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    max-width: 600px;
+}
+
+.dice-area {
+    display: flex;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.dice-area .no-dice-message {
+    font-style: italic;
+    color: #ecf0f1;
+    margin: 0;
+    font-size: 1.125rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.die {
+    width: 72px;
+    height: 72px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    font-weight: bold;
+    background: linear-gradient(145deg, #ffffff, #e8e8e8);
+    border: none;
+    box-shadow:
+            0 8px 16px rgba(0,0,0,0.15),
+            inset 0 -2px 4px rgba(0,0,0,0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+}
+
+.die::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    border-radius: 8px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent);
+    pointer-events: none;
+}
+
+.die:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow:
+            0 12px 24px rgba(0,0,0,0.2),
+            inset 0 -2px 4px rgba(0,0,0,0.1);
+}
+
+.die.my-turn {
+    cursor: pointer;
+    animation: gentle-float 3s ease-in-out infinite;
+}
+
+@keyframes gentle-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+.die.held {
+    background: linear-gradient(145deg, #4facfe, #00f2fe);
+    color: white;
+    transform: scale(1.1) rotate(5deg);
+    box-shadow:
+            0 12px 24px rgba(79, 172, 254, 0.4),
+            inset 0 -2px 4px rgba(0,0,0,0.2);
+}
+
+.die.held::after {
+    content: '✓';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    background: #27ae60;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    color: white;
+    box-shadow: 0 2px 8px rgba(39, 174, 96, 0.5);
+}
+
+.fallback-text {
+    color: #2c3e50;
+    text-transform: uppercase;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.5);
+}
+
+/* * --- Buttons --- */
+.btn {
+    border-radius: 12px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    color: white;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn:active {
+    transform: scale(0.95);
+}
+
+.btn:disabled {
+    background: linear-gradient(135deg, #7f8c8d, #95a5a6) !important;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn:disabled::before {
+    display: none;
+}
+
+/* Roll Button */
+.btn-roll {
+    padding: 1.25rem 0;
+    width: 70%;
+    font-size: 1.5rem;
+    font-weight: 900;
+    margin-bottom: 1.25rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.btn-roll:not(:disabled):hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Finish Button */
+.btn-finish {
+    padding: 1rem 3rem;
+    width: auto;
+    min-width: 280px;
+    font-size: 1.125rem;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.btn-finish:not(:disabled):hover {
+    background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(245, 87, 108, 0.4);
+}
+
+/* Leave Button */
+.btn-leave {
+    position: absolute;
+    bottom: 2rem;
+    left: 2rem;
+    z-index: 20;
+    padding: 0.875rem 2.5rem;
+    font-size: 1rem;
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    border-radius: 12px;
+}
+
+.btn-leave:not(:disabled):hover {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
+}
+
+.controls-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
