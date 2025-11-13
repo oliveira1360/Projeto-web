@@ -39,7 +39,7 @@ const LobbyCreationPage: React.FC = () => {
     };
 
     return (
-        <div className="lobby-creation-container">
+        <div className="lobby-creation-container lobby-page">
             <h2>Criar Novo Lobby</h2>
 
             {error && <p className="error-message">{error}</p>}

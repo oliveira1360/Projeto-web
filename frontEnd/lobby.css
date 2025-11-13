@@ -1,0 +1,181 @@
+/* --- Variáveis CSS (Tema Escuro/Jogo) --- */
+/* Estas variáveis ainda podem ser usadas globalmente, se desejar */
+:root {
+    --background-dark: #1e2124;
+    --card-background: #282b30;
+    --dark-green: #375338;
+    --accent-gold: #ffc107;
+    --text-light: #ffffff;
+    --text-secondary: #aaaaaa;
+    --border-color: #4f545c;
+    --shadow-color: rgba(0, 0, 0, 0.4);
+}
+
+/* --- Estilos Globais Base (Apenas para garantir o fundo do corpo se o ficheiro principal não o fizer) --- */
+body {
+    background-color: var(--background-dark);
+}
+
+/* ======================================================= */
+/* === CLASSE DE CONTENÇÃO: .lobby-page (TUDO AQUI DENTRO) === */
+/* ======================================================= */
+
+.lobby-page {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 40px 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+
+}
+
+.lobby-page h2 {
+    color: var(--accent-gold);
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2.2em;
+    text-shadow: 0 0 5px var(--shadow-color);
+}
+
+/* --- Botões (Revisados para usar as classes globais e depois as cores) --- */
+
+/* Nota: Se o seu CSS de Jogo define '.btn', estes estilos irão sobrepor-se nas cores,
+   mas o layout base (.btn) será mantido se o CSS de Jogo for carregado depois. */
+.lobby-page .btn {
+    /* Ajustes específicos do lobby, confiando no CSS base global para o resto */
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+.lobby-page .btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
+
+.lobby-page .btn-primary {
+    background-color: #007bff;
+}
+
+.lobby-page .btn-success {
+    background-color: #28a745;
+}
+
+.lobby-page .btn-secondary {
+    background-color: var(--border-color);
+}
+
+.lobby-page .btn-danger {
+    background-color: #dc3545;
+}
+
+.lobby-page .btn-small {
+    padding: 8px 15px;
+    font-size: 0.85em;
+    border-radius: 15px;
+}
+
+/* --- Grid de Lobbies --- */
+
+.lobby-page .lobby-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 40px;
+}
+
+/* --- Card de Lobby (LobbyCard) --- */
+
+.lobby-page .lobby-card {
+    background-color: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 8px 15px var(--shadow-color);
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.lobby-page .lobby-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--accent-gold);
+}
+
+.lobby-page .lobby-card.selected {
+    border: 2px solid var(--accent-gold);
+    box-shadow: 0 0 15px var(--accent-gold);
+    background-color: #383b42;
+}
+
+.lobby-page .lobby-card h3 {
+    margin-top: 0;
+    color: var(--accent-gold);
+    font-size: 1.4em;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.lobby-page .lobby-card p {
+    margin: 5px 0;
+    font-size: 1em;
+    color: var(--text-secondary);
+}
+
+.lobby-page .card-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* --- Painel de Detalhes (LobbyDetails) --- */
+
+.lobby-page .details-panel {
+    background-color: var(--dark-green);
+    border: 3px solid var(--accent-gold);
+    padding: 30px;
+    margin-top: 50px;
+    border-radius: 15px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6);
+}
+
+.lobby-page .details-panel h3 {
+    color: var(--accent-gold);
+    border-bottom: 2px solid var(--accent-gold);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.lobby-page .details-panel p {
+    font-size: 1.1em;
+    margin: 15px 0;
+}
+
+.lobby-page .details-panel .btn-danger {
+    margin-top: 20px;
+    display: block;
+    width: 100%;
+}
+
+/* --- Estilos de Estado --- */
+
+.lobby-page .error-message {
+    color: #ff6b6b;
+    background-color: #4d2d2d;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px auto;
+    text-align: center;
+    max-width: 600px;
+    border: 1px solid #ff6b6b;
+}
+
+/* --- Linha Separadora --- */
+.lobby-page hr {
+    border: none;
+    border-top: 2px dashed var(--border-color);
+    margin: 40px 0;
+}

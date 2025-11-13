@@ -46,7 +46,7 @@ const LobbyPage: React.FC = () => {
     };
 
     return (
-        <div className="lobby-container">
+        <div className="lobby-container lobby-page">
             <h2>Lobbies Disponíveis</h2>
 
             {loading && lobbies.length === 0 && <h2>A carregar Lobbies...</h2>}
