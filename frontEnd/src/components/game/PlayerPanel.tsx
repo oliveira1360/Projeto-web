@@ -1,6 +1,6 @@
 // @ts-ignore
 import React from "react";
-import {Player} from "../../services/game/gameService";
+import {Player} from "../../services/game/responsesType";
 
 interface PlayerSlotProps {
     player?: Player;

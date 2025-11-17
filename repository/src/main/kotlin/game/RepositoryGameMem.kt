@@ -32,6 +32,7 @@ data class RoundData(
     val roundNumber: Int,
     val turns: MutableMap<Int, TurnData> = mutableMapOf(),
     val winnerId: Int? = null,
+    val playerOrder: MutableList<Int> = mutableListOf(),
 )
 
 data class TurnData(
@@ -65,10 +66,7 @@ class RepositoryGameMem : RepositoryGame {
         return gameId
     }
 
-    override fun closeGame(
-        userId: Int,
-        gameId: Int,
-    ) {
+    override fun closeGame(gameId: Int) {
         val game = games[gameId] ?: throw IllegalArgumentException("Game not found: $gameId")
         games[gameId] = game.copy(status = "FINISHED")
     }
@@ -97,9 +95,10 @@ class RepositoryGameMem : RepositoryGame {
     override fun startRound(gameId: Int): Int {
         val game = games[gameId] ?: throw IllegalArgumentException("Game not found: $gameId")
         val nextRoundNumber = (game.rounds.maxOfOrNull { it.roundNumber } ?: 0) + 1
-        val round = RoundData(gameId, nextRoundNumber)
+        val playerOrder = game.players.toMutableList()
+        val round = RoundData(gameId, nextRoundNumber, playerOrder = playerOrder)
         game.rounds.add(round)
-        return game.rounds.size // todo
+        return nextRoundNumber
     }
 
     override fun getPlayerHand(
@@ -135,7 +134,7 @@ class RepositoryGameMem : RepositoryGame {
         return newHand
     }
 
-    override fun calculatePoints(
+    override fun updateScore(
         userId: Int,
         gameId: Int,
         points: Points,
@@ -281,12 +280,11 @@ class RepositoryGameMem : RepositoryGame {
 
     override fun getRoundInfo(gameId: Int): RoundInfo {
         val game = games[gameId] ?: throw IllegalArgumentException("Game not found: $gameId")
-
         val currentRound = game.rounds.maxByOrNull { it.roundNumber }
 
         if (currentRound == null) {
             val pointsQueue = PriorityQueue<PointPlayer>(compareByDescending { it.points.points })
-            return RoundInfo(Round(0), pointsQueue)
+            return RoundInfo(Round(0), pointsQueue, emptyList())
         }
 
         val pointsQueue = PriorityQueue<PointPlayer>(compareByDescending { it.points.points })
@@ -308,7 +306,26 @@ class RepositoryGameMem : RepositoryGame {
             }
         }
 
-        return RoundInfo(Round(currentRound.roundNumber), pointsQueue)
+        return RoundInfo(Round(currentRound.roundNumber), pointsQueue, currentRound.playerOrder.toList())
+    }
+
+    override fun getRoundOrder(gameId: Int): List<Int> {
+        val game = games[gameId] ?: return emptyList()
+        val currentRound = game.rounds.maxByOrNull { it.roundNumber } ?: return emptyList()
+        return currentRound.playerOrder.toList()
+    }
+
+    override fun setRoundOrder(
+        gameId: Int,
+        roundNumber: Int,
+        playerOrder: List<Int>,
+    ) {
+        val game = games[gameId] ?: throw IllegalStateException("Game not found: $gameId")
+        val round =
+            game.rounds.find { it.roundNumber == roundNumber }
+                ?: throw IllegalStateException("Round not found")
+        round.playerOrder.clear()
+        round.playerOrder.addAll(playerOrder)
     }
 
     override fun getScores(gameId: Int): Scoreboard {
@@ -337,6 +354,21 @@ class RepositoryGameMem : RepositoryGame {
         }
 
         return Scoreboard(pointsQueue)
+    }
+
+    override fun getCurrentRoundNumber(gameId: Int): Int? {
+        TODO("Not yet implemented")
+    }
+
+    override fun getTotalRoundsOfGame(gameId: Int): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun populateEmptyTurns(
+        matchId: Int,
+        roundNumber: Int,
+    ) {
+        TODO("Not yet implemented")
     }
 
     override fun findById(id: Int): Game? {

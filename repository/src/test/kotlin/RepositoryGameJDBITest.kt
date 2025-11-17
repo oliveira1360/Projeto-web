@@ -213,7 +213,7 @@ class RepositoryGameJDBITest {
 
             // Act
             val points = Points(30)
-            repositoryGame.calculatePoints(user1Id, gameId, points)
+            repositoryGame.updateScore(user1Id, gameId, points)
 
             // Assert - Verificar através do scoreboard
             val scoreboard = repositoryGame.getScores(gameId)
@@ -239,9 +239,9 @@ class RepositoryGameJDBITest {
             repositoryGame.shuffle(user2Id, hand2, gameId)
             repositoryGame.shuffle(user3Id, hand3, gameId)
 
-            repositoryGame.calculatePoints(user1Id, gameId, Points(30))
-            repositoryGame.calculatePoints(user2Id, gameId, Points(25))
-            repositoryGame.calculatePoints(user3Id, gameId, Points(20))
+            repositoryGame.updateScore(user1Id, gameId, Points(30))
+            repositoryGame.updateScore(user2Id, gameId, Points(25))
+            repositoryGame.updateScore(user3Id, gameId, Points(20))
 
             val balanceBefore =
                 repositoryUser
@@ -300,8 +300,8 @@ class RepositoryGameJDBITest {
             repositoryGame.shuffle(user2Id, hand2, gameId)
 
             // Ambos têm Full House (mesmo score)
-            repositoryGame.calculatePoints(user1Id, gameId, Points(25))
-            repositoryGame.calculatePoints(user2Id, gameId, Points(25))
+            repositoryGame.updateScore(user1Id, gameId, Points(25))
+            repositoryGame.updateScore(user2Id, gameId, Points(25))
 
             // Act
             val winner = repositoryGame.getRoundWinner(gameId)
@@ -324,8 +324,8 @@ class RepositoryGameJDBITest {
             repositoryGame.shuffle(user1Id, hand1, gameId)
             repositoryGame.shuffle(user2Id, hand2, gameId)
 
-            repositoryGame.calculatePoints(user1Id, gameId, Points(30))
-            repositoryGame.calculatePoints(user2Id, gameId, Points(25))
+            repositoryGame.updateScore(user1Id, gameId, Points(30))
+            repositoryGame.updateScore(user2Id, gameId, Points(25))
 
             // Act
             val scoreboard = repositoryGame.getScores(gameId)
@@ -381,8 +381,8 @@ class RepositoryGameJDBITest {
                 repositoryGame.shuffle(user1Id, hand1, gameId)
                 repositoryGame.shuffle(user2Id, hand2, gameId)
 
-                repositoryGame.calculatePoints(user1Id, gameId, Points(30))
-                repositoryGame.calculatePoints(user2Id, gameId, Points(20))
+                repositoryGame.updateScore(user1Id, gameId, Points(30))
+                repositoryGame.updateScore(user2Id, gameId, Points(20))
             }
 
             // Act

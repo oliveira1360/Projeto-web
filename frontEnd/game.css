@@ -367,3 +367,17 @@ html, body {
     align-items: center;
     width: 100%;
 }
+
+
+
+.button-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #cccccc;
+    pointer-events: none;
+}
+
+.error {
+    color: #d32f2f;
+    margin-top: 10px;
+}

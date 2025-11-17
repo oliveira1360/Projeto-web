@@ -17,10 +17,7 @@ interface RepositoryGame : Repository<Game> {
         lobbyId: Int,
     ): Int
 
-    fun closeGame(
-        userId: Int,
-        gameId: Int,
-    ): Unit
+    fun closeGame(gameId: Int): Unit
 
     fun listPlayersInGame(gameId: Int): ListPlayersInGame
 
@@ -37,7 +34,7 @@ interface RepositoryGame : Repository<Game> {
         gameId: Int,
     ): Hand
 
-    fun calculatePoints(
+    fun updateScore(
         userId: Int,
         gameId: Int,
         points: Points,
@@ -69,5 +66,22 @@ interface RepositoryGame : Repository<Game> {
 
     fun getRoundInfo(gameId: Int): RoundInfo
 
+    fun getRoundOrder(gameId: Int): List<Int>
+
+    fun setRoundOrder(
+        gameId: Int,
+        roundNumber: Int,
+        playerOrder: List<Int>,
+    ): Unit
+
     fun getScores(gameId: Int): Scoreboard
+
+    fun getCurrentRoundNumber(gameId: Int): Int?
+
+    fun getTotalRoundsOfGame(gameId: Int): Int
+
+    fun populateEmptyTurns(
+        matchId: Int,
+        roundNumber: Int,
+    )
 }

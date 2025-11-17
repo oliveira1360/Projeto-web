@@ -1,6 +1,6 @@
 import org.example.Failure
 import org.example.GameError
-import org.example.GameService
+import org.example.game.GameService
 import org.example.Success
 import org.example.TransactionManagerMem
 import org.example.config.GameDomainConfig
@@ -253,7 +253,7 @@ class GameServiceTest {
         val hand = Hand(List(5) { Dice(DiceFace.ACE) })
         gameRepo.setPlayerHand(user1.id, 1, hand)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Success)
         val points = (result as Success).value
@@ -278,7 +278,7 @@ class GameServiceTest {
             )
         gameRepo.setPlayerHand(user1.id, 1, hand)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Success)
         assertEquals(HandValues.FOUR_OF_A_KIND.value, (result as Success).value.points)
@@ -302,7 +302,7 @@ class GameServiceTest {
             )
         gameRepo.setPlayerHand(user1.id, 1, hand)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Success)
         assertEquals(HandValues.FULL_HOUSE.value, (result as Success).value.points)
@@ -326,7 +326,7 @@ class GameServiceTest {
             )
         gameRepo.setPlayerHand(user1.id, 1, hand)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Success)
         assertEquals(HandValues.STRAIGHT.value, (result as Success).value.points)
@@ -350,7 +350,7 @@ class GameServiceTest {
             )
         gameRepo.setPlayerHand(user1.id, 1, hand)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Success)
         assertEquals(HandValues.THREE_OF_A_KIND.value, (result as Success).value.points)
@@ -374,7 +374,7 @@ class GameServiceTest {
             )
         gameRepo.setPlayerHand(user1.id, 1, hand)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Success)
         assertEquals(HandValues.TWO_PAIR.value, (result as Success).value.points)
@@ -398,7 +398,7 @@ class GameServiceTest {
             )
         gameRepo.setPlayerHand(user1.id, 1, hand)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Success)
         assertEquals(HandValues.ONE_PAIR.value, (result as Success).value.points)
@@ -422,7 +422,7 @@ class GameServiceTest {
             )
         gameRepo.setPlayerHand(user1.id, 1, hand)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Success)
         assertEquals(HandValues.NO_VALUE.value, (result as Success).value.points)
@@ -434,7 +434,7 @@ class GameServiceTest {
         gameService.createGame(user1.id, lobby.id)
         gameService.startRound(1)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Failure)
         assertTrue((result as Failure).value is GameError.EmptyHand)
@@ -455,8 +455,8 @@ class GameServiceTest {
         gameRepo.setPlayerHand(user1.id, 1, hand1)
         gameRepo.setPlayerHand(user2.id, 1, hand2)
 
-        gameService.calculatePoints(user1.id, 1)
-        gameService.calculatePoints(user2.id, 1)
+        gameService.finishTurn(user1.id, 1)
+        gameService.finishTurn(user2.id, 1)
 
         val result = gameService.getRoundWinner(1)
 
@@ -491,8 +491,8 @@ class GameServiceTest {
             gameRepo.setPlayerHand(user1.id, 1, hand1)
             gameRepo.setPlayerHand(user2.id, 1, hand2)
 
-            gameService.calculatePoints(user1.id, 1)
-            gameService.calculatePoints(user2.id, 1)
+            gameService.finishTurn(user1.id, 1)
+            gameService.finishTurn(user2.id, 1)
 
             gameService.getRoundWinner(1)
         }
@@ -544,7 +544,7 @@ class GameServiceTest {
 
         val hand1 = Hand(List(5) { Dice(DiceFace.ACE) })
         gameRepo.setPlayerHand(user1.id, 1, hand1)
-        gameService.calculatePoints(user1.id, 1)
+        gameService.finishTurn(user1.id, 1)
 
         val result = gameService.getScores(1)
 
@@ -636,7 +636,7 @@ class GameServiceTest {
             )
         gameRepo.setPlayerHand(user1.id, 1, hand)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Success)
         assertEquals(HandValues.STRAIGHT.value, (result as Success).value.points)
@@ -660,7 +660,7 @@ class GameServiceTest {
             )
         gameRepo.setPlayerHand(user1.id, 1, hand)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Success)
         assertEquals(HandValues.STRAIGHT.value, (result as Success).value.points)
@@ -685,7 +685,7 @@ class GameServiceTest {
             )
         gameRepo.setPlayerHand(user1.id, 1, hand)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Success)
         assertEquals(HandValues.STRAIGHT.value, (result as Success).value.points)
@@ -710,7 +710,7 @@ class GameServiceTest {
             )
         gameRepo.setPlayerHand(user1.id, 1, hand)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Success)
         // Should be NO_VALUE, not STRAIGHT
@@ -726,7 +726,7 @@ class GameServiceTest {
         val hand = Hand(List(5) { Dice(DiceFace.ACE) })
         gameRepo.setPlayerHand(user1.id, 1, hand)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Success)
         assertEquals(HandValues.FIVE_OF_A_KIND.value, (result as Success).value.points)
@@ -750,7 +750,7 @@ class GameServiceTest {
             )
         gameRepo.setPlayerHand(user1.id, 1, hand)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Success)
         assertEquals(HandValues.FOUR_OF_A_KIND.value, (result as Success).value.points)
@@ -775,7 +775,7 @@ class GameServiceTest {
             )
         gameRepo.setPlayerHand(user1.id, 1, hand)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Success)
         assertEquals(HandValues.FULL_HOUSE.value, (result as Success).value.points)
@@ -799,7 +799,7 @@ class GameServiceTest {
             )
         gameRepo.setPlayerHand(user1.id, 1, hand)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Success)
         assertEquals(HandValues.THREE_OF_A_KIND.value, (result as Success).value.points)
@@ -823,7 +823,7 @@ class GameServiceTest {
             )
         gameRepo.setPlayerHand(user1.id, 1, hand)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Success)
         assertEquals(HandValues.TWO_PAIR.value, (result as Success).value.points)
@@ -847,7 +847,7 @@ class GameServiceTest {
             )
         gameRepo.setPlayerHand(user1.id, 1, hand)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Success)
         assertEquals(HandValues.ONE_PAIR.value, (result as Success).value.points)
@@ -872,7 +872,7 @@ class GameServiceTest {
             )
         gameRepo.setPlayerHand(user1.id, 1, hand)
 
-        val result = gameService.calculatePoints(user1.id, 1)
+        val result = gameService.finishTurn(user1.id, 1)
 
         assertTrue(result is Success)
         assertEquals(HandValues.NO_VALUE.value, (result as Success).value.points)

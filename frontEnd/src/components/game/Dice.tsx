@@ -1,5 +1,9 @@
 import React from "react";
-import { Die } from "../../hooks/useGame";
+
+export interface Die {
+    value: string;
+    held: boolean;
+}
 
 interface DiceProps {
     hand: Die[];
@@ -13,16 +17,17 @@ export const Dice: React.FC<DiceProps> = ({ hand, isMyTurn, onToggleHold }) => (
             hand.map((die, i) => (
                 <div
                     key={i}
-                    onClick={() => onToggleHold(i)}
+                    onClick={() => isMyTurn && onToggleHold(i)}
                     className={`die ${isMyTurn ? "my-turn" : ""} ${
                         die.held ? "held" : ""
                     }`}
+                    title={isMyTurn ? "Clique para manter" : "Aguardando sua vez"}
                 >
                     <span className="fallback-text">{die.value}</span>
                 </div>
             ))
         ) : (
-            <p className="no-dice-message">No dice yet — Roll to start!</p>
+            <p className="no-dice-message">Sem dados — Role para começar!</p>
         )}
     </div>
 );

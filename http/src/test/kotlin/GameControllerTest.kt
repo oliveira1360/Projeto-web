@@ -2,10 +2,11 @@
 
 package org.example.controllers
 
-import org.example.GameService
+import org.example.game.GameService
 import org.example.TransactionManager
 import org.example.TransactionManagerMem
 import org.example.config.GameDomainConfig
+import org.example.controllers.GameController
 import org.example.dto.inputDto.AuthenticatedUserDto
 import org.example.dto.inputDto.CreateGameDTO
 import org.example.dto.inputDto.ShuffleDTO

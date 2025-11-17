@@ -36,3 +36,10 @@ inline fun <L, R> Either<L, R>.onSuccess(action: (R) -> Unit): Either<L, R> {
     }
     return this
 }
+
+inline fun <L, R> Either<L, R>.andThen(block: (R) -> Either<L, R>): Either<L, R> =
+    when (this) {
+        is Either.Left -> this
+        is Either.Right -> block(this.value)
+    }
+

@@ -1,64 +1,94 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useGame } from "../hooks/useGame";
-import { Dice } from "../components/game/Dice";
-import { PlayerSlot } from "../components/game/PlayerPanel";
-import { GameControls } from "../components/game/GameControls";
-// @ts-ignore
-import backgroundImage from "../img/pokertable.jpg";
+import useGame from "../hooks/useGame";
+import GameLoading from "../components/game/GameLoading";
+import GameError from "../components/game/GameError";
+import GameFinished from "../components/game/GameFinished";
+import GameLayout from "../components/game/GameLayout";
+import {PlayerInfoResponse, playerService} from "../services/player/playerService";
+
 
 const GamePage: React.FC = () => {
     const { gameId } = useParams<{ gameId: string }>();
+    const [userInfo, setUserInfo] = useState<PlayerInfoResponse | null>(null);
+
+    useEffect(() => {
+        const fetchUserInfo = async () => {
+            try {
+                const data = await playerService.playerInfo();
+                setUserInfo(data);
+            } catch (error) {
+                console.error("Failed to fetch user info:", error);
+            }
+        };
+        fetchUserInfo();
+    }, []);
+
+    const userId = userInfo?.userId ?? null;
+
+    const game = useGame(Number(gameId), userId);
+
     const {
         players,
         hand,
         isMyTurn,
+        currentRound,
+        totalRounds,
         loading,
         error,
+        gameStatus,
+        winner,
+        roundWinner,
+        remainingTime,
         toggleHold,
         rollDice,
         finishTurn,
-    } = useGame(Number(gameId));
+        startRound,
+        leaveGame,
+    } = game;
 
-    const handleLeave = () => {
-        console.log("Leaving game...");
-        // todo: implement leave game
-    };
+    const [showRoundWinner, setShowRoundWinner] = useState(false);
 
-    if (loading) return <p>Loading game...</p>;
-    if (error) return <p className="error-message">Error: {error}</p>;
+    useEffect(() => {
+        if (roundWinner) {
+            setShowRoundWinner(true);
+            const timer = setTimeout(() => setShowRoundWinner(false), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [roundWinner]);
+
+    if (!userInfo) return <GameLoading />;
+    if (loading) return <GameLoading />;
+    if (error) return <GameError error={error} />;
+
+    if (gameStatus === "FINISHED" && winner)
+        return (
+            <GameFinished
+                winner={winner}
+                players={players}
+                leaveGame={leaveGame}
+            />
+        );
 
     return (
-        // load img
-        <div
-            className="game-container"
-            style={{ backgroundImage: `url(${backgroundImage})` }}
-        >
-            <div className="poker-table">
-                {players.map((player, i) => (
-                    <PlayerSlot
-                        key={player.playerId || i}
-                        player={player}
-                        isActiveTurn={!isMyTurn}
-                        positionClass={`pos-${i + 1}`}
-                    />
-                ))}
-
-                <div className="center-area">
-                    <Dice hand={hand} isMyTurn={isMyTurn} onToggleHold={toggleHold} />
-                    <GameControls
-                        onRoll={rollDice}
-                        onFinish={finishTurn}
-                        disabled={!isMyTurn}
-                    />
-                </div>
-
-                <button onClick={handleLeave} className="btn btn-leave">
-                    LEAVE
-                </button>
-            </div>
-        </div>
+        <GameLayout
+            players={players}
+            hand={hand}
+            isMyTurn={isMyTurn}
+            currentRound={currentRound}
+            totalRounds={totalRounds}
+            remainingTime={remainingTime}
+            startRound={startRound}
+            rollDice={rollDice}
+            finishTurn={finishTurn}
+            toggleHold={toggleHold}
+            leaveGame={leaveGame}
+            showRoundWinner={showRoundWinner}
+            roundWinner={roundWinner}
+            userId={userId}
+        />
     );
 };
+
 
 export default GamePage;

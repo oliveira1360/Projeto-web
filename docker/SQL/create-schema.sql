@@ -11,7 +11,9 @@ DROP TABLE If EXISTS lobbies CASCADE;
 DROP TABLE IF EXISTS turn cascade;
 DROP TABLE IF EXISTS lobby_players CASCADE;
 DROP TABLE IF EXISTS invites CASCADE;
+drop table if EXISTS round_order cascade;
 DROP TYPE IF EXISTS DiceFace CASCADE;
+
 
 
 
@@ -87,6 +89,15 @@ CREATE TABLE rounds (
                         winner_id INT REFERENCES users(id),
                         roll_number INT DEFAULT 1,
                         PRIMARY KEY (match_id, round_number)
+);
+
+CREATE TABLE round_order (
+                             match_id INT NOT NULL,
+                             round_number INT NOT NULL,
+                             order_position INT NOT NULL CHECK (order_position > 0),
+                             user_id INT REFERENCES users(id) ON DELETE CASCADE,
+                             PRIMARY KEY (match_id, round_number, order_position),
+                             FOREIGN KEY (match_id, round_number) REFERENCES rounds(match_id, round_number) ON DELETE CASCADE
 );
 
 -- === TURN ===

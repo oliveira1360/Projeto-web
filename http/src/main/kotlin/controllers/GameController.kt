@@ -1,19 +1,23 @@
-@file:Suppress("ktlint:standard:no-wildcard-imports")
-
 package org.example.controllers
 
-import org.example.Either
 import org.example.Failure
-import org.example.GameError
-import org.example.GameService
+import org.example.GameNotificationService
 import org.example.Success
 import org.example.dto.inputDto.AuthenticatedUserDto
 import org.example.dto.inputDto.CreateGameDTO
 import org.example.dto.inputDto.ShuffleDTO
-import org.springframework.http.HttpHeaders
+import org.example.game.GameService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 
 /**
  * RESTful Game Controller with:
@@ -26,7 +30,45 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/game")
 class GameController(
     private val gameService: GameService,
+    private val gameNotificationService: GameNotificationService,
+    private val errorHandler: HandleError,
 ) {
+    @GetMapping("/{gameId}/events")
+    fun subscribeToGameEvents(
+        user: AuthenticatedUserDto,
+        @PathVariable gameId: Int,
+    ): SseEmitter {
+        val timeout = 86_400_000L // 24 horas
+        val emitter = SseEmitter(timeout)
+        gameNotificationService.subscribe(user.user.id, gameId, emitter)
+        val gameInfo = gameService.getRoundInfo(gameId)
+        val firstPlayer =
+            when (gameInfo) {
+                is Failure -> null
+                is Success -> gameInfo.value.roundOrder.firstOrNull()
+            }
+
+        try {
+            emitter.send(
+                SseEmitter
+                    .event()
+                    .name("connected")
+                    .data(
+                        mapOf(
+                            "message" to "Connected to Game $gameId",
+                            "gameId" to gameId,
+                            "userId" to user.user.id,
+                            "firstPlayer" to firstPlayer,
+                        ),
+                    ),
+            )
+        } catch (ex: Exception) {
+            emitter.completeWithError(ex)
+        }
+
+        return emitter
+    }
+
     /**
      * Creates a new game instance.
      */
@@ -39,7 +81,7 @@ class GameController(
         user: AuthenticatedUserDto,
         @RequestBody game: CreateGameDTO,
     ): ResponseEntity<*> =
-        handleResult("/game", gameService.createGame(user.user.id, game.lobbyId), HttpStatus.CREATED) {
+        errorHandler.handleResult("/game", gameService.createGame(user.user.id, game.lobbyId), HttpStatus.CREATED) {
             val gameId = it.gameId
             mapOf(
                 "gameId" to gameId,
@@ -71,7 +113,7 @@ class GameController(
         @PathVariable gameId: Int,
     ): ResponseEntity<*> =
         when (val result = gameService.closeGame(user.user.id, gameId)) {
-            is Failure -> handleGameError(result.value, "/game/$gameId")
+            is Failure -> errorHandler.handleGameError(result.value, "/game/$gameId")
             is Success -> ResponseEntity.noContent().build<Any>()
         }
 
@@ -85,7 +127,7 @@ class GameController(
     fun listPlayersInGame(
         @PathVariable gameId: Int,
     ): ResponseEntity<*> =
-        handleResult("/game/$gameId/players", gameService.listPlayersInGame(gameId)) {
+        errorHandler.handleResult("/game/$gameId/players", gameService.listPlayersInGame(gameId)) {
             mapOf(
                 "players" to it.listPlayersInGame,
                 "_links" to GameLinks.listPlayersInGame(gameId),
@@ -102,7 +144,7 @@ class GameController(
     fun startRound(
         @PathVariable gameId: Int,
     ): ResponseEntity<*> =
-        handleResult("/game/$gameId/round/start", gameService.startRound(gameId), HttpStatus.CREATED) { roundNumber ->
+        errorHandler.handleResult("/game/$gameId/round/start", gameService.startRound(gameId), HttpStatus.CREATED) { roundNumber ->
             mapOf(
                 "roundNumber" to roundNumber,
                 "message" to "Round $roundNumber started",
@@ -121,7 +163,7 @@ class GameController(
         user: AuthenticatedUserDto,
         @PathVariable gameId: Int,
     ): ResponseEntity<*> =
-        handleResult("/game/$gameId/player/hand", gameService.getPlayerHand(user.user.id, gameId)) {
+        errorHandler.handleResult("/game/$gameId/player/hand", gameService.getPlayerHand(user.user.id, gameId)) {
             mapOf(
                 "hand" to it.value.map { card -> card.face.name },
                 "_links" to GameLinks.playerHand(gameId),
@@ -141,7 +183,7 @@ class GameController(
         @RequestBody shuffleDTO: ShuffleDTO,
         @PathVariable gameId: Int,
     ): ResponseEntity<*> =
-        handleResult("/game/$gameId/player/shuffle", gameService.shuffle(user.user.id, shuffleDTO.lockedDice, gameId)) { it ->
+        errorHandler.handleResult("/game/$gameId/player/shuffle", gameService.shuffle(user.user.id, shuffleDTO.lockedDice, gameId)) { it ->
             mapOf(
                 "hand" to it.value.map { hand -> hand.face.name },
                 "rollNumber" to it.value.size,
@@ -160,7 +202,7 @@ class GameController(
         user: AuthenticatedUserDto,
         @PathVariable gameId: Int,
     ): ResponseEntity<*> =
-        handleResult("/game/$gameId/player/finish", gameService.calculatePoints(user.user.id, gameId)) {
+        errorHandler.handleResult("/game/$gameId/player/finish", gameService.finishTurn(user.user.id, gameId)) {
             mapOf(
                 "points" to it.points,
                 "finished" to true,
@@ -179,7 +221,7 @@ class GameController(
         user: AuthenticatedUserDto,
         @PathVariable gameId: Int,
     ): ResponseEntity<*> =
-        handleResult("/game/$gameId/round/winner", gameService.getRoundWinner(gameId)) {
+        errorHandler.handleResult("/game/$gameId/round/winner", gameService.getRoundWinner(gameId)) {
             mapOf(
                 "winner" to
                     mapOf(
@@ -203,7 +245,7 @@ class GameController(
         user: AuthenticatedUserDto,
         @PathVariable gameId: Int,
     ): ResponseEntity<*> =
-        handleResult("/game/$gameId/winner", gameService.getGameWinner(gameId)) {
+        errorHandler.handleResult("/game/$gameId/winner", gameService.getGameWinner(gameId)) {
             mapOf(
                 "winner" to
                     mapOf(
@@ -226,7 +268,7 @@ class GameController(
         user: AuthenticatedUserDto,
         @PathVariable gameId: Int,
     ): ResponseEntity<*> =
-        handleResult("/game/$gameId/remaining-time", gameService.remainingTime(gameId)) {
+        errorHandler.handleResult("/game/$gameId/remaining-time", gameService.remainingTime(gameId)) {
             mapOf(
                 "remainingSeconds" to it.time,
                 "_links" to GameLinks.remainingTime(gameId),
@@ -244,10 +286,17 @@ class GameController(
         user: AuthenticatedUserDto,
         @PathVariable gameId: Int,
     ): ResponseEntity<*> =
-        handleResult("/game/$gameId/round", gameService.getRoundInfo(gameId)) {
+        errorHandler.handleResult("/$gameId/round", gameService.getRoundInfo(gameId)) { it ->
+
             mapOf(
                 "round" to it.round,
                 "players" to it.pointsQueue.size,
+                "order" to
+                    it.roundOrder.map { value ->
+                        mapOf(
+                            "idPlayer" to value,
+                        )
+                    },
                 "_links" to GameLinks.getRoundInfo(gameId),
             )
         }
@@ -263,7 +312,7 @@ class GameController(
         user: AuthenticatedUserDto,
         @PathVariable gameId: Int,
     ): ResponseEntity<*> =
-        handleResult("/game/$gameId/scores", gameService.getScores(gameId)) { success ->
+        errorHandler.handleResult("/game/$gameId/scores", gameService.getScores(gameId)) { success ->
             mapOf(
                 "players" to
                     success.pointsQueue
@@ -276,252 +325,5 @@ class GameController(
                         },
                 "_links" to GameLinks.getScoreboard(gameId),
             )
-        }
-
-    /**
-     * Handles game errors and converts them to RFC 7807 Problem+JSON responses.
-     */
-    private fun handleGameError(
-        error: GameError,
-        instance: String,
-    ): ResponseEntity<ProblemDetail> =
-        when (error) {
-            is GameError.EmptyHand ->
-                ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
-                    .body(
-                        createProblemDetail(
-                            type = ProblemTypes.EMPTY_HAND,
-                            title = "Empty Hand",
-                            status = HttpStatus.BAD_REQUEST,
-                            detail = "Player has no hand in the current round. Shuffle first.",
-                            instance = instance,
-                            additionalProperties = mapOf("requiredAction" to "shuffle"),
-                        ),
-                    )
-
-            is GameError.NoRoundInProgress ->
-                ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
-                    .body(
-                        createProblemDetail(
-                            type = ProblemTypes.NO_ROUND_IN_PROGRESS,
-                            title = "No Round In Progress",
-                            status = HttpStatus.CONFLICT,
-                            detail = "Cannot determine round winner when no round is in progress.",
-                            instance = instance,
-                        ),
-                    )
-
-            is GameError.GameNotFinished ->
-                ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
-                    .body(
-                        createProblemDetail(
-                            type = ProblemTypes.GAME_NOT_FINISHED,
-                            title = "Game Not Finished",
-                            status = HttpStatus.CONFLICT,
-                            detail = "Cannot determine game winner until all rounds are completed.",
-                            instance = instance,
-                            additionalProperties = mapOf("allPlayersFinished" to false),
-                        ),
-                    )
-
-            is GameError.TooManyRolls ->
-                ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
-                    .body(
-                        createProblemDetail(
-                            type = ProblemTypes.TOO_MANY_ROLLS,
-                            title = "Too Many Rolls",
-                            status = HttpStatus.FORBIDDEN,
-                            detail = "Maximum number of rolls (3) exceeded for this round.",
-                            instance = instance,
-                            additionalProperties = mapOf("maxRolls" to 3, "currentRolls" to 3),
-                        ),
-                    )
-
-            is GameError.GameNotFound ->
-                ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
-                    .body(
-                        createProblemDetail(
-                            type = ProblemTypes.GAME_NOT_FOUND,
-                            title = "Game Not Found",
-                            status = HttpStatus.NOT_FOUND,
-                            detail = "The requested game does not exist.",
-                            instance = instance,
-                        ),
-                    )
-
-            is GameError.LobbyNotFound ->
-                ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
-                    .body(
-                        createProblemDetail(
-                            type = ProblemTypes.LOBBY_NOT_FOUND,
-                            title = "Lobby Not Found",
-                            status = HttpStatus.NOT_FOUND,
-                            detail = "The requested lobby does not exist.",
-                            instance = instance,
-                        ),
-                    )
-
-            is GameError.InvalidGameId ->
-                ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
-                    .body(
-                        createProblemDetail(
-                            type = ProblemTypes.INVALID_GAME_ID,
-                            title = "Invalid Game ID",
-                            status = HttpStatus.BAD_REQUEST,
-                            detail = "The provided game ID is invalid.",
-                            instance = instance,
-                        ),
-                    )
-
-            is GameError.InvalidUserId ->
-                ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
-                    .body(
-                        createProblemDetail(
-                            type = ProblemTypes.INVALID_USER_ID,
-                            title = "Invalid User ID",
-                            status = HttpStatus.BAD_REQUEST,
-                            detail = "The provided user ID is invalid.",
-                            instance = instance,
-                        ),
-                    )
-
-            is GameError.GameAlreadyFinished ->
-                ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
-                    .body(
-                        createProblemDetail(
-                            type = ProblemTypes.GAME_ALREADY_FINISHED,
-                            title = "Game Already Finished",
-                            status = HttpStatus.CONFLICT,
-                            detail = "The game has already been finished.",
-                            instance = instance,
-                        ),
-                    )
-
-            is GameError.NoPlayersInGame ->
-                ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
-                    .body(
-                        createProblemDetail(
-                            type = ProblemTypes.NO_PLAYERS_IN_GAME,
-                            title = "No Players In Game",
-                            status = HttpStatus.CONFLICT,
-                            detail = "The game has no players.",
-                            instance = instance,
-                        ),
-                    )
-
-            is GameError.InvalidDiceIndices ->
-                ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
-                    .body(
-                        createProblemDetail(
-                            type = ProblemTypes.INVALID_DICE_INDICES,
-                            title = "Invalid Dice Indices",
-                            status = HttpStatus.BAD_REQUEST,
-                            detail = "The provided dice indices are invalid.",
-                            instance = instance,
-                        ),
-                    )
-
-            is GameError.RoundNotStarted ->
-                ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
-                    .body(
-                        createProblemDetail(
-                            type = ProblemTypes.ROUND_NOT_STARTED,
-                            title = "Round Not Started",
-                            status = HttpStatus.CONFLICT,
-                            detail = "No round has been started yet.",
-                            instance = instance,
-                        ),
-                    )
-
-            is GameError.AllPlayersNotFinished ->
-                ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
-                    .body(
-                        createProblemDetail(
-                            type = ProblemTypes.ALL_PLAYERS_NOT_FINISHED,
-                            title = "All Players Not Finished",
-                            status = HttpStatus.CONFLICT,
-                            detail = "Not all players have finished their turns.",
-                            instance = instance,
-                        ),
-                    )
-
-            is GameError.UserNotInGame ->
-                ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
-                    .body(
-                        createProblemDetail(
-                            type = ProblemTypes.USER_NOT_IN_GAME,
-                            title = "User Not In Game",
-                            status = HttpStatus.CONFLICT,
-                            detail = "The user is not a player in this game.",
-                            instance = instance,
-                        ),
-                    )
-
-            is GameError.UnauthorizedAction ->
-                ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
-                    .body(
-                        createProblemDetail(
-                            type = ProblemTypes.UNAUTHORIZED_ACTION,
-                            title = "Unauthorized Action",
-                            status = HttpStatus.FORBIDDEN,
-                            detail = "You are not authorized to perform this action.",
-                            instance = instance,
-                        ),
-                    )
-
-            is GameError.NotPlayerTurn ->
-                ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
-                    .body(
-                        createProblemDetail(
-                            type = ProblemTypes.UNAUTHORIZED_ACTION,
-                            title = "Not Player Turn",
-                            status = HttpStatus.CONFLICT,
-                            detail = "It is not your turn to play.",
-                            instance = instance,
-                        ),
-                    )
-        }
-
-    private inline fun <T> handleResult(
-        path: String,
-        result: Either<GameError, T>,
-        status: HttpStatus = HttpStatus.OK,
-        successBodyBuilder: (T) -> Any,
-    ): ResponseEntity<*> =
-        when (result) {
-            is Failure -> handleGameError(result.value, path)
-            is Success -> ResponseEntity.status(status).body(successBodyBuilder(result.value))
         }
 }
