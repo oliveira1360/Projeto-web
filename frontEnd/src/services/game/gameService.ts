@@ -106,7 +106,9 @@ export const gameService = {
         return {
             round: data.round,
             players: data.players,
-            pointsQueue: data.order,
+            order: data.order,
+            pointsQueue: data.pointsQueue,
+            turn: data.turn,
             _links: data._links,
         };
     },

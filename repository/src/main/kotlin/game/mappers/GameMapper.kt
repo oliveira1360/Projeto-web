@@ -121,6 +121,7 @@ class GameMapper : RowMapper<Game> {
                         round = Round(roundNumber),
                         pointsQueue = pointsQueue,
                         roundOrder = emptyList(),
+                        turn = 0, // todo
                     )
                 } catch (e: Exception) {
                     null

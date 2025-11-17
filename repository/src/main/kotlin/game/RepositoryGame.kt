@@ -84,4 +84,6 @@ interface RepositoryGame : Repository<Game> {
         matchId: Int,
         roundNumber: Int,
     )
+
+    fun getCurrentPlayerTurn(gameId: Int): Int
 }

@@ -69,12 +69,8 @@ export function useGame(gameId?: number, userId?: number) {
                 setCurrentRound(roundInfo.round);
                 setTotalRounds(roundInfo.players || 0);
 
-                const roundOrder = roundInfo.pointsQueue?.map((playerObj) => playerObj.player.playerId) || [];
-
-                const completedPlayers = roundInfo.pointsQueue?.map((p) => p.player.playerId) || [];
-
-                const nextPlayer = roundOrder.find((playerId: number) => !completedPlayers.includes(playerId));
-                setIsMyTurn(nextPlayer === userId);
+                const nextPlayerId = roundInfo.turn;
+                setIsMyTurn(nextPlayerId === userId);
 
             } catch (e: any) {
                 console.error("!!! ERRO AO CARREGAR RoundInfo:", e.message, e);
@@ -147,7 +143,7 @@ export function useGame(gameId?: number, userId?: number) {
         if (!gameId || !isMyTurn) return;
         try {
             await gameService.finishTurn(gameId);
-            setIsMyTurn(false);
+            setIsMyTurn(false); // Otimização: define imediatamente como falso
         } catch (e: any) {
             setError(e.message);
         }

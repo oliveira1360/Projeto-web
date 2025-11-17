@@ -297,6 +297,11 @@ class GameController(
                             "idPlayer" to value,
                         )
                     },
+                "pointsQueue" to
+                    it.pointsQueue.map { p ->
+                        mapOf("player" to mapOf("playerId" to p.player.playerId))
+                    },
+                "turn" to it.turn,
                 "_links" to GameLinks.getRoundInfo(gameId),
             )
         }

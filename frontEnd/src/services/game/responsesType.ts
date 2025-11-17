@@ -59,7 +59,9 @@ export type ScoreboardResponse = {
 export type RoundInfoResponse = {
     round: number;
     players: number;
-    pointsQueue: { player: { playerId: number } }[];
+    order: { idPlayer: number }[];
+    pointsQueue: { playerId: number }[];
+    turn: number;
     _links: any;
 };
 

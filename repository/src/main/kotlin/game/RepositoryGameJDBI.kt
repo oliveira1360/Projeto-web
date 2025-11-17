@@ -452,10 +452,13 @@ class RepositoryGameJDBI(
 
         val roundOrder = getRoundOrder(gameId)
 
+        val turn = getCurrentPlayerTurn(gameId)
+
         return RoundInfo(
             round = Round(roundNumber),
             pointsQueue = pointsQueue,
             roundOrder = roundOrder,
+            turn = turn,
         )
     }
 
@@ -907,5 +910,35 @@ class RepositoryGameJDBI(
                 .bind("userId", userId)
                 .execute()
         }
+    }
+
+    override fun getCurrentPlayerTurn(gameId: Int): Int {
+        val roundNumber = getCurrentRoundNumber(gameId) ?: throw IllegalStateException("No rounds found for game $gameId")
+
+        val order = getRoundOrder(gameId)
+        if (order.isEmpty()) throw IllegalStateException("No players found for game $gameId")
+
+        // Find the first player who has not rolled yet (roll_number = 0)
+        order.forEach { userId ->
+            val rollNumber =
+                handle
+                    .createQuery(
+                        """
+            SELECT COALESCE(roll_number, 0) 
+            FROM turn
+            WHERE match_id = :gameId
+              AND round_number = :roundNumber
+              AND user_id = :userId
+            """,
+                    ).bind("gameId", gameId)
+                    .bind("roundNumber", roundNumber)
+                    .bind("userId", userId)
+                    .mapTo(Int::class.java)
+                    .findOne()
+                    .orElse(0)
+
+            if (rollNumber == 0) return userId
+        }
+        return order.first()
     }
 }

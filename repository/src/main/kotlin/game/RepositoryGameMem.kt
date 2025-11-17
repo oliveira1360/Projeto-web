@@ -282,9 +282,10 @@ class RepositoryGameMem : RepositoryGame {
         val game = games[gameId] ?: throw IllegalArgumentException("Game not found: $gameId")
         val currentRound = game.rounds.maxByOrNull { it.roundNumber }
 
+        val turn = getCurrentPlayerTurn(gameId)
         if (currentRound == null) {
             val pointsQueue = PriorityQueue<PointPlayer>(compareByDescending { it.points.points })
-            return RoundInfo(Round(0), pointsQueue, emptyList())
+            return RoundInfo(Round(0), pointsQueue, emptyList(), turn)
         }
 
         val pointsQueue = PriorityQueue<PointPlayer>(compareByDescending { it.points.points })
@@ -306,7 +307,7 @@ class RepositoryGameMem : RepositoryGame {
             }
         }
 
-        return RoundInfo(Round(currentRound.roundNumber), pointsQueue, currentRound.playerOrder.toList())
+        return RoundInfo(Round(currentRound.roundNumber), pointsQueue, currentRound.playerOrder.toList(), turn)
     }
 
     override fun getRoundOrder(gameId: Int): List<Int> {
@@ -368,6 +369,10 @@ class RepositoryGameMem : RepositoryGame {
         matchId: Int,
         roundNumber: Int,
     ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun getCurrentPlayerTurn(gameId: Int): Int {
         TODO("Not yet implemented")
     }
 

@@ -64,6 +64,7 @@ const GameLayout = ({
                         <GameControls
                             isPlayerTurn={isMyTurn}
                             onRoll={rollDice}
+                            onFinishTurn={finishTurn}
                         />
                     )}
                 </div>
