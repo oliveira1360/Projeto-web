@@ -1,6 +1,4 @@
 import org.example.Failure
-import org.example.GameError
-import org.example.game.GameService
 import org.example.Success
 import org.example.TransactionManagerMem
 import org.example.config.GameDomainConfig
@@ -16,6 +14,7 @@ import org.example.entity.lobby.Lobby
 import org.example.entity.player.Hand
 import org.example.entity.player.HandValues
 import org.example.entity.player.User
+import org.example.game.GameService
 import org.example.game.RepositoryGameMem
 import org.example.general.RepositoryInviteMem
 import org.example.lobby.RepositoryLobbyMem

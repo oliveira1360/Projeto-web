@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:filename")
+
 package org.example.auth
 
 import org.example.controllers.ApiMediaTypes

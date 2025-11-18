@@ -42,4 +42,3 @@ inline fun <L, R> Either<L, R>.andThen(block: (R) -> Either<L, R>): Either<L, R>
         is Either.Left -> this
         is Either.Right -> block(this.value)
     }
-

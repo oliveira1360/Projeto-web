@@ -357,7 +357,7 @@ class RepositoryGameJDBITest {
             gameId = repositoryGame.createGame(user1Id, lobbyId)
 
             // Act
-            repositoryGame.closeGame(user1Id, gameId)
+            repositoryGame.closeGame(gameId)
 
             // Assert
             val game = repositoryGame.findById(gameId)
