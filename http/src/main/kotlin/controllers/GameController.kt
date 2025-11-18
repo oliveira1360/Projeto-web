@@ -3,6 +3,7 @@ package org.example.controllers
 import org.example.Failure
 import org.example.GameNotificationService
 import org.example.Success
+import org.example.UserAuthService
 import org.example.dto.inputDto.AuthenticatedUserDto
 import org.example.dto.inputDto.CreateGameDTO
 import org.example.dto.inputDto.ShuffleDTO
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 
@@ -26,45 +28,45 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
  * - Proper HTTP methods and status codes
  * - Content negotiation support
  */
+
+class UnauthorizedException(
+    message: String,
+) : RuntimeException(message)
+
 @RestController
 @RequestMapping("/game")
 class GameController(
     private val gameService: GameService,
+    private val userServices: UserAuthService,
     private val gameNotificationService: GameNotificationService,
     private val errorHandler: HandleError,
 ) {
     @GetMapping("/{gameId}/events")
     fun subscribeToGameEvents(
-        user: AuthenticatedUserDto,
+        @RequestParam token: String,
         @PathVariable gameId: Int,
     ): SseEmitter {
-        val timeout = 86_400_000L // 24 horas
-        val emitter = SseEmitter(timeout)
-        gameNotificationService.subscribe(user.user.id, gameId, emitter)
-        val gameInfo = gameService.getRoundInfo(gameId)
-        val firstPlayer =
-            when (gameInfo) {
-                is Failure -> null
-                is Success -> gameInfo.value.roundOrder.firstOrNull()
-            }
+        val user =
+            userServices.getUserByToken(token)
+                ?: throw UnauthorizedException("Invalid or expired token")
 
-        try {
-            emitter.send(
-                SseEmitter
-                    .event()
-                    .name("connected")
-                    .data(
-                        mapOf(
-                            "message" to "Connected to Game $gameId",
-                            "gameId" to gameId,
-                            "userId" to user.user.id,
-                            "firstPlayer" to firstPlayer,
-                        ),
+        val timeout = 86_400_000L
+        val emitter = SseEmitter(timeout)
+
+        gameNotificationService.subscribe(user.id, gameId, emitter)
+
+        emitter.send(
+            SseEmitter
+                .event()
+                .name("connected")
+                .data(
+                    mapOf(
+                        "message" to "Connected to Game $gameId",
+                        "gameId" to gameId,
+                        "userId" to user.id,
                     ),
-            )
-        } catch (ex: Exception) {
-            emitter.completeWithError(ex)
-        }
+                ),
+        )
 
         return emitter
     }

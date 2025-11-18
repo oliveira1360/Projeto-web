@@ -142,79 +142,38 @@ export const gameService = {
     subscribeToGameEvents(
         gameId: number,
         onEvent: (eventType: string, data: any) => void,
-        onError?: (error: Error) => void,
+        onError?: (err: any) => void,
         onClose?: () => void
-    ): { close: () => void } {
-        const baseUrl = BASE_URL;
+    ) {
         const token = getToken();
-        let abortController = new AbortController();
 
-        const connectToStream = async () => {
-            try {
-                const response = await fetch(`${baseUrl}/game/${gameId}/events`, {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                    signal: abortController.signal,
-                });
+        const eventSource = new EventSource(
+            `${BASE_URL}/game/${gameId}/events?token=${token}`
+        );
 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-                }
-
-                const reader = response.body?.getReader();
-                if (!reader) {
-                    throw new Error("Unable to read response body");
-                }
-
-                const decoder = new TextDecoder();
-                let buffer = "";
-
-                while (true) {
-                    const { done, value } = await reader.read();
-
-                    if (done) {
-                        onClose?.();
-                        break;
-                    }
-
-                    buffer += decoder.decode(value, { stream: true });
-                    const lines = buffer.split("\n");
-
-                    buffer = lines.pop() || "";
-
-                    let currentEvent: string | null = null;
-
-                    lines.forEach((line) => {
-                        if (line.startsWith("event:")) {
-                            currentEvent = line.replace("event:", "").trim();
-                        } else if (line.startsWith("data:") && currentEvent) {
-                            const jsonData = line.replace("data:", "").trim();
-                            try {
-                                const data = JSON.parse(jsonData);
-                                onEvent(currentEvent, data);
-                            } catch (e) {
-                                console.error("Failed to parse event data:", e, jsonData);
-                            }
-                            currentEvent = null;
-                        }
-                    });
-                }
-            } catch (error) {
-                if ((error as Error).name !== "AbortError") {
-                    onError?.(error as Error);
-                }
-            }
+        eventSource.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            onEvent("message", data); // generic fallback
         };
 
-        connectToStream();
+        const events = ["PLAYER_FINISHED_TURN", "ROUND_STARTED", "ROUND_ENDED", "connected", "GAME_ENDED"];
+        events.forEach((e) => {
+            eventSource.addEventListener(e, (event: MessageEvent) => {
+                const data = JSON.parse(event.data);
+                onEvent(e, data);
+            });
+        });
+
+        eventSource.onerror = (err) => {
+            console.error("SSE error:", err);
+            onError?.(err);
+        };
 
         return {
             close: () => {
-                abortController.abort();
+                eventSource.close();
                 onClose?.();
-            },
+            }
         };
-    },
+    }
 };

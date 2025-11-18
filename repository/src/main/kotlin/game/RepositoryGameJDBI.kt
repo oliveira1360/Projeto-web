@@ -825,29 +825,29 @@ class RepositoryGameJDBI(
         handle
             .createQuery(
                 """
-            SELECT u.id AS user_id,
-                   u.username,
-                   u.nick_name,
-                   u.email,
-                   u.avatar_url,
-                   u.balance,
-                   0 AS roll_number,
-                   NULL AS hand,
-                   COALESCE(t.score, 0) AS score
-            FROM match_players mp
-            JOIN users u ON mp.user_id = u.id
-            LEFT JOIN rounds r ON r.match_id = mp.match_id
-            LEFT JOIN turn t ON t.user_id = u.id 
-                AND t.match_id = mp.match_id 
-                AND t.round_id = r.id
-            WHERE mp.match_id = :gameId
-              AND r.round_number = (
-                  SELECT MAX(round_number) 
-                  FROM rounds 
-                  WHERE match_id = :gameId
-              )
-            GROUP BY u.id, u.username, u.nick_name, u.email, u.avatar_url, u.balance, t.score
-            """,
+        SELECT u.id AS user_id,
+               u.username,
+               u.nick_name,
+               u.email,
+               u.avatar_url,
+               u.balance,
+               0 AS roll_number,
+               NULL AS hand,
+               COALESCE(t.score, 0) AS score
+        FROM match_players mp
+        JOIN users u ON mp.user_id = u.id
+        LEFT JOIN rounds r ON r.match_id = mp.match_id
+        LEFT JOIN turn t ON t.user_id = u.id 
+            AND t.match_id = mp.match_id 
+            AND t.round_number = r.round_number
+        WHERE mp.match_id = :gameId
+          AND r.round_number = (
+              SELECT MAX(round_number) 
+              FROM rounds 
+              WHERE match_id = :gameId
+          )
+        GROUP BY u.id, u.username, u.nick_name, u.email, u.avatar_url, u.balance, t.score
+        """,
             ).bind("gameId", gameId)
             .map(PlayerScoreMapper())
             .list()

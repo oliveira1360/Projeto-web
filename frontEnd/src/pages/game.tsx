@@ -13,16 +13,13 @@ const GamePage: React.FC = () => {
     const [userInfo, setUserInfo] = useState<PlayerInfoResponse | null>(null);
 
     useEffect(() => {
-        const fetchUserInfo = async () => {
-            try {
-                const data = await playerService.playerInfo();
-                setUserInfo(data);
-            } catch (error) {
-                console.error("Failed to fetch user info:", error);
-            }
+        const load = async () => {
+            const info = await playerService.playerInfo();
+            setUserInfo(info);
         };
-        fetchUserInfo();
+        load();
     }, []);
+
 
     const userId = userInfo?.userId ?? null;
 

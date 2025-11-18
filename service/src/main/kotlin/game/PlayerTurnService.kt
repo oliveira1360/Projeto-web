@@ -18,6 +18,7 @@ class PlayerTurnService(
     private val trxManager: TransactionManager,
     private val validationService: GameValidationService,
     private val notificationService: GameNotificationService,
+    private val roundService: RoundService,
 ) {
     fun getPlayerHand(
         userId: Int,
@@ -133,6 +134,15 @@ class PlayerTurnService(
             )
 
             repositoryGame.updateScore(userId, gameId, points)
+
+            // Check if all players have finished their turns
+            val players = repositoryGame.listPlayersInGame(gameId)
+            val scoreboard = repositoryGame.getScores(gameId)
+
+            if (scoreboard.pointsQueue.size >= players.listPlayersInGame.size) {
+                roundService.getRoundWinner(gameId)
+            }
+
             success(points)
         }
 }

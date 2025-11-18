@@ -84,32 +84,38 @@ export function useGame(gameId?: number, userId?: number) {
     };
 
     useEffect(() => {
+        console.log("loadGameState called");
         if (!gameId || !userId) return;
 
         const stream = gameService.subscribeToGameEvents(
             gameId,
-            (eventType: string, data: any) => {
-                if (
-                    eventType === "connected" ||
-                    eventType === "ROUND_STARTED" ||
-                    eventType === "PLAYER_FINISHED_TURN" ||
-                    eventType === "ROUND_ENDED"
-                ) {
-                    if (eventType === "connected") {
-                        console.log("SSE: Conectado. A carregar estado...", data);
-                    }
-                    loadGameState();
-
-                } else if (eventType === "GAME_ENDED") {
-                    setGameStatus("FINISHED");
-                    loadGameWinner();
+            async (eventType, data) => {
+                console.log("Received event:", eventType, data);
+                switch (eventType) {
+                    case "PLAYER_FINISHED_TURN":
+                        console.log("Player finished turn:", data);
+                        const roundInfo = await gameService.getRoundInfo(gameId);
+                        setCurrentRound(roundInfo.round);
+                        setTotalRounds(roundInfo.players || 0);
+                        setIsMyTurn(roundInfo.turn === userId);
+                        break;
+                    case "ROUND_STARTED":
+                    case "ROUND_ENDED":
+                        loadGameState();
+                        break;
+                    case "GAME_ENDED":
+                        setGameStatus("FINISHED");
+                        loadGameWinner();
+                        break;
+                    case "connected":
+                        loadGameState();
+                        break;
                 }
             },
             (error) => setError(error.message)
         );
 
         return () => stream.close();
-
     }, [gameId, userId]);
 
     useEffect(() => {
@@ -143,7 +149,7 @@ export function useGame(gameId?: number, userId?: number) {
         if (!gameId || !isMyTurn) return;
         try {
             await gameService.finishTurn(gameId);
-            setIsMyTurn(false); // Otimização: define imediatamente como falso
+            setIsMyTurn(false);
         } catch (e: any) {
             setError(e.message);
         }
