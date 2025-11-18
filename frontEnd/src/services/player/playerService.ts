@@ -1,25 +1,18 @@
 import {BASE_URL, getToken} from "../../utils/comman";
 import {request} from "../request";
+import {PlayerInfoResponse} from "./playerResponseTypes";
 
 
-export type PlayerInfoResponse = {
-    userId: number;
-    name: string;
-    nickName: string;
-    email: string;
-    balance: string;
-    imageUrl?: string;
-    _links: any;
-};
 
 
 export const playerService = {
+    /**
+     * GET /user/info
+     * Obtém informações do jogador autenticado.
+     */
     async playerInfo(): Promise<PlayerInfoResponse> {
         const response = await request(`/user/info`, {
             method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
         });
 
         const data = await response.json();
@@ -35,4 +28,3 @@ export const playerService = {
         };
     }
 };
-

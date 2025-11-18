@@ -8,6 +8,7 @@
     --text-light: #ffffff;
     --text-secondary: #aaaaaa;
     --border-color: #4f545c;
+    --neutral-control: #95a5a6;
     --shadow-color: rgba(0, 0, 0, 0.4);
 }
 
@@ -17,7 +18,7 @@
 /* ======================================================= */
 
 .lobby-page {
-    /* ✅ FUNDO E COR DE TEXTO APLICADOS AQUI PARA ISOLAMENTO */
+    /* FUNDO E COR DE TEXTO APLICADOS AQUI PARA ISOLAMENTO */
     background-color: var(--background-dark);
     color: var(--text-light);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -52,7 +53,7 @@
 /* --- Botões (Confiando nas regras base do CSS de Jogo/Login para a estrutura .btn) --- */
 
 .lobby-page .btn {
-    /* ✅ APENAS REGRAS ESPECÍFICAS DE FORMATO E DE HOVER */
+    /*  APENAS REGRAS ESPECÍFICAS DE FORMATO E DE HOVER */
     border-radius: 20px;
     transition: all 0.3s ease;
     text-transform: uppercase;
@@ -76,6 +77,84 @@
     font-size: 0.85em;
     border-radius: 15px;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+/* --- CSS Adicional para Lobby Controls (dentro de .lobby-page) --- */
+
+.lobby-page .lobby-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    padding: 0 10px;
+}
+
+.lobby-page .lobby-controls .btn {
+    font-size: 1em;
+    padding: 10px 20px;
+    box-shadow: 0 4px 6px var(--shadow-color);
+    /* Garante que o texto base do botão é legível */
+    color: var(--background-dark) !important;
+}
+
+.lobby-page .lobby-controls .btn-primary {
+    /* Botão Criar Lobby (Dourado/Destaque) */
+    background-color: var(--accent-gold);
+    border-color: var(--accent-gold);
+}
+
+.lobby-page .lobby-controls .btn-secondary {
+    /* Botão Voltar (Neutro) */
+    background-color: var(--neutral-control);
+    border-color: var(--neutral-control);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.lobby-page .btn-back-to-lobbies {
+    /* Define o botão como um bloco para que a margin funcione */
+    display: block;
+
+    /* Centraliza o botão horizontalmente */
+    margin: 0 auto 30px auto;
+
+    /* Z-index e outros estilos não são necessários, pois já não é absoluto */
+    padding: 10px 20px;
+}
+
+
+
+
+
+
+
+
+
 
 /* --- Estilos da Homepage (HomeButton/Grid) --- */
 
@@ -152,5 +231,3 @@
     transform: translateY(-5px);
     border-color: var(--accent-gold);
 }
-
-/* ... (O restante CSS de detalhes omitido por brevidade, mas está contido corretamente) ... */

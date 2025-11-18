@@ -14,21 +14,24 @@ const LobbyCreationPage: React.FC = () => {
     // Hook para navegação programática
     const navigate = useNavigate();
 
+    const handleGoBack = () => {
+
+        navigate('/lobbies');
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
 
         try {
-            // 🚨 Chamada ao serviço de criação
             const result = await lobbyService.createLobby(name, maxPlayers, rounds);
 
             // Se for bem-sucedido, redireciona o utilizador para a página do lobby criado
-            // Ou para a página principal de listagem de lobbies
             alert(`Lobby '${result.name}' criado com sucesso! ID: ${result.lobbyId}`);
 
-            // Exemplo de redirecionamento para a página principal de lobbies
-            navigate('/lobbies');
+            // Redirecionamento para a página principal de lobbies
+            navigate('/lobby');
 
         } catch (e: any) {
             console.error("Creation Error:", e);
@@ -40,6 +43,14 @@ const LobbyCreationPage: React.FC = () => {
 
     return (
         <div className="lobby-creation-container lobby-page">
+
+            <button
+                onClick={handleGoBack}
+                className="btn btn-secondary btn-back-to-lobbies"
+            >
+                VOLTAR AOS LOBBIES
+            </button>
+
             <h2>Criar Novo Lobby</h2>
 
             {error && <p className="error-message">{error}</p>}
