@@ -1,11 +1,17 @@
 import * as React from "react";
 import {useState} from 'react';
-import {login} from "../services/user/userApi";
-import {useNavigate} from "react-router-dom";
-import {setToken} from "../utils/comman";
+import {login, register, isSafePassword} from "../services/user/userApi";
+import {Navigate, useNavigate} from "react-router-dom";
+import {setToken, getToken} from "../utils/comman";
 
 
 function AuthenticationPage() {
+    const token = getToken();
+
+    if (token) {    
+        return <Navigate to="/home" replace />;
+    }
+
     const [isPanelActive, setIsPanelActive] = useState(false);
     const navigate = useNavigate();
 
@@ -15,6 +21,8 @@ function AuthenticationPage() {
     const [signUpName, setSignUpName] = useState('');
     const [signUpEmail, setSignUpEmail] = useState('');
     const [signUpPassword, setSignUpPassword] = useState('');
+    const [signUpNickname, setSignUpNickname] = useState('');
+    const [signUpInviteCode, setSignUpInviteCode] = useState('');
 
     const handleSignUpClick = () => setIsPanelActive(true);
     const handleSignInClick = () => setIsPanelActive(false);
@@ -39,7 +47,33 @@ function AuthenticationPage() {
     // @ts-ignore
     const handleSignUpSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
-    };
+
+        try {
+            const userData = await register(signUpName, signUpNickname, signUpEmail, signUpPassword, signUpInviteCode);
+            const token = userData.token;
+            console.log('Registration successful!', userData);
+            setToken(token);
+            setIsPanelActive(false);
+            navigate('/home');
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const isSignUpEnabled = () => {
+        const nameNotBlank = signUpName.trim() !== '';
+        const nicknameNotBlank = signUpNickname.trim() !== '';
+        const emailNotBlank = signUpEmail.trim() !== '';
+        const passwordNotBlank = signUpPassword.trim() !== '';
+        const inviteCodeNotBlank = signUpInviteCode.trim() !== '';
+        return nameNotBlank && nicknameNotBlank && emailNotBlank && passwordNotBlank && inviteCodeNotBlank && isSafePassword(signUpPassword);
+    }
+
+    const isSignInEnabled = () => {
+        const emailNotBlank = signInEmail.trim() !== '';
+        const passwordNotBlank = signInPassword.trim() !== '';
+        return emailNotBlank && passwordNotBlank && isSafePassword(signInPassword);
+    }
 
     return (
         <div>
@@ -59,6 +93,12 @@ function AuthenticationPage() {
                             onChange={e => setSignUpName(e.target.value)}
                         />
                         <input
+                            type="text"
+                            placeholder="Nickname"
+                            value={signUpNickname}
+                            onChange={e => setSignUpNickname(e.target.value)}
+                        />
+                        <input
                             type="email"
                             placeholder="Email"
                             value={signUpEmail}
@@ -70,7 +110,13 @@ function AuthenticationPage() {
                             value={signUpPassword}
                             onChange={e => setSignUpPassword(e.target.value)}
                         />
-                        <button>Sign Up</button>
+                        <input
+                            type="text"
+                            placeholder="Invite Code"
+                            value={signUpInviteCode}
+                            onChange={e => setSignUpInviteCode(e.target.value)}
+                        />
+                        <button disabled={!isSignUpEnabled()}>Sign Up</button>
                     </form>
                 </div>
 
@@ -92,7 +138,7 @@ function AuthenticationPage() {
                             onChange={e => setSignInPassword(e.target.value)}
                         />
                         <a href="#">Forgot your password?</a>
-                        <button>Sign In</button>
+                        <button disabled={!isSignInEnabled()}>Sign In</button>
                     </form>
                 </div>
 

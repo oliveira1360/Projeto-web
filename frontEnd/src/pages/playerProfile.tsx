@@ -5,8 +5,12 @@ import {NavBar} from '../components/navBar';
 function PlayerProfilePage() {
     return (
         <div>
-            <NavBar/>
-            <h1>Player profile Page</h1>
+            <div>
+                <NavBar/>
+            </div>
+            <div>
+                <h1>Player profile Page</h1>
+            </div>
         </div>
     );
 }
