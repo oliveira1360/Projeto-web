@@ -22,40 +22,40 @@ data class ProblemDetail(
  * Problem type URIs for game-related errors
  */
 object ProblemTypes {
-    const val BASE_URI = "https://api.pokerdice.com/problems"
+    const val BASE_URI = "https://github.com/isel-leic-daw/2025-daw-leic52d-2025-leic52d-14/tree/main/docs/problemTypes"
 
     // Game errors
-    const val EMPTY_HAND = "$BASE_URI/empty-hand"
-    const val NO_ROUND_IN_PROGRESS = "$BASE_URI/no-round-in-progress"
-    const val GAME_NOT_FINISHED = "$BASE_URI/game-not-finished"
-    const val GAME_NOT_FOUND = "$BASE_URI/game-not-found"
-    const val INVALID_GAME_ID = "$BASE_URI/invalid-game-id"
-    const val TOO_MANY_ROLLS = "$BASE_URI/too-many-rolls"
-    const val ROUND_NOT_STARTED = "$BASE_URI/round-not-started"
-    const val GAME_ALREADY_FINISHED = "$BASE_URI/game-already-finished"
-    const val NO_PLAYERS_IN_GAME = "$BASE_URI/no-players-in-game"
-    const val INVALID_DICE_INDICES = "$BASE_URI/invalid-dice-indices"
-    const val ALL_PLAYERS_NOT_FINISHED = "$BASE_URI/all-players-not-finished"
+    const val EMPTY_HAND = "$BASE_URI/empty-hand.kt"
+    const val NO_ROUND_IN_PROGRESS = "$BASE_URI/no-round-in-progress.kt"
+    const val GAME_NOT_FINISHED = "$BASE_URI/game-not-finished.kt"
+    const val GAME_NOT_FOUND = "$BASE_URI/game-not-found.kt"
+    const val INVALID_GAME_ID = "$BASE_URI/invalid-game-id.kt"
+    const val TOO_MANY_ROLLS = "$BASE_URI/too-many-rolls.kt"
+    const val ROUND_NOT_STARTED = "$BASE_URI/round-not-started.kt"
+    const val GAME_ALREADY_FINISHED = "$BASE_URI/game-already-finished.kt"
+    const val NO_PLAYERS_IN_GAME = "$BASE_URI/no-players-in-game.kt"
+    const val INVALID_DICE_INDICES = "$BASE_URI/invalid-dice-indices.kt"
+    const val ALL_PLAYERS_NOT_FINISHED = "$BASE_URI/all-players-not-finished.kt"
 
     // Lobby errors
-    const val LOBBY_NOT_FOUND = "$BASE_URI/lobby-not-found"
-    const val LOBBY_FULL = "$BASE_URI/lobby-full"
-    const val ALREADY_IN_LOBBY = "$BASE_URI/already-in-lobby"
-    const val NOT_IN_LOBBY = "$BASE_URI/not-in-lobby"
-    const val INVALID_LOBBY_DATA = "$BASE_URI/invalid-lobby-data"
+    const val LOBBY_NOT_FOUND = "$BASE_URI/lobby-not-found.kt"
+    const val LOBBY_FULL = "$BASE_URI/lobby-full.kt"
+    const val ALREADY_IN_LOBBY = "$BASE_URI/already-in-lobby.kt"
+    const val NOT_IN_LOBBY = "$BASE_URI/not-in-lobby.kt"
+    const val INVALID_LOBBY_DATA = "$BASE_URI/invalid-lobby-data.kt"
 
     // User/Auth errors
-    const val USER_NOT_FOUND = "$BASE_URI/user-not-found"
-    const val USER_NOT_IN_GAME = "$BASE_URI/user-not-in-game"
-    const val UNAUTHORIZED_ACTION = "$BASE_URI/unauthorized-action"
-    const val INVALID_CREDENTIALS = "$BASE_URI/invalid-credentials"
-    const val INSECURE_PASSWORD = "$BASE_URI/insecure-password"
-    const val EMAIL_ALREADY_USED = "$BASE_URI/email-already-used"
-    const val INVALID_USER_ID = "$BASE_URI/invalid-user-id"
+    const val USER_NOT_FOUND = "$BASE_URI/user-not-found.kt"
+    const val USER_NOT_IN_GAME = "$BASE_URI/user-not-in-game.kt"
+    const val UNAUTHORIZED_ACTION = "$BASE_URI/unauthorized-action.kt"
+    const val INVALID_CREDENTIALS = "$BASE_URI/invalid-credentials.kt"
+    const val INSECURE_PASSWORD = "$BASE_URI/insecure-password.kt"
+    const val EMAIL_ALREADY_USED = "$BASE_URI/email-already-used.kt"
+    const val INVALID_USER_ID = "$BASE_URI/invalid-user-id.kt"
 
     // Authorization
-    const val UNAUTHORIZED = "$BASE_URI/unauthorized"
-    const val FORBIDDEN = "$BASE_URI/forbidden"
+    const val UNAUTHORIZED = "$BASE_URI/unauthorized.kt"
+    const val FORBIDDEN = "$BASE_URI/forbidden.kt"
 }
 
 /**
