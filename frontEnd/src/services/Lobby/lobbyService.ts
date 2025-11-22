@@ -1,168 +1,128 @@
+// src/services/lobby/lobbyService.ts
+
 import { BASE_URL, getToken } from "../../utils/comman";
+import {
+    CreateLobbyResponse,
+    ListLobbiesResponse,
+    LobbyDetailsResponse,
+    JoinLeaveLobbyResponse,
+} from "./lobbyResponseTypes";
+// Assumimos que 'request' agora retorna Promise<Response>
+import { request } from "../request";
+import { Lobby } from "./lobbyResponseTypes";
 
-
-// --- Interfaces de Dados ---
-
-export interface Lobby {
-    lobbyId: number;
-    name: string;
-    maxPlayers: number;
-    currentPlayers: number;
-    rounds?: number; // Opcional, pois não está sempre presente na listagem
-}
-
-export interface LobbyDetailsResponse extends Lobby {
-    rounds: number; // Presente nos detalhes
-}
-
-export interface ListLobbiesResponse {
-    lobbies: Lobby[];
-}
-
-export interface CreateLobbyResponse {
-    lobbyId: number;
-    name: string;
-    maxPlayers: number;
-    currentPlayers: number;
-    rounds: number;
-}
-
-export interface JoinLeaveLobbyResponse {
-    lobbyId?: number; // Presente no Join, ausente no Leave
-    message: string;
-}
-
-// --- Função de Requisição Genérica (Assumida) ---
-
-
-async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
-    const token = getToken();
-
-    const response = await fetch(url, {
-        headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            ...(options.headers ?? {}),
-        },
-        credentials: "include",
-        ...options,
-    });
-
-    if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(`HTTP ${response.status} - ${response.statusText}\n${errorBody}`);
-    }
-
-    // Retorna vazio se a resposta for 204 No Content
-    if (response.status === 204) {
-        return {} as T;
-    }
-
-    return response.json() as Promise<T>;
-}
-
-
-// --- Lobby Service ---
 
 export const lobbyService = {
-    /**
-     * POST /lobbies/create
-     * Cria um novo lobby.
-     * @param name Nome do lobby.
-     * @param maxPlayers Número máximo de jogadores.
-     * @param rounds Número de rondas.
-     */
-    async createLobby(name: string, maxPlayers: number, rounds: number) {
-        const data = await request<CreateLobbyResponse>(
-            `${BASE_URL}/lobbies/create`,
-            {
-                method: "POST",
-                body: JSON.stringify({ name, maxPlayers, rounds }),
-            }
-        );
-        return data;
+
+    async createLobby(name: string, maxPlayers: number, rounds: number): Promise<CreateLobbyResponse> {
+        const response = await request(`/lobbies/create`, {
+            method: "POST",
+            body: JSON.stringify({ name, maxPlayers, rounds }),
+        });
+        const data = await response.json();
+        return {
+            lobbyId: data.lobbyId,
+            name: data.name,
+            maxPlayers: data.maxPlayers,
+            currentPlayers: data.currentPlayers,
+            rounds: data.rounds,
+            _links: data._links,
+        };
     },
 
-    /**
-     * GET /lobbies
-     * Lista todos os lobbies disponíveis.
-     */
-    async listLobbies() {
-        const data = await request<ListLobbiesResponse>(
-            `${BASE_URL}/lobbies`
-        );
-        return data.lobbies;
+    // 💡 SEGUE O PADRÃO: Response -> json() -> Mapeamento
+    async listLobbies(): Promise<ListLobbiesResponse> {
+        const response = await request(`/lobbies`);
+        const data = await response.json();
+        return {
+            lobbies: data.lobbies as Lobby[], // Assumimos que data.lobbies é o array de lobbies
+            _links: data._links,
+        };
     },
 
-    /**
-     * GET /lobbies/{lobbyId}
-     * Obtém os detalhes de um lobby específico.
-     * @param lobbyId ID do lobby.
-     */
-    async getLobbyDetails(lobbyId: number) {
-        const data = await request<LobbyDetailsResponse>(
-            `${BASE_URL}/lobbies/${lobbyId}`
-        );
-        // O controller devolve um objeto plano (LobbyDetailsResponse)
-        return data;
+    async getLobbyDetails(lobbyId: number): Promise<LobbyDetailsResponse> {
+        const response = await request(`/lobbies/${lobbyId}`);
+        const data = await response.json();
+        return {
+            lobbyId: data.lobbyId,
+            name: data.name,
+            maxPlayers: data.maxPlayers,
+            currentPlayers: data.currentPlayers,
+            rounds: data.rounds,
+            _links: data._links,
+        };
     },
 
-    /**
-     * POST /lobbies/join/{lobbyId}
-     * O utilizador autenticado junta-se a um lobby.
-     * @param lobbyId ID do lobby a juntar.
-     */
-    async joinLobby(lobbyId: number) {
-        const data = await request<JoinLeaveLobbyResponse>(
-            `${BASE_URL}/lobbies/join/${lobbyId}`,
-            {
-                method: "POST",
-            }
-        );
-        return data;
+    async joinLobby(lobbyId: number): Promise<JoinLeaveLobbyResponse> {
+        const response = await request(`/lobbies/join/${lobbyId}`, {
+            method: "POST",
+        });
+        const data = await response.json();
+        return {
+            lobbyId: data.lobbyId,
+            message: data.message,
+            _links: data._links,
+        };
     },
 
-    /**
-     * POST /lobbies/leave/{lobbyId}
-     * O utilizador autenticado sai de um lobby.
-     * @param lobbyId ID do lobby a sair.
-     */
-    async leaveLobby(lobbyId: number) {
-        const data = await request<JoinLeaveLobbyResponse>(
-            `${BASE_URL}/lobbies/leave/${lobbyId}`,
-            {
-                method: "POST",
-            }
-        );
-        return data;
+    async leaveLobby(lobbyId: number): Promise<JoinLeaveLobbyResponse> {
+        const response = await request(`/lobbies/leave/${lobbyId}`, {
+            method: "POST",
+        });
+        const data = await response.json();
+        return {
+            lobbyId: data.lobbyId,
+            message: data.message,
+            _links: data._links,
+        };
     },
 
 
 
-    // TODO Não sei se esta rota também é preciso
     /**
      * GET /lobbies/{lobbyId}/events
      * Estabelece uma conexão SSE (Server-Sent Events) para receber eventos do lobby.
-     * NOTA: Esta função não usa a abstração 'request' e requer o tratamento especial de SSE no lado do cliente.
-     * @param lobbyId ID do lobby.
      */
+
     /*
-    subscribeToLobbyEvents(lobbyId: number): EventSource {
-        const url = `${BASE_URL}/lobbies/${lobbyId}/events`;
-        // Para incluir a autenticação, pode ser necessário passar o token
-        // ou usar um mod de conexão que suporte headers (ex: fetch com ReadableStream, mas EventSource é mais simples para SSE).
-        // Se a autenticação estiver apenas em cookies/credentials, EventSource funciona:
+    subscribeToLobbyEvents(
+        lobbyId: number,
+        onEvent: (data: LobbyEventResponse) => void,
+        onError?: (err: any) => void,
+        onClose?: () => void
+    ) {
         const token = getToken();
-        let finalUrl = url;
+        // Nota: Assumindo que BASE_URL está acessível
+        const eventSource = new EventSource(
+            `${BASE_URL}/lobbies/${lobbyId}/events?token=${token}`
+        );
 
-        // NOTA: Se o token for exigido na URL (e não em cookie/header), descomente o seguinte:
-        // if (token) {
-        //     finalUrl += `?token=${token}`;
-        // }
+        eventSource.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            onEvent(data);
+        };
 
-        return new EventSource(finalUrl, { withCredentials: true });
+        const events = ["player_joined", "player_left", "game_starting", "lobby_closed", "connected"];
+        events.forEach((e) => {
+            eventSource.addEventListener(e, (event: MessageEvent) => {
+                const data = JSON.parse(event.data);
+                onEvent({ type: e, data: data });
+            });
+        });
+
+        eventSource.onerror = (err) => {
+            console.error("SSE error:", err);
+            onError?.(err);
+        };
+
+        return {
+            close: () => {
+                eventSource.close();
+                onClose?.();
+            }
+        };
     }
+
 
      */
 };

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Lobby, LobbyDetailsResponse } from '../../services/lobby/lobbyService';
+import { Link } from "react-router-dom";
 
 // Propriedades para o Card de um Lobby
 interface LobbyCardProps {
@@ -53,6 +54,17 @@ export const LobbyCard: React.FC<LobbyCardProps> = ({
         </div>
     );
 };
+
+export const LobbyHeaderControls: React.FC = () => (
+    <div className="lobby-controls">
+        <Link to="/" className="btn btn-secondary">
+            VOLTAR PARA HOME
+        </Link>
+        <Link to="/lobbyCreation" className="btn btn-primary">
+            CRIAR NOVO LOBBY
+        </Link>
+    </div>
+);
 
 interface LobbyDetailsProps {
     details: LobbyDetailsResponse;

@@ -1,5 +1,5 @@
 /* --- Variáveis CSS (Tema Escuro/Jogo) --- */
-/* Estas variáveis ainda podem ser usadas globalmente, se desejar */
+/* As variáveis são seguras e podem permanecer no :root */
 :root {
     --background-dark: #1e2124;
     --card-background: #282b30;
@@ -8,24 +8,32 @@
     --text-light: #ffffff;
     --text-secondary: #aaaaaa;
     --border-color: #4f545c;
+    --neutral-control: #95a5a6;
     --shadow-color: rgba(0, 0, 0, 0.4);
 }
 
-/* --- Estilos Globais Base (Apenas para garantir o fundo do corpo se o ficheiro principal não o fizer) --- */
-body {
-    background-color: var(--background-dark);
-}
 
 /* ======================================================= */
-/* === CLASSE DE CONTENÇÃO: .lobby-page (TUDO AQUI DENTRO) === */
+/* === CLASSE DE CONTENÇÃO: .lobby-page === */
 /* ======================================================= */
 
 .lobby-page {
+    /* FUNDO E COR DE TEXTO APLICADOS AQUI PARA ISOLAMENTO */
+    background-color: var(--background-dark);
+    color: var(--text-light);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 40px 20px;
     max-width: 1400px;
     margin: 0 auto;
+    min-height: 100vh; /* Garante que o fundo escuro preenche toda a vista */
+}
 
+/* --- Títulos --- */
+
+.lobby-page h1 {
+    font-size: 3em;
+    margin-bottom: 5px;
+    color: var(--accent-gold); /* Cor específica do Lobby/Home */
 }
 
 .lobby-page h2 {
@@ -36,12 +44,16 @@ body {
     text-shadow: 0 0 5px var(--shadow-color);
 }
 
-/* --- Botões (Revisados para usar as classes globais e depois as cores) --- */
+.lobby-page p {
+    font-size: 1.2em;
+    color: var(--text-secondary);
+    margin-bottom: 40px;
+}
 
-/* Nota: Se o seu CSS de Jogo define '.btn', estes estilos irão sobrepor-se nas cores,
-   mas o layout base (.btn) será mantido se o CSS de Jogo for carregado depois. */
+/* --- Botões (Confiando nas regras base do CSS de Jogo/Login para a estrutura .btn) --- */
+
 .lobby-page .btn {
-    /* Ajustes específicos do lobby, confiando no CSS base global para o resto */
+    /*  APENAS REGRAS ESPECÍFICAS DE FORMATO E DE HOVER */
     border-radius: 20px;
     transition: all 0.3s ease;
     text-transform: uppercase;
@@ -53,21 +65,12 @@ body {
     filter: brightness(1.1);
 }
 
-.lobby-page .btn-primary {
-    background-color: #007bff;
-}
+/* --- Cores dos Botões --- */
 
-.lobby-page .btn-success {
-    background-color: #28a745;
-}
-
-.lobby-page .btn-secondary {
-    background-color: var(--border-color);
-}
-
-.lobby-page .btn-danger {
-    background-color: #dc3545;
-}
+.lobby-page .btn-primary { background-color: #007bff; border-color: #007bff; }
+.lobby-page .btn-success { background-color: #28a745; border-color: #28a745; }
+.lobby-page .btn-secondary { background-color: var(--border-color); border-color: var(--border-color); }
+.lobby-page .btn-danger { background-color: #dc3545; border-color: #dc3545; }
 
 .lobby-page .btn-small {
     padding: 8px 15px;
@@ -75,7 +78,134 @@ body {
     border-radius: 15px;
 }
 
-/* --- Grid de Lobbies --- */
+
+
+
+
+
+
+
+
+
+
+
+/* --- CSS Adicional para Lobby Controls (dentro de .lobby-page) --- */
+
+.lobby-page .lobby-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    padding: 0 10px;
+}
+
+.lobby-page .lobby-controls .btn {
+    font-size: 1em;
+    padding: 10px 20px;
+    box-shadow: 0 4px 6px var(--shadow-color);
+    /* Garante que o texto base do botão é legível */
+    color: var(--background-dark) !important;
+}
+
+.lobby-page .lobby-controls .btn-primary {
+    /* Botão Criar Lobby (Dourado/Destaque) */
+    background-color: var(--accent-gold);
+    border-color: var(--accent-gold);
+}
+
+.lobby-page .lobby-controls .btn-secondary {
+    /* Botão Voltar (Neutro) */
+    background-color: var(--neutral-control);
+    border-color: var(--neutral-control);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.lobby-page .btn-back-to-lobbies {
+    /* Define o botão como um bloco para que a margin funcione */
+    display: block;
+
+    /* Centraliza o botão horizontalmente */
+    margin: 0 auto 30px auto;
+
+    /* Z-index e outros estilos não são necessários, pois já não é absoluto */
+    padding: 10px 20px;
+}
+
+
+
+
+
+
+
+
+
+
+/* --- Estilos da Homepage (HomeButton/Grid) --- */
+
+.lobby-page .home-container {
+    padding-top: 10vh;
+    text-align: center;
+}
+
+.lobby-page .home-button-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.lobby-page .btn-home {
+    width: 300px;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1em;
+    text-decoration: none;
+    text-align: center;
+}
+
+.lobby-page .btn-icon {
+    font-size: 1.8em;
+    margin-bottom: 5px;
+}
+
+/* Cores da Homepage */
+.lobby-page .btn-main-action {
+    background-color: var(--accent-gold);
+    border-color: var(--accent-gold);
+    color: var(--background-dark) !important;
+}
+
+.lobby-page .btn-info-action {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.lobby-page .btn-secondary-action {
+    background-color: var(--card-background);
+    border-color: var(--border-color);
+}
+
+/* --- Grid e Cards do Lobby --- */
 
 .lobby-page .lobby-grid {
     display: grid;
@@ -83,8 +213,6 @@ body {
     gap: 25px;
     margin-top: 40px;
 }
-
-/* --- Card de Lobby (LobbyCard) --- */
 
 .lobby-page .lobby-card {
     background-color: var(--card-background);
@@ -102,80 +230,4 @@ body {
 .lobby-page .lobby-card:hover {
     transform: translateY(-5px);
     border-color: var(--accent-gold);
-}
-
-.lobby-page .lobby-card.selected {
-    border: 2px solid var(--accent-gold);
-    box-shadow: 0 0 15px var(--accent-gold);
-    background-color: #383b42;
-}
-
-.lobby-page .lobby-card h3 {
-    margin-top: 0;
-    color: var(--accent-gold);
-    font-size: 1.4em;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 10px;
-    margin-bottom: 15px;
-}
-
-.lobby-page .lobby-card p {
-    margin: 5px 0;
-    font-size: 1em;
-    color: var(--text-secondary);
-}
-
-.lobby-page .card-actions {
-    margin-top: 20px;
-    display: flex;
-    justify-content: space-between;
-}
-
-/* --- Painel de Detalhes (LobbyDetails) --- */
-
-.lobby-page .details-panel {
-    background-color: var(--dark-green);
-    border: 3px solid var(--accent-gold);
-    padding: 30px;
-    margin-top: 50px;
-    border-radius: 15px;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6);
-}
-
-.lobby-page .details-panel h3 {
-    color: var(--accent-gold);
-    border-bottom: 2px solid var(--accent-gold);
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-}
-
-.lobby-page .details-panel p {
-    font-size: 1.1em;
-    margin: 15px 0;
-}
-
-.lobby-page .details-panel .btn-danger {
-    margin-top: 20px;
-    display: block;
-    width: 100%;
-}
-
-/* --- Estilos de Estado --- */
-
-.lobby-page .error-message {
-    color: #ff6b6b;
-    background-color: #4d2d2d;
-    padding: 15px;
-    border-radius: 8px;
-    margin: 20px auto;
-    text-align: center;
-    max-width: 600px;
-    border: 1px solid #ff6b6b;
-}
-
-/* --- Linha Separadora --- */
-.lobby-page hr {
-    border: none;
-    border-top: 2px dashed var(--border-color);
-    margin: 40px 0;
 }
