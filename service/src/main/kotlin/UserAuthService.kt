@@ -4,14 +4,11 @@ import jakarta.inject.Named
 import org.example.config.UsersDomainConfig
 import org.example.entity.core.Email
 import org.example.entity.core.isNameValid
-import org.example.entity.core.isPasswordValid
 import org.example.entity.core.isUrlValid
 import org.example.entity.core.isValidEmail
 import org.example.entity.core.toEmail
 import org.example.entity.core.toName
 import org.example.entity.core.toNameOrNull
-import org.example.entity.core.toPassword
-import org.example.entity.core.toPasswordOrNull
 import org.example.entity.core.toUrlOrNull
 import org.example.entity.player.User
 import org.example.entity.player.UserInfo
@@ -52,11 +49,11 @@ class UserAuthService(
         name: String,
         nickName: String,
         email: String,
-        password: String,
+        passwordHash: String,
         imageUrl: String?,
     ): Either<UserError, User> {
         if (!(
-                email.isValidEmail() && password.isPasswordValid() && name.isNameValid() && nickName.isNameValid()
+                email.isValidEmail() && name.isNameValid() && nickName.isNameValid() && passwordHash.isNotBlank()
             )
         ) {
             return failure(UserError.InsecurePassword)
@@ -70,7 +67,6 @@ class UserAuthService(
         val name = name.toName()
         val nickName = nickName.toName()
         val email = email.toEmail()
-        val password = password.toPassword()
         val imageUrl = imageUrl?.toUrlOrNull()
 
         return trxManager.run {
@@ -78,7 +74,7 @@ class UserAuthService(
 
             val existingNickName = repositoryUser.findByNickName(nickName)?.let { return@run failure(UserError.AlreadyUsedEmailAddress) }
 
-            val user = repositoryUser.createUser(name, nickName, email, password, imageUrl)
+            val user = repositoryUser.createUser(name, nickName, email, passwordHash, imageUrl)
             success(user)
         }
     }
@@ -118,15 +114,14 @@ class UserAuthService(
         userID: Int,
         name: String?,
         nickName: String?,
-        password: String?,
+        passwordHash: String?,
         imageUrl: String?,
     ): ReturnResult {
         val name = name.toNameOrNull()
         val nickName = nickName.toNameOrNull()
-        val password = password.toPasswordOrNull()
         val imageUrl = imageUrl.toUrlOrNull()
         return trxManager.run {
-            val user = repositoryUser.updateUser(userID, name, nickName, password, imageUrl)
+            val user = repositoryUser.updateUser(userID, name, nickName, passwordHash, imageUrl)
             success(user)
         }
     }
@@ -140,15 +135,15 @@ class UserAuthService(
 
     fun createToken(
         email: String,
-        password: String,
+        passwordHash: String,
     ): Either<TokenCreationError, TokenExternalInfo> {
-        if (!(email.isValidEmail() && password.isPasswordValid())) {
+        if (!(email.isValidEmail())) {
             return failure(TokenCreationError.UserOrPasswordAreInvalid)
         }
 
         return trxManager.run {
             val user: User =
-                repositoryUser.findByEmailAndPassword(email.toEmail(), password.toPassword())
+                repositoryUser.findByEmailAndPassword(email.toEmail(), passwordHash)
                     ?: return@run failure(TokenCreationError.UserOrPasswordAreInvalid)
             val tokenValue = generateTokenValue()
             val now = clock.instant()

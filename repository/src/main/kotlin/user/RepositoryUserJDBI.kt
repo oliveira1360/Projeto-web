@@ -43,18 +43,18 @@ class RepositoryUserJDBI(
         name: Name,
         nickName: Name,
         email: Email,
-        password: Password,
+        passwordHash: String,
         imageUrl: URL?,
     ): User {
         val id =
             handle
                 .createUpdate(
                     "INSERT INTO users (username, nick_name, email, password_hash, avatar_url) " +
-                        "VALUES (:name, :nickName, :email, :password, :imageUrl)",
+                        "VALUES (:name, :nickName, :email, :password_hash, :imageUrl)",
                 ).bind("name", name.value)
                 .bind("nickName", nickName.value)
                 .bind("email", email.value)
-                .bind("password", password.value)
+                .bind("password_hash", passwordHash)
                 .bind("imageUrl", imageUrl?.value)
                 .executeAndReturnGeneratedKeys()
                 .mapTo(Int::class.java)
@@ -72,7 +72,7 @@ class RepositoryUserJDBI(
             nickName = nickName,
             imageUrl = imageUrl,
             email = email,
-            password = password,
+            passwordHash = passwordHash,
             balance = 0.toBalance(),
         )
     }
@@ -89,7 +89,7 @@ class RepositoryUserJDBI(
         userId: Int,
         name: Name?,
         nickName: Name?,
-        password: Password?,
+        passwordHash: String?,
         imageUrl: URL?,
     ): User =
         handle
@@ -105,7 +105,7 @@ class RepositoryUserJDBI(
             ).bind("id", userId)
             .bind("name", name?.value)
             .bind("nickName", nickName?.value)
-            .bind("password", password?.value)
+            .bind("password", passwordHash)
             .bind("imageUrl", imageUrl?.value)
             .map(UserMapper())
             .one()
@@ -188,12 +188,12 @@ class RepositoryUserJDBI(
 
     override fun findByEmailAndPassword(
         email: Email,
-        password: Password,
+        passwordHash: String,
     ): User? =
         handle
-            .createQuery("SELECT * FROM users WHERE email = :email and password_hash = :password")
+            .createQuery("SELECT * FROM users WHERE email = :email and password_hash = :password_hash")
             .bind("email", email.value)
-            .bind("password", password.value)
+            .bind("password_hash", passwordHash)
             .map(UserMapper())
             .findOne()
             .orElse(null)
@@ -250,7 +250,7 @@ class RepositoryUserJDBI(
                 .bind("name", entity.name.value)
                 .bind("nickName", entity.nickName.value)
                 .bind("email", entity.email.value)
-                .bind("password", entity.password.value)
+                .bind("password", entity.passwordHash)
                 .bind("imageUrl", entity.imageUrl?.value)
                 .bind("balance", entity.balance.money.value)
                 .execute()
@@ -265,7 +265,7 @@ class RepositoryUserJDBI(
                 .bind("name", entity.name.value)
                 .bind("nickName", entity.nickName.value)
                 .bind("email", entity.email.value)
-                .bind("password", entity.password.value)
+                .bind("password", entity.passwordHash)
                 .bind("imageUrl", entity.imageUrl?.value)
                 .bind("balance", entity.balance.money.value)
                 .execute()
@@ -312,7 +312,7 @@ class RepositoryUserJDBI(
         val nickName: Name,
         val imageUrl: URL,
         val email: Email,
-        val passwordValidation: Password,
+        val passwordValidation: String,
         val tokenValidation: TokenValidationInfo,
         val balance: Balance,
         val createdAt: Long,
@@ -343,7 +343,7 @@ private class UserMapper : RowMapper<User> {
             nickName = rs.getString("nick_name").toName(),
             email = rs.getString("email").toEmail(),
             imageUrl = rs.getString("avatar_url").toUrlOrNull(),
-            password = rs.getString("password_hash").toPassword(),
+            passwordHash = rs.getString("password_hash"),
             balance = rs.getInt("balance").toBalance(),
         )
 }
@@ -376,7 +376,7 @@ private class UserAndTokenMapper : RowMapper<Pair<User, Token>> {
                 nickName = rs.getString("nick_name").toName(),
                 imageUrl = rs.getString("avatar_url").toUrlOrNull(),
                 email = rs.getString("email").toEmail(),
-                password = rs.getString("password_hash").toPassword(),
+                passwordHash = rs.getString("password_hash"),
                 balance = rs.getInt("balance").toBalance(),
             )
         val token =

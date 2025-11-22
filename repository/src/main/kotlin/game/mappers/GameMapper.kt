@@ -5,7 +5,6 @@ import org.example.entity.core.Balance
 import org.example.entity.core.Email
 import org.example.entity.core.Money
 import org.example.entity.core.Name
-import org.example.entity.core.Password
 import org.example.entity.core.Points
 import org.example.entity.core.URL
 import org.example.entity.core.toQuantity
@@ -48,7 +47,7 @@ class GameMapper : RowMapper<Game> {
                     val email = extractJsonValue(cleanJson, "email") ?: return@mapNotNull null
                     val imageUrl = extractJsonValue(cleanJson, "imageUrl")
                     val balance = extractJsonValue(cleanJson, "balance")?.toIntOrNull() ?: 0
-                    val password = extractJsonValue(cleanJson, "password_hash") ?: ""
+                    val passwordHash = extractJsonValue(cleanJson, "password_hash") ?: ""
 
                     User(
                         id = id,
@@ -56,7 +55,7 @@ class GameMapper : RowMapper<Game> {
                         nickName = Name(nickName),
                         email = Email(email),
                         imageUrl = imageUrl?.let { URL(it) },
-                        password = Password(password),
+                        passwordHash = passwordHash,
                         balance = Balance(Money(balance)),
                     )
                 } catch (e: Exception) {

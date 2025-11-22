@@ -295,7 +295,7 @@ private class UserMapper : RowMapper<User> {
             nickName = rs.getString("nick_name").toName(),
             email = rs.getString("email").toEmail(),
             imageUrl = rs.getString("avatar_url")?.toUrlOrNull(),
-            password = rs.getString("password_hash").toPassword(),
+            passwordHash = rs.getString("password_hash"),
             balance = Balance(rs.getInt("balance").toMoney()),
         )
 }

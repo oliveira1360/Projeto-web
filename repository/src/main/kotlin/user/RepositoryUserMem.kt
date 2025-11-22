@@ -3,7 +3,6 @@ package org.example.user
 import org.example.entity.core.Balance
 import org.example.entity.core.Email
 import org.example.entity.core.Name
-import org.example.entity.core.Password
 import org.example.entity.core.URL
 import org.example.entity.core.toBalance
 import org.example.entity.core.toMoney
@@ -31,7 +30,7 @@ class RepositoryUserMem : RepositoryUser {
         name: Name,
         nickName: Name,
         email: Email,
-        password: Password,
+        passwordHash: String,
         imageUrl: URL?,
     ): User {
         _users.find { it.email == email }?.let {
@@ -43,7 +42,7 @@ class RepositoryUserMem : RepositoryUser {
                 name = name,
                 nickName = nickName,
                 email = email,
-                password = password,
+                passwordHash = passwordHash,
                 imageUrl = imageUrl,
                 balance = Balance(0.toMoney()),
             )
@@ -58,7 +57,7 @@ class RepositoryUserMem : RepositoryUser {
         userId: Int,
         name: Name?,
         nickName: Name?,
-        password: Password?,
+        passwordHash: String?,
         imageUrl: URL?,
     ): User =
         users.find { it.id == userId }.let {
@@ -67,7 +66,7 @@ class RepositoryUserMem : RepositoryUser {
                     it.copy(
                         name = name ?: it.name,
                         nickName = nickName ?: it.nickName,
-                        password = password ?: it.password,
+                        passwordHash = passwordHash ?: it.passwordHash,
                         imageUrl = imageUrl ?: it.imageUrl,
                     )
                 _users.remove(it)
@@ -120,8 +119,8 @@ class RepositoryUserMem : RepositoryUser {
 
     override fun findByEmailAndPassword(
         email: Email,
-        password: Password,
-    ): User? = users.find { it.email == email && it.password == password }
+        passwordHash: String,
+    ): User? = users.find { it.email == email && it.passwordHash == passwordHash }
 
     override fun updateBalance(
         userId: Int,
