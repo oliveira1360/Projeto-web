@@ -1,4 +1,4 @@
-import {BASE_URL, getToken} from "../../utils/comman";
+import {BASE_URL} from "../../utils/comman";
 import {
     CreateGameResponse,
     FinishTurnResponse, GameWinnerResponse,
@@ -145,15 +145,15 @@ export const gameService = {
         onError?: (err: any) => void,
         onClose?: () => void
     ) {
-        const token = getToken();
 
         const eventSource = new EventSource(
-            `${BASE_URL}/game/${gameId}/events?token=${token}`
+            `${BASE_URL}/game/${gameId}/events?`,
+                { withCredentials: true }
         );
 
         eventSource.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            onEvent("message", data); // generic fallback
+            onEvent("message", data);
         };
 
         const events = ["PLAYER_FINISHED_TURN", "ROUND_STARTED", "ROUND_ENDED", "connected", "GAME_ENDED"];

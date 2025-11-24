@@ -1,5 +1,6 @@
 package org.example.controllers
 
+import jakarta.servlet.http.HttpServletRequest
 import org.example.Either
 import org.example.Failure
 import org.example.Success
@@ -56,11 +57,14 @@ class UserController(
     )
     fun loginUser(
         @RequestBody body: LoginUserDTO,
+        request: HttpServletRequest,
     ): ResponseEntity<*> {
         val result = userServices.createToken(body.email, body.password)
         return when (result) {
             is Failure -> handleTokenError(result.value, "/user/login")
-            is Success ->
+            is Success -> {
+                request.setAttribute("authToken", result.value.tokenValue)
+
                 ResponseEntity.status(HttpStatus.ACCEPTED).body(
                     mapOf(
                         "token" to result.value.tokenValue,
@@ -69,8 +73,20 @@ class UserController(
                         "_links" to UserLinks.login(),
                     ),
                 )
+            }
         }
     }
+
+    @GetMapping("/me")
+    fun getCurrentUser(user: AuthenticatedUserDto): ResponseEntity<*> =
+        ResponseEntity.ok(
+            mapOf(
+                "userId" to user.user.id,
+                "name" to user.user.name.value,
+                "nickName" to user.user.nickName.value,
+                "email" to user.user.email.value,
+            ),
+        )
 
     @GetMapping(
         "/info",

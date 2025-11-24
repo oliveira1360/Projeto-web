@@ -21,9 +21,13 @@ class AuthenticationInterceptor(
                 it.parameterType == AuthenticatedUserDto::class.java
             }
         ) {
+            val token = extractTokenFromCookies(request)
             // enforce authentication
             val user =
-                authorizationHeaderProcessor.processAuthorizationHeaderValue(request.getHeader(NAME_AUTHORIZATION_HEADER))
+                token?.let {
+                    authorizationHeaderProcessor.processCookieToken(it)
+                }
+
             return if (user == null) {
                 response.status = 401
                 response.addHeader(NAME_WWW_AUTHENTICATE_HEADER, RequestTokenProcessor.SCHEME)
@@ -38,7 +42,11 @@ class AuthenticationInterceptor(
     }
 
     companion object {
-        const val NAME_AUTHORIZATION_HEADER = "Authorization"
         private const val NAME_WWW_AUTHENTICATE_HEADER = "WWW-Authenticate"
     }
+
+    private fun extractTokenFromCookies(request: HttpServletRequest): String? =
+        request.cookies
+            ?.firstOrNull { it.name == "token" }
+            ?.value
 }

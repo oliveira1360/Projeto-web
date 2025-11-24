@@ -6,6 +6,7 @@ import org.example.auth.*
 import org.example.config.GameDomainConfig
 import org.example.config.LobbiesDomainConfig
 import org.example.config.UsersDomainConfig
+import org.example.filter.TokenCookieFilter
 import org.example.invite.InviteArgumentResolver
 import org.example.invite.InviteInterceptor
 import org.example.token.Sha256TokenEncoder
@@ -17,7 +18,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.web.method.support.HandlerMethodArgumentResolver
-import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import java.time.Clock
@@ -38,14 +38,6 @@ open class PipelineConfigurer(
     override fun addArgumentResolvers(resolvers: MutableList<HandlerMethodArgumentResolver>) {
         resolvers.add(authenticatedUserArgumentResolver)
         resolvers.add(inviteArgumentResolver)
-    }
-
-    // This method adds the CORS configuration
-    override fun addCorsMappings(registry: CorsRegistry) {
-        registry.addMapping("/**")
-            .allowedOriginPatterns("http://localhost:*")
-            .allowedMethods("GET", "POST", "PUT", "DELETE")
-            .allowCredentials(true)
     }
 }
 
@@ -93,6 +85,9 @@ open class App {
         GameDomainConfig(
             moneyRemove = 1,
         )
+
+    @Bean
+    open fun tokenCookieFilter() = TokenCookieFilter()
 }
 
 fun main() {

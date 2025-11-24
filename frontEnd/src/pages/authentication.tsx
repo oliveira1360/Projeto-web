@@ -1,16 +1,9 @@
 import * as React from "react";
 import {useState} from 'react';
 import {login, register, isSafePassword} from "../services/user/userApi";
-import {Navigate, useNavigate} from "react-router-dom";
-import {setToken, getToken} from "../utils/comman";
-
+import {useNavigate} from "react-router-dom";
 
 function AuthenticationPage() {
-    const token = getToken();
-
-    if (token) {    
-        return <Navigate to="/home" replace />;
-    }
 
     const [isPanelActive, setIsPanelActive] = useState(false);
     const navigate = useNavigate();
@@ -34,8 +27,6 @@ function AuthenticationPage() {
 
         try {
             const userData = await login(signInEmail, signInPassword);
-            const token = userData.token;
-            setToken(token)
             console.log('Login successful!', userData);
             navigate('/home');
 
@@ -50,9 +41,7 @@ function AuthenticationPage() {
 
         try {
             const userData = await register(signUpName, signUpNickname, signUpEmail, signUpPassword, signUpInviteCode);
-            const token = userData.token;
             console.log('Registration successful!', userData);
-            setToken(token);
             setIsPanelActive(false);
             navigate('/home');
         } catch (error) {

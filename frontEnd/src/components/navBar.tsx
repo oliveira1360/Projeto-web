@@ -1,11 +1,22 @@
 import * as React from "react";
 import {Link, useNavigate} from "react-router-dom";
-import { getToken } from "../utils/comman";
 import { logout } from "../services/user/userApi";
+import {useEffect, useState} from "react";
+import {checkAuth} from "../services/request";
 
 export function NavBar() {
-    const token = getToken();
     const navigate = useNavigate();
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+
+    useEffect(() => {
+        const verifyAuth = async () => {
+            const auth = await checkAuth();
+            setIsAuthenticated(auth);
+        };
+
+        verifyAuth();
+    }, []);
 
     const handleLogout = async () => {
         try {
@@ -22,7 +33,7 @@ export function NavBar() {
         <nav>
             <button onClick={() => navigate('/home')}>Home</button>
             <button onClick={() => navigate('/playerProfile')}>Profile</button>
-            {token ? (
+            {isAuthenticated ? (
                 <button onClick={handleLogout}>
                     Logout
                 </button>

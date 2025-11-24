@@ -1,4 +1,5 @@
-import {BASE_URL, getToken, removeToken, setToken} from "../../utils/comman";
+import {BASE_URL} from "../../utils/comman";
+import {request} from "../request";
 
 export type TokenExternalInfo = {
     token: string;
@@ -15,15 +16,18 @@ export async function login(email: string, password: string): Promise<TokenExter
     // Code obtained and adapted from https://www.geeksforgeeks.org/javascript/how-to-create-hash-from-string-in-javascript/
     const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password)); 
     const hashArray = Array.from(new Uint8Array(hashBuffer)); 
-    const passwordHashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join(''); 
+    const passwordHashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
 
 
-    const response = await fetch(`${BASE_URL}/user/login`, {
-        method: 'POST',
+    const response = await request(`/user/login`, {
+        method: "POST",
         headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json"
         },
-        body: JSON.stringify({ email, password: passwordHashHex }),
+        body: JSON.stringify({
+            email,
+            password: passwordHashHex
+        })
     });
 
     if (!response.ok) {
@@ -41,16 +45,15 @@ export async function register(name: string, nickName: string, email: string, pa
     // Code obtained and adapted from https://www.geeksforgeeks.org/javascript/how-to-create-hash-from-string-in-javascript/
     const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password)); 
     const hashArray = Array.from(new Uint8Array(hashBuffer)); 
-    const passwordHashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join(''); 
+    const passwordHashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
 
-    const response = await fetch(`${BASE_URL}/user/create`, {
+    const response = await request('/user/create', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
             'Authorization': 'invite ' + inviteCode,
         },
         body: JSON.stringify({ name, nickName, email, password: passwordHashHex }),
-    })
+    });
 
     if (!response.ok) {
         const errorData: TokenCreationError = await response.json();
@@ -60,6 +63,7 @@ export async function register(name: string, nickName: string, email: string, pa
 }
 
 export async function logout(): Promise<void> {
+    /*
     const response = await fetch(`${BASE_URL}/user/logout`, {
         method: 'POST',
         headers: {
@@ -72,6 +76,8 @@ export async function logout(): Promise<void> {
         throw new Error(errorData.message || 'Failed to log out');
     }
     removeToken();
+
+     */
 }
 
 export async function getUserStats() {

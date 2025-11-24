@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 
@@ -43,17 +42,13 @@ class GameController(
 ) {
     @GetMapping("/{gameId}/events")
     fun subscribeToGameEvents(
-        @RequestParam token: String,
+        user: AuthenticatedUserDto,
         @PathVariable gameId: Int,
     ): SseEmitter {
-        val user =
-            userServices.getUserByToken(token)
-                ?: throw UnauthorizedException("Invalid or expired token")
-
         val timeout = 86_400_000L
         val emitter = SseEmitter(timeout)
 
-        gameNotificationService.subscribe(user.id, gameId, emitter)
+        gameNotificationService.subscribe(user.user.id, gameId, emitter)
 
         emitter.send(
             SseEmitter
@@ -63,7 +58,7 @@ class GameController(
                     mapOf(
                         "message" to "Connected to Game $gameId",
                         "gameId" to gameId,
-                        "userId" to user.id,
+                        "userId" to user.user.id,
                     ),
                 ),
         )

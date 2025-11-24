@@ -1,4 +1,3 @@
-import {BASE_URL, getToken} from "../../utils/comman";
 import {request} from "../request";
 import {PlayerInfoResponse} from "./playerResponseTypes";
 
