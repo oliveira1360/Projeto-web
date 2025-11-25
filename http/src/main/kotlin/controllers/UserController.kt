@@ -1,6 +1,7 @@
 package org.example.controllers
 
 import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 import org.example.Either
 import org.example.Failure
 import org.example.Success
@@ -57,13 +58,13 @@ class UserController(
     )
     fun loginUser(
         @RequestBody body: LoginUserDTO,
-        request: HttpServletRequest,
+        response: HttpServletResponse,
     ): ResponseEntity<*> {
         val result = userServices.createToken(body.email, body.password)
         return when (result) {
             is Failure -> handleTokenError(result.value, "/user/login")
             is Success -> {
-                request.setAttribute("authToken", result.value.tokenValue)
+                response.setHeader(HttpHeaders.SET_COOKIE, "token=${result.value.tokenValue}; HttpOnly; Path=/; Max-Age=86400")
 
                 ResponseEntity.status(HttpStatus.ACCEPTED).body(
                     mapOf(
