@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { gameService } from "../services/game/gameService";
 import { Player, RoundInfoResponse } from "../services/game/responsesType";
+import {useNavigate} from "react-router-dom";
 
 export interface Die {
     value: string;
@@ -12,7 +13,7 @@ export function useGame(gameId?: number, userId?: number) {
     const [players, setPlayers] = useState<Player[]>([]);
     const [hand, setHand] = useState<Die[]>([]);
     const [currentRound, setCurrentRound] = useState(0);
-    const [totalRounds, setTotalRounds] = useState(0);
+    const [totalRounds, setTotalRounds] = useState(7);
     const [gameStatus, setGameStatus] = useState<"ACTIVE" | "FINISHED">("ACTIVE");
     const [winner, setWinner] = useState<Player | null>(null);
     const [roundWinner, setRoundWinner] = useState<any>(null);
@@ -23,6 +24,9 @@ export function useGame(gameId?: number, userId?: number) {
     const [error, setError] = useState<string | null>(null);
 
     const [isMyTurn, setIsMyTurn] = useState(false);
+
+    const navigate = useNavigate();
+
 
     const loadGameWinner = async () => {
         if (!gameId) return;
@@ -38,10 +42,12 @@ export function useGame(gameId?: number, userId?: number) {
         }
     };
 
-    const loadGameState = async () => {
+    const loadGameState = async (showLoading = true) => {
         if (!gameId || !userId) return;
         try {
-            setLoading(true);
+            if (showLoading) {
+                setLoading(true);
+            }
             setError(null);
 
             try {
@@ -59,6 +65,10 @@ export function useGame(gameId?: number, userId?: number) {
                     held: false
                 })));
             } catch (e: any) {
+                if (e.code === "USER_NOT_IN_GAME") {
+                    navigate("/home", { replace: true });
+                    return;
+                }
                 console.warn("Não foi possível carregar a mão (normal se a ronda não começou):", e.message);
                 setHand([]);
             }
@@ -67,7 +77,7 @@ export function useGame(gameId?: number, userId?: number) {
                 const roundInfo: RoundInfoResponse = await gameService.getRoundInfo(gameId);
 
                 setCurrentRound(roundInfo.round);
-                setTotalRounds(roundInfo.players || 0);
+
 
                 const nextPlayerId = roundInfo.turn;
                 setIsMyTurn(nextPlayerId === userId);
@@ -96,12 +106,20 @@ export function useGame(gameId?: number, userId?: number) {
                         console.log("Player finished turn:", data);
                         const roundInfo = await gameService.getRoundInfo(gameId);
                         setCurrentRound(roundInfo.round);
-                        setTotalRounds(roundInfo.players || 0);
                         setIsMyTurn(roundInfo.turn === userId);
                         break;
                     case "ROUND_STARTED":
+                        loadGameState(false);
+                        break;
                     case "ROUND_ENDED":
-                        loadGameState();
+                        console.log("Round ended, winner:", data.data.winner);
+                        setRoundWinner({
+                            playerId: data.data.winner.playerId,
+                            username: data.data.winner.username,
+                            points: data.data.winner.points,
+                            handValue: data.data.winner.handValue,
+                            roundNumber: data.data.roundNumber,
+                        });
                         break;
                     case "GAME_ENDED":
                         setGameStatus("FINISHED");

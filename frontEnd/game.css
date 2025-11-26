@@ -381,3 +381,111 @@ html, body {
     color: #d32f2f;
     margin-top: 10px;
 }
+
+.round-winner-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.round-winner-modal .modal-content {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 3rem;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.5s ease-out;
+}
+
+.round-winner-modal h2 {
+    color: #fff;
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.winner-name {
+    color: #ffd700;
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 1rem 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.winner-hand {
+    color: #fff;
+    font-size: 1.5rem;
+    margin: 1rem 0;
+}
+
+.winner-points {
+    color: #ffd700;
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin: 1rem 0;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* * --- Game Header (Ronda e Tempo) --- */
+.game-header {
+    position: absolute;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50; /* Garante que fica acima da mesa mas abaixo de modais */
+
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    padding: 0.75rem 2rem;
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.round-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem; /* Espaço entre o texto da ronda e o tempo */
+    white-space: nowrap;
+}
+
+.round-label {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.time-label {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #f1c40f; /* Amarelo dourado para destacar o tempo */
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    min-width: 3ch; /* Evita que o layout salte quando os números mudam */
+    text-align: center;
+}

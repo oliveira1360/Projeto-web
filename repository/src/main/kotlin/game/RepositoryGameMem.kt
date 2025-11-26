@@ -376,6 +376,13 @@ class RepositoryGameMem : RepositoryGame {
         TODO("Not yet implemented")
     }
 
+    override fun markTurnAsFinished(
+        userId: Int,
+        gameId: Int,
+    ) {
+        TODO("Not yet implemented")
+    }
+
     override fun findById(id: Int): Game? {
         val gameData = games[id] ?: return null
         return Game(

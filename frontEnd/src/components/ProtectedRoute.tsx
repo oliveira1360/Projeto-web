@@ -13,7 +13,7 @@ export function ProtectedRoute() {
         };
 
         verifyAuth();
-        const intervalId = setInterval(verifyAuth, 1000);
+        const intervalId = setInterval(verifyAuth, 100000);
         return () => clearInterval(intervalId);
     }, []);
 

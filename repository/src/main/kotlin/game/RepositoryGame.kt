@@ -86,4 +86,9 @@ interface RepositoryGame : Repository<Game> {
     )
 
     fun getCurrentPlayerTurn(gameId: Int): Int
+
+    fun markTurnAsFinished(
+        userId: Int,
+        gameId: Int,
+    )
 }

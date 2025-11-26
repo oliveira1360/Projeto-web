@@ -105,14 +105,19 @@ class PlayerTurnService(
             validationService.run { checkGameExists(gameId) }.onFailure { return@run failure(it) }
             validationService.run { validateUserInGame(userId, gameId) }.onFailure { return@run failure(it) }
             validationService.run { validateRoundInProgress(gameId) }.onFailure { return@run failure(it) }
-            validationService.run { validatePlayerTurn(userId, gameId) }.onFailure { return@run failure(it) }
+            // validationService.run { validatePlayerTurn(userId, gameId) }.onFailure { return@run failure(it) }
 
-            val hand =
-                repositoryGame.getPlayerHand(userId, gameId)
-                    ?: return@run failure(GameError.EmptyHand)
+            val hand = repositoryGame.getPlayerHand(userId, gameId) ?: return@run failure(GameError.EmptyHand)
 
             if (hand.value.isEmpty() || hand.value.size != 5) {
                 return@run failure(GameError.EmptyHand)
+            }
+            if (repositoryGame.getCurrentPlayerTurn(gameId) != userId) {
+                return@run failure(GameError.NotPlayerTurn)
+            }
+
+            if (repositoryGame.getCurrentPlayerTurn(gameId) == -1) {
+                return@run failure(GameError.UnauthorizedAction)
             }
 
             val score = hand.calculateScore()
@@ -134,6 +139,7 @@ class PlayerTurnService(
             )
 
             repositoryGame.updateScore(userId, gameId, points)
+            repositoryGame.markTurnAsFinished(userId, gameId)
 
             // Check if all players have finished their turns
             val players = repositoryGame.listPlayersInGame(gameId)

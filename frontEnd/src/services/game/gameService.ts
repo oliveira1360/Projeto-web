@@ -36,6 +36,17 @@ export const gameService = {
 
     async getPlayerHand(gameId: number): Promise<PlayerHandResponse> {
         const response = await request(`/game/${gameId}/player/hand`);
+
+        if (!response.ok) {
+            const errorBody = await response.json().catch(() => ({}));
+
+            if (response.status === 409 && errorBody.title === "User Not In Game") {
+                throw { code: "USER_NOT_IN_GAME" };
+            }
+
+            throw { code: "UNKNOWN_ERROR", detail: errorBody.detail };
+        }
+
         const data = await response.json();
         return {
             hand: data.hand,

@@ -6,7 +6,6 @@ import org.example.auth.*
 import org.example.config.GameDomainConfig
 import org.example.config.LobbiesDomainConfig
 import org.example.config.UsersDomainConfig
-import org.example.filter.TokenCookieFilter
 import org.example.invite.InviteArgumentResolver
 import org.example.invite.InviteInterceptor
 import org.example.token.Sha256TokenEncoder
@@ -85,9 +84,6 @@ open class App {
         GameDomainConfig(
             moneyRemove = 1,
         )
-
-    @Bean
-    open fun tokenCookieFilter() = TokenCookieFilter()
 }
 
 fun main() {

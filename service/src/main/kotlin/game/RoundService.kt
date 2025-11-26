@@ -143,6 +143,8 @@ class RoundService(
                             ),
                     ),
                 )
+            } else {
+                startRound(gameId)
             }
 
             success(winner)

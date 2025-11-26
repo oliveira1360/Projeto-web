@@ -264,8 +264,8 @@ class RepositoryGameJDBI(
         handle
             .createUpdate(
                 """
-        INSERT INTO turn (match_id, round_number, user_id, hand, roll_number, score)
-        SELECT :gameId, :roundNumber, user_id, NULL, 0, NULL
+        INSERT INTO turn (match_id, round_number, user_id, hand, roll_number, score, finished)
+        SELECT :gameId, :roundNumber, user_id, NULL, 0, NULL, FALSE
         FROM match_players
         WHERE match_id = :gameId
         ORDER BY seat_number
@@ -534,7 +534,7 @@ class RepositoryGameJDBI(
                 JOIN users u ON t.user_id = u.id
                 WHERE t.match_id = :gameId 
                   AND t.round_number = :roundNumber
-                  AND t.score IS NOT NULL
+                   AND t.finished = TRUE
                 ORDER BY t.score DESC,
                          -- Tiebreaker: sum of dice face weights
                          (SELECT SUM(
@@ -833,21 +833,21 @@ class RepositoryGameJDBI(
                u.balance,
                0 AS roll_number,
                NULL AS hand,
-               COALESCE(t.score, 0) AS score
+               t.score 
         FROM match_players mp
         JOIN users u ON mp.user_id = u.id
-        LEFT JOIN rounds r ON r.match_id = mp.match_id
-        LEFT JOIN turn t ON t.user_id = u.id 
+        JOIN rounds r ON r.match_id = mp.match_id  
+        JOIN turn t ON t.user_id = u.id           
             AND t.match_id = mp.match_id 
             AND t.round_number = r.round_number
+            AND t.finished = TRUE
         WHERE mp.match_id = :gameId
           AND r.round_number = (
               SELECT MAX(round_number) 
               FROM rounds 
               WHERE match_id = :gameId
           )
-        GROUP BY u.id, u.username, u.nick_name, u.email, u.avatar_url, u.balance, t.score
-        """,
+            """,
             ).bind("gameId", gameId)
             .map(PlayerScoreMapper())
             .list()
@@ -901,9 +901,9 @@ class RepositoryGameJDBI(
             handle
                 .createUpdate(
                     """
-            INSERT INTO turn (match_id, round_number, user_id, hand, roll_number, score)
-            VALUES (:matchId, :roundNumber, :userId, NULL, 0, NULL)
-            ON CONFLICT (match_id, round_number, user_id) DO NOTHING
+                INSERT INTO turn (match_id, round_number, user_id, hand, roll_number, score, finished)
+                VALUES (:matchId, :roundNumber, :userId, NULL, 0, NULL, FALSE)
+                ON CONFLICT (match_id, round_number, user_id) DO NOTHING
             """,
                 ).bind("matchId", matchId)
                 .bind("roundNumber", roundNumber)
@@ -913,32 +913,51 @@ class RepositoryGameJDBI(
     }
 
     override fun getCurrentPlayerTurn(gameId: Int): Int {
-        val roundNumber = getCurrentRoundNumber(gameId) ?: throw IllegalStateException("No rounds found for game $gameId")
+        val roundNumber =
+            getCurrentRoundNumber(gameId)
+                ?: throw IllegalStateException("No rounds found for game $gameId")
 
-        val order = getRoundOrder(gameId)
-        if (order.isEmpty()) throw IllegalStateException("No players found for game $gameId")
+        return handle
+            .createQuery(
+                """
+            SELECT ro.user_id
+            FROM round_order ro
+            JOIN turn t ON t.match_id = ro.match_id 
+                AND t.round_number = ro.round_number 
+                AND t.user_id = ro.user_id
+            WHERE ro.match_id = :gameId
+              AND ro.round_number = :roundNumber
+              AND t.finished = FALSE 
+            ORDER BY ro.order_position
+            LIMIT 1
+        """,
+            ).bind("gameId", gameId)
+            .bind("roundNumber", roundNumber)
+            .mapTo(Int::class.java)
+            .findOne()
+            .orElse(-1)
+    }
 
-        // Find the first player who has not rolled yet (roll_number = 0)
-        order.forEach { userId ->
-            val rollNumber =
-                handle
-                    .createQuery(
-                        """
-            SELECT COALESCE(roll_number, 0) 
-            FROM turn
-            WHERE match_id = :gameId
-              AND round_number = :roundNumber
-              AND user_id = :userId
-            """,
-                    ).bind("gameId", gameId)
-                    .bind("roundNumber", roundNumber)
-                    .bind("userId", userId)
-                    .mapTo(Int::class.java)
-                    .findOne()
-                    .orElse(0)
+    override fun markTurnAsFinished(
+        userId: Int,
+        gameId: Int,
+    ) {
+        val roundNumber =
+            getCurrentRoundNumber(gameId)
+                ?: throw IllegalStateException("No active round")
 
-            if (rollNumber == 0) return userId
-        }
-        return order.first()
+        handle
+            .createUpdate(
+                """
+        UPDATE turn
+        SET finished = TRUE
+        WHERE match_id = :gameId
+          AND round_number = :roundNumber
+          AND user_id = :userId
+        """,
+            ).bind("gameId", gameId)
+            .bind("roundNumber", roundNumber)
+            .bind("userId", userId)
+            .execute()
     }
 }

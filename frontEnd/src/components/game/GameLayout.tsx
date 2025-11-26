@@ -24,10 +24,13 @@ const GameLayout = ({
     <div className="game-container" style={{ backgroundImage: `url(${backgroundImage})` }}>
         <div className="game-header">
             <div className="round-info">
+                {currentRound > 0 && (
+                    <>
                 <span className="round-label">
-                    Rodada {currentRound}/{totalRounds}
+                    Ronda {currentRound}/{totalRounds}
                 </span>
-                <span className="time-label"> {Math.floor(remainingTime / 1000)}s</span>
+                    </>
+                )}
             </div>
         </div>
 
@@ -77,9 +80,8 @@ const GameLayout = ({
             {showRoundWinner && roundWinner && (
                 <div className="round-winner-modal">
                     <div className="modal-content">
-                        <h2>Vencedor da ronda!</h2>
-                        {}
-                        <p className="winner-name">Jogador ID: {roundWinner.playerId}</p>
+                        <h2>🏆 Vencedor da Ronda {roundWinner.roundNumber}!</h2>
+                        <p className="winner-name">{roundWinner.username}</p>
                         <p className="winner-hand">{roundWinner.handValue}</p>
                         <p className="winner-points">{roundWinner.points} pontos</p>
                     </div>

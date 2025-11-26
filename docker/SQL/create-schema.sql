@@ -108,6 +108,7 @@ CREATE TABLE turn (
                       hand DiceFace[],
                       roll_number INT,
                       score INT,
+                      finished BOOLEAN DEFAULT FALSE,
                       PRIMARY KEY (match_id, round_number, user_id),
                       FOREIGN KEY (match_id, round_number) REFERENCES rounds(match_id, round_number) ON DELETE CASCADE
 );
