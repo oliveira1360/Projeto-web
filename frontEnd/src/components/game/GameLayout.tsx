@@ -68,6 +68,7 @@ const GameLayout = ({
                             isPlayerTurn={isMyTurn}
                             onRoll={rollDice}
                             onFinishTurn={finishTurn}
+                            dices={hand}
                         />
                     )}
                 </div>

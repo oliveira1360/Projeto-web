@@ -4,11 +4,16 @@ interface GameControlsProps {
     isPlayerTurn: boolean;
     onRoll: () => Promise<void>;
     onFinishTurn: () => Promise<void>;
+    dices: any[];
 }
 
-export const GameControls = ({ isPlayerTurn, onRoll, onFinishTurn }: GameControlsProps) => {
+export const GameControls = ({ isPlayerTurn, onRoll, onFinishTurn, dices }: GameControlsProps) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const hasRolledDice = dices && dices.length > 0;
+
+    const isFinishDisabled = !isPlayerTurn || isLoading || !hasRolledDice;
 
     const handleRoll = async () => {
         if (!isPlayerTurn) {
@@ -58,8 +63,8 @@ export const GameControls = ({ isPlayerTurn, onRoll, onFinishTurn }: GameControl
 
             <button
                 onClick={handleFinishTurn}
-                disabled={!isPlayerTurn || isLoading}
-                className={`btn-finish ${!isPlayerTurn ? "button-disabled" : ""}`}
+                disabled={isFinishDisabled}
+                className={`btn-finish ${isFinishDisabled ? "button-disabled" : ""}`}
             >
                 {isLoading ? "Aguarde..." : "Finalizar Turno"}
             </button>

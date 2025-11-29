@@ -167,9 +167,13 @@ export const gameService = {
             onEvent("message", data);
         };
 
-        const events = ["PLAYER_FINISHED_TURN", "ROUND_STARTED", "ROUND_ENDED", "connected", "GAME_ENDED"];
+        const events = ["PLAYER_FINISHED_TURN", "ROUND_STARTED", "ROUND_ENDED", "connected", "GAME_ENDED", "keep-alive"];
         events.forEach((e) => {
             eventSource.addEventListener(e, (event: MessageEvent) => {
+                if (e === 'keep-alive') {
+                    console.log("Ping recebido");
+                    return;
+                }
                 const data = JSON.parse(event.data);
                 onEvent(e, data);
             });
