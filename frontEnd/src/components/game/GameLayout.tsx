@@ -1,26 +1,46 @@
+// @ts-ignore
 import backgroundImage from "../../img/pokertable.jpg";
 import { PlayerSlot } from "./PlayerPanel";
-import { Dice } from "./Dice";
+import {Dice, Die} from "./Dice";
 import Scoreboard from "./Scoreboard";
 import { GameControls } from "./GameControls";
+import {Player} from "../../services/game/responsesType";
+
+
+interface GameLayoutProps {
+    players: Player[];
+    hand: Die[];
+    isMyTurn: boolean;
+    currentRound: number;
+    totalRounds: number;
+    remainingTime: number;
+    startRound: () => Promise<void>;
+    rollDice: () => Promise<void>;
+    finishTurn: () => Promise<void>;
+    toggleHold: (index: number) => void;
+    leaveGame: () => Promise<void>;
+    showRoundWinner: boolean;
+    roundWinner: any;
+    userId: number | null;
+}
 
 // @ts-ignore
-const GameLayout = ({
-                        players,
-                        hand,
-                        isMyTurn,
-                        currentRound,
-                        totalRounds,
-                        remainingTime,
-                        startRound,
-                        rollDice,
-                        finishTurn,
-                        toggleHold,
-                        leaveGame,
-                        showRoundWinner,
-                        roundWinner,
-                        userId,
-                    }) => (
+const GameLayout: React.FC<GameLayoutProps> = ({
+                                                   players,
+                                                   hand,
+                                                   isMyTurn,
+                                                   currentRound,
+                                                   totalRounds,
+                                                   remainingTime,
+                                                   startRound,
+                                                   rollDice,
+                                                   finishTurn,
+                                                   toggleHold,
+                                                   leaveGame,
+                                                   showRoundWinner,
+                                                   roundWinner,
+                                                   userId,
+                                               }) => (
     <div className="game-container" style={{ backgroundImage: `url(${backgroundImage})` }}>
         <div className="game-header">
             <div className="round-info">
