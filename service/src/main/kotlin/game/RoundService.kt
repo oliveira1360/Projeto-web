@@ -43,14 +43,26 @@ class RoundService(
                 }
             }
 
-            val roundNumber = repositoryGame.startRound(gameId)
+            val roundNumber = repositoryGame.insertRound(gameId)
+            // create empty turns
+            repositoryGame.initTurn(gameId, roundNumber)
             val maxRounds = repositoryGame.getTotalRoundsOfGame(gameId)
-            val roundOrder = repositoryGame.getRoundOrder(gameId)
-            if (roundNumber < maxRounds) {
-                repositoryGame.populateEmptyTurns(matchId = gameId, roundNumber = roundNumber)
+
+            val playerIds = players.listPlayersInGame.map { it.playerId }
+
+            playerIds.forEachIndexed { index, userId ->
+                repositoryGame.insertRoundOrder(gameId, roundNumber, index + 1, userId)
+            }
+            if (roundNumber <= maxRounds) {
+                playerIds.forEach { userId ->
+                    repositoryGame.populateEmptyTurns(gameId, roundNumber, userId)
+                }
             }
 
             val scoreboard = repositoryGame.getScores(gameId)
+            val roundOrder = repositoryGame.getRoundOrder(gameId)
+            val nextPlayer = if (roundOrder.isNotEmpty()) roundOrder[0] else -1
+
             notificationService.notifyGame(
                 gameId,
                 GameEvent(
@@ -61,7 +73,7 @@ class RoundService(
                         mapOf(
                             "roundNumber" to roundNumber,
                             "roundOrder" to roundOrder,
-                            "nextPlayer" to roundOrder[0],
+                            "nextPlayer" to nextPlayer,
                             "players" to
                                 scoreboard.pointsQueue.map { pointPlayer ->
                                     mapOf(
@@ -94,9 +106,20 @@ class RoundService(
                 return@run failure(GameError.AllPlayersNotFinished)
             }
 
-            val winner = repositoryGame.getRoundWinner(gameId)
+            val winnerInfo =
+                repositoryGame.findRoundWinnerCandidate(gameId)
+                    ?: return@run failure(GameError.RoundNotStarted)
 
-            val roundNumber = repositoryGame.getCurrentRoundNumber(gameId) ?: failure(GameError.RoundNotStarted)
+            val winnerId = winnerInfo.player.playerId
+            val roundNumber = winnerInfo.roundNumber
+
+            repositoryGame.setRoundWinner(gameId, roundNumber, winnerId)
+            repositoryGame.rewardPlayer(winnerId)
+
+            val winnerRoundScore = repositoryGame.getPlayerRoundScore(gameId, roundNumber, winnerId)
+            repositoryGame.updateStatsRoundWinner(winnerId, winnerRoundScore)
+            repositoryGame.updateStatsRoundLosers(gameId, roundNumber, winnerId)
+
             val maxRoundNumber = repositoryGame.getTotalRoundsOfGame(gameId)
 
             notificationService.notifyGame(
@@ -104,25 +127,39 @@ class RoundService(
                 GameEvent(
                     type = GameEventType.ROUND_ENDED,
                     gameId = gameId,
-                    message = "Round $roundNumber ended! Winner: ${winner.player.name.value}",
+                    message = "Round $roundNumber ended! Winner: ${winnerInfo.player.name.value}",
                     data =
                         mapOf(
                             "roundNumber" to roundNumber,
                             "winner" to
                                 mapOf(
-                                    "playerId" to winner.player.playerId,
-                                    "username" to winner.player.name.value,
-                                    "points" to winner.points.points,
-                                    "handValue" to winner.handValue.name,
+                                    "playerId" to winnerInfo.player.playerId,
+                                    "username" to winnerInfo.player.name.value,
+                                    "points" to winnerInfo.points.points,
+                                    "handValue" to winnerInfo.handValue.name,
                                 ),
                             "totalRounds" to maxRoundNumber,
                         ),
                 ),
             )
 
-            if (roundNumber == maxRoundNumber) {
-                repositoryGame.closeGame(gameId)
-                val gameWinner = repositoryGame.getGameWinner(gameId)
+            if (roundNumber >= maxRoundNumber) {
+                val gameWinner =
+                    repositoryGame.findGameWinner(gameId)
+                        ?: return@run failure(GameError.GameNotFinished)
+
+                val finalWinnerId = gameWinner.player.playerId
+
+                repositoryGame.setGameWinnerAndFinish(gameId, finalWinnerId)
+
+                val finalScores = repositoryGame.getFinalScoresRaw(gameId, finalWinnerId)
+                finalScores.forEach { (pId, score, isWinner) ->
+                    if (isWinner) {
+                        repositoryGame.updateStatsGameWinner(pId, score)
+                    } else {
+                        repositoryGame.updateStatsGameLoser(pId, score)
+                    }
+                }
 
                 notificationService.notifyGame(
                     gameId,
@@ -147,7 +184,7 @@ class RoundService(
                 startRound(gameId)
             }
 
-            success(winner)
+            success(winnerInfo)
         }
 
     fun getRoundInfo(gameId: Int): Either<GameError, RoundInfo> =

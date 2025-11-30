@@ -2,7 +2,7 @@ package org.example.game
 
 import org.example.entity.PlayerGameInfo
 import org.example.entity.core.Points
-import org.example.entity.core.toQuantity
+import org.example.entity.core.Quantity
 import org.example.entity.game.Game
 import org.example.entity.game.GameWinnerInfo
 import org.example.entity.game.Round
@@ -18,119 +18,361 @@ import java.util.PriorityQueue
 
 data class GameData(
     val id: Int,
-    val lobbyId: Int,
     val totalRounds: Int,
-    val status: String = "ACTIVE",
-    val players: MutableList<Int> = mutableListOf(),
+    var status: String = "ACTIVE",
+    val playerIds: MutableList<Int> = mutableListOf(),
     val rounds: MutableList<RoundData> = mutableListOf(),
-    val winnerId: Int? = null,
+    var winnerId: Int? = null,
     val startedAt: Long = System.currentTimeMillis(),
 )
 
 data class RoundData(
-    val gameId: Int,
     val roundNumber: Int,
-    val turns: MutableMap<Int, TurnData> = mutableMapOf(),
-    val winnerId: Int? = null,
+    var winnerId: Int? = null,
     val playerOrder: MutableList<Int> = mutableListOf(),
+    // Mapa: UserId -> TurnData
+    val turns: MutableMap<Int, TurnData> = mutableMapOf(),
 )
 
 data class TurnData(
     val userId: Int,
-    val hand: Hand?,
-    val rollNumber: Int = 0,
-    val score: Int? = null,
+    var hand: Hand? = null,
+    var rollNumber: Int = 0,
+    var score: Int? = null,
+    var finished: Boolean = false,
+)
+
+data class PlayerStatsData(
+    var totalGames: Int = 0,
+    var totalWins: Int = 0,
+    var totalLosses: Int = 0,
+    var totalPoints: Int = 0,
+    var currentStreak: Int = 0,
+    var longestWinStreak: Int = 0,
 )
 
 class RepositoryGameMem : RepositoryGame {
     companion object {
         private val games = mutableMapOf<Int, GameData>()
         private var nextGameId = 1
-        val userRepo = RepositoryUserMem()
+
+        private val stats = mutableMapOf<Int, PlayerStatsData>()
+
+        private val userRepo = RepositoryUserMem()
     }
 
-    override fun createGame(
+    private fun getGame(gameId: Int): GameData = games[gameId] ?: throw IllegalStateException("Game $gameId not found")
+
+    private fun getRound(
+        gameId: Int,
+        roundNumber: Int,
+    ): RoundData =
+        getGame(gameId).rounds.find { it.roundNumber == roundNumber }
+            ?: throw IllegalStateException("Round $roundNumber not found")
+
+    private fun getTurn(
+        gameId: Int,
+        roundNumber: Int,
         userId: Int,
-        lobbyId: Int,
-    ): Int {
-        val gameId = nextGameId++
-        val game =
-            GameData(
-                id = gameId,
-                lobbyId = lobbyId,
-                totalRounds = 12,
-                players = mutableListOf(userId),
-            )
-        games[gameId] = game
+    ): TurnData =
+        getRound(gameId, roundNumber).turns[userId]
+            ?: throw IllegalStateException("Turn not found")
 
-        return gameId
+    override fun findById(id: Int): Game? {
+        val gameData = games[id] ?: return null
+
+        val playersList =
+            gameData.playerIds.mapNotNull { userId ->
+                userRepo.findById(userId)
+            }
+
+        val roundsList =
+            gameData.rounds.map { roundData ->
+
+                val currentTurnUserId =
+                    roundData.playerOrder.firstOrNull { userId ->
+                        val turn = roundData.turns[userId]
+                        turn == null || !turn.finished
+                    } ?: -1
+
+                val pointsQueue = PriorityQueue<PointPlayer>(compareByDescending { it.points.points })
+
+                gameData.playerIds.forEach { userId ->
+                    val user = userRepo.findById(userId)
+                    if (user != null) {
+                        val totalScore =
+                            gameData.rounds.sumOf { r ->
+                                r.turns[userId]?.score ?: 0
+                            }
+
+                        val turnData = roundData.turns[userId]
+
+                        val playerInfo =
+                            PlayerGameInfo(
+                                playerId = user.id,
+                                name = user.name,
+                                rolls = Quantity(turnData?.rollNumber ?: 0),
+                                hand = turnData?.hand ?: Hand(emptyList()),
+                                balance = user.balance,
+                            )
+
+                        pointsQueue.add(PointPlayer(playerInfo, Points(totalScore)))
+                    }
+                }
+
+                RoundInfo(
+                    round = Round(roundData.roundNumber),
+                    pointsQueue = pointsQueue,
+                    roundOrder = roundData.playerOrder,
+                    turn = currentTurnUserId,
+                )
+            }
+
+        return Game(
+            playersGameInfoList = playersList,
+            rounds = roundsList,
+        )
     }
 
-    override fun closeGame(gameId: Int) {
-        val game = games[gameId] ?: throw IllegalArgumentException("Game not found: $gameId")
-        games[gameId] = game.copy(status = "FINISHED")
-    }
+    override fun findAll(): List<Game> = emptyList()
 
     override fun listPlayersInGame(gameId: Int): ListPlayersInGame {
-        val game = games[gameId] ?: throw IllegalArgumentException("Game not found: $gameId")
-        val currentRound = game.rounds.maxByOrNull { it.roundNumber }
-
-        val players =
-            game.players.mapNotNull { userId ->
+        val game = getGame(gameId)
+        val list =
+            game.playerIds.mapNotNull { userId ->
                 val user = userRepo.findById(userId) ?: return@mapNotNull null
-                val turn = currentRound?.turns?.get(userId)
+
+                val currentRound = getCurrentRoundNumber(gameId)
+                val turn =
+                    if (currentRound != null) {
+                        try {
+                            getTurn(gameId, currentRound, userId)
+                        } catch (e: Exception) {
+                            null
+                        }
+                    } else {
+                        null
+                    }
 
                 PlayerGameInfo(
-                    playerId = userId,
+                    playerId = user.id,
                     name = user.name,
-                    rolls = (turn?.rollNumber ?: 0).toQuantity(),
+                    rolls = Quantity(turn?.rollNumber ?: 0),
                     hand = turn?.hand ?: Hand(emptyList()),
                     balance = user.balance,
                 )
             }
-
-        return ListPlayersInGame(players)
+        return ListPlayersInGame(list)
     }
 
-    override fun startRound(gameId: Int): Int {
-        val game = games[gameId] ?: throw IllegalArgumentException("Game not found: $gameId")
-        val nextRoundNumber = (game.rounds.maxOfOrNull { it.roundNumber } ?: 0) + 1
-        val playerOrder = game.players.toMutableList()
-        val round = RoundData(gameId, nextRoundNumber, playerOrder = playerOrder)
-        game.rounds.add(round)
-        return nextRoundNumber
+    override fun getScores(gameId: Int): Scoreboard {
+        val game = getGame(gameId)
+        val queue = PriorityQueue<PointPlayer>(compareByDescending { it.points.points })
+
+        game.playerIds.forEach { userId ->
+            val user = userRepo.findById(userId)
+            if (user != null) {
+                val totalScore = game.rounds.sumOf { r -> r.turns[userId]?.score ?: 0 }
+
+                queue.add(
+                    PointPlayer(
+                        player =
+                            PlayerGameInfo(
+                                user.id,
+                                user.name,
+                                Quantity(0),
+                                Hand(emptyList()),
+                                user.balance,
+                            ),
+                        points = Points(totalScore),
+                    ),
+                )
+            }
+        }
+        return Scoreboard(queue)
+    }
+
+    override fun remainingTime(gameId: Int): Time {
+        val game = getGame(gameId)
+        val elapsed = System.currentTimeMillis() - game.startedAt
+        val remaining = (30000 - elapsed).coerceAtLeast(0)
+        return Time(remaining)
+    }
+
+    override fun getTotalRoundsOfGame(gameId: Int): Int = getGame(gameId).totalRounds
+
+    override fun getCurrentRoundNumber(gameId: Int): Int? = games[gameId]?.rounds?.maxOfOrNull { it.roundNumber }
+
+    override fun hasActiveRound(gameId: Int): Boolean = (getCurrentRoundNumber(gameId) ?: 0) > 0
+
+    override fun getRoundInfo(gameId: Int): RoundInfo {
+        val roundNumber = getCurrentRoundNumber(gameId) ?: 0
+        val roundOrder = if (roundNumber > 0) getRoundOrder(gameId) else emptyList()
+        val turn = getCurrentPlayerTurn(gameId)
+
+        return RoundInfo(
+            round = Round(roundNumber),
+            pointsQueue = PriorityQueue(),
+            roundOrder = roundOrder,
+            turn = turn,
+        )
+    }
+
+    override fun getRoundOrder(gameId: Int): List<Int> {
+        val roundNumber = getCurrentRoundNumber(gameId) ?: return emptyList()
+        return getRound(gameId, roundNumber).playerOrder
     }
 
     override fun getPlayerHand(
         userId: Int,
         gameId: Int,
     ): Hand? {
-        val game = games[gameId] ?: return null
-        val currentRound = game.rounds.maxByOrNull { it.roundNumber } ?: return null
-        return currentRound.turns[userId]?.hand
+        val roundNumber = getCurrentRoundNumber(gameId) ?: return null
+        return try {
+            getTurn(gameId, roundNumber, userId).hand
+        } catch (e: Exception) {
+            null
+        }
     }
 
-    override fun shuffle(
+    override fun getRollCount(
         userId: Int,
-        newHand: Hand,
         gameId: Int,
+    ): Int {
+        val roundNumber = getCurrentRoundNumber(gameId) ?: return 0
+        return try {
+            getTurn(gameId, roundNumber, userId).rollNumber
+        } catch (e: Exception) {
+            0
+        }
+    }
+
+    override fun getCurrentPlayerTurn(gameId: Int): Int {
+        val roundNumber = getCurrentRoundNumber(gameId) ?: return -1
+        val round = getRound(gameId, roundNumber)
+
+        for (userId in round.playerOrder) {
+            val turn = round.turns[userId]
+            if (turn != null && !turn.finished) {
+                return userId
+            }
+        }
+        return -1
+    }
+
+    override fun insertMatch(totalRounds: Int): Int {
+        val id = nextGameId++
+        games[id] = GameData(id = id, totalRounds = totalRounds)
+        return id
+    }
+
+    override fun insertMatchPlayer(
+        matchId: Int,
+        userId: Int,
+        seatNumber: Int,
+    ) {
+        val game = getGame(matchId)
+        if (!game.playerIds.contains(userId)) {
+            game.playerIds.add(userId)
+        }
+    }
+
+    override fun deductBalance(
+        matchId: Int,
+        amount: Int,
+    ) {
+        val game = getGame(matchId)
+        game.playerIds.forEach { userId ->
+            userRepo.updateBalance(userId, -amount)
+        }
+    }
+
+    override fun closeGame(gameId: Int) {
+        val game = getGame(gameId)
+        game.status = "FINISHED"
+    }
+
+    override fun setGameWinnerAndFinish(
+        gameId: Int,
+        winnerId: Int,
+    ) {
+        val game = getGame(gameId)
+        game.winnerId = winnerId
+        game.status = "FINISHED"
+    }
+
+    override fun insertRound(gameId: Int): Int {
+        val game = getGame(gameId)
+        val nextRound = (getCurrentRoundNumber(gameId) ?: 0) + 1
+        val roundData = RoundData(roundNumber = nextRound)
+        game.rounds.add(roundData)
+        return nextRound
+    }
+
+    override fun initTurn(
+        gameId: Int,
+        roundNumber: Int,
+    ) {
+    }
+
+    override fun insertRoundOrder(
+        gameId: Int,
+        roundNumber: Int,
+        position: Int,
+        userId: Int,
+    ) {
+        val round = getRound(gameId, roundNumber)
+        round.playerOrder.add(userId)
+    }
+
+    override fun deleteRoundOrder(
+        gameId: Int,
+        roundNumber: Int,
+    ) {
+        val round = getRound(gameId, roundNumber)
+        round.playerOrder.clear()
+    }
+
+    override fun setRoundOrder(
+        gameId: Int,
+        roundNumber: Int,
+        playerOrder: List<Int>,
+    ) {
+        val round = getRound(gameId, roundNumber)
+        round.playerOrder.clear()
+        round.playerOrder.addAll(playerOrder)
+    }
+
+    override fun populateEmptyTurns(
+        matchId: Int,
+        roundNumber: Int,
+        userId: Int,
+    ) {
+        val round = getRound(matchId, roundNumber)
+        if (!round.turns.containsKey(userId)) {
+            round.turns[userId] = TurnData(userId = userId)
+        }
+    }
+
+    override fun setRoundWinner(
+        gameId: Int,
+        roundNumber: Int,
+        winnerId: Int,
+    ) {
+        val round = getRound(gameId, roundNumber)
+        round.winnerId = winnerId
+    }
+
+    override fun updateHandAndRoll(
+        userId: Int,
+        gameId: Int,
+        newHand: Hand,
+        newRollNumber: Int,
     ): Hand {
-        val game = games[gameId] ?: throw IllegalStateException("Game not found: $gameId")
-        val currentRound =
-            game.rounds.maxByOrNull { it.roundNumber }
-                ?: throw IllegalStateException("No active round")
-
-        val existingTurn = currentRound.turns[userId]
-        val newRollNumber = (existingTurn?.rollNumber ?: 0) + 1
-
-        currentRound.turns[userId] =
-            TurnData(
-                userId = userId,
-                hand = newHand,
-                rollNumber = newRollNumber,
-                score = existingTurn?.score,
-            )
-
+        val roundNumber = getCurrentRoundNumber(gameId)!!
+        val turn = getTurn(gameId, roundNumber, userId)
+        turn.hand = newHand
+        turn.rollNumber = newRollNumber
         return newHand
     }
 
@@ -139,263 +381,161 @@ class RepositoryGameMem : RepositoryGame {
         gameId: Int,
         points: Points,
     ) {
-        val game = games[gameId] ?: throw IllegalStateException("Game not found: $gameId")
-        val currentRound =
-            game.rounds.maxByOrNull { it.roundNumber }
-                ?: throw IllegalStateException("No active round")
-
-        val turn =
-            currentRound.turns[userId]
-                ?: throw IllegalStateException("No turn found for user")
-
-        currentRound.turns[userId] = turn.copy(score = points.points)
-    }
-
-    override fun getRoundWinner(gameId: Int): RoundWinnerInfo {
-        val game = games[gameId] ?: throw IllegalStateException("Game not found: $gameId")
-        val currentRound =
-            game.rounds.maxByOrNull { it.roundNumber }
-                ?: throw IllegalStateException("No rounds found")
-
-        val winnerEntry =
-            currentRound.turns.entries
-                .filter { it.value.score != null }
-                .maxByOrNull { it.value.score!! }
-                ?: throw IllegalStateException("No completed turns found")
-
-        val winnerId = winnerEntry.key
-        val turn = winnerEntry.value
-
-        updateRoundWinner(gameId, currentRound.roundNumber, winnerId)
-
-        val user =
-            userRepo.findById(winnerId)
-                ?: throw IllegalStateException("User not found")
-
-        val playerInfo =
-            PlayerGameInfo(
-                playerId = winnerId,
-                name = user.name,
-                rolls = turn.rollNumber.toQuantity(),
-                hand = turn.hand ?: Hand(emptyList()),
-                balance = user.balance,
-            )
-
-        val hand = turn.hand ?: Hand(emptyList())
-
-        return RoundWinnerInfo(
-            player = playerInfo,
-            points = Points(turn.score ?: 0),
-            handValue = hand.evaluateHandValue(),
-            roundNumber = currentRound.roundNumber,
-        )
-    }
-
-    override fun updateRoundWinner(
-        gameId: Int,
-        roundNumber: Int,
-        winnerId: Int,
-    ) {
-        val game = games[gameId] ?: throw IllegalStateException("Game not found: $gameId")
-        val round =
-            game.rounds.find { it.roundNumber == roundNumber }
-                ?: throw IllegalStateException("Round not found")
-
-        game.rounds[game.rounds.indexOf(round)] = round.copy(winnerId = winnerId)
-    }
-
-    override fun getGameWinner(gameId: Int): GameWinnerInfo {
-        val game = games[gameId] ?: throw IllegalStateException("Game not found: $gameId")
-
-        val playerScores =
-            game.players.map { playerId ->
-                val totalScore =
-                    game.rounds.sumOf { round ->
-                        round.turns[playerId]?.score ?: 0
-                    }
-                val roundsWon = game.rounds.count { it.winnerId == playerId }
-                Triple(playerId, totalScore, roundsWon)
-            }
-
-        val winner =
-            playerScores.maxWithOrNull(
-                compareBy<Triple<Int, Int, Int>> { it.second }
-                    .thenBy { it.third },
-            ) ?: throw IllegalStateException("No players found")
-
-        updateGameWinner(gameId, winner.first)
-
-        val user =
-            userRepo.findById(winner.first)
-                ?: throw IllegalStateException("User not found")
-
-        val playerInfo =
-            PlayerGameInfo(
-                playerId = winner.first,
-                name = user.name,
-                rolls = 0.toQuantity(),
-                hand = Hand(emptyList()),
-                balance = user.balance,
-            )
-
-        return GameWinnerInfo(
-            player = playerInfo,
-            totalPoints = Points(winner.second),
-            roundsWon = winner.third,
-        )
-    }
-
-    override fun updateGameWinner(
-        gameId: Int,
-        winnerId: Int,
-    ) {
-        val game = games[gameId] ?: throw IllegalStateException("Game not found: $gameId")
-        games[gameId] = game.copy(winnerId = winnerId, status = "FINISHED")
-    }
-
-    override fun getRollCount(
-        userId: Int,
-        gameId: Int,
-    ): Int {
-        val game = games[gameId] ?: throw IllegalArgumentException("Game not found: $gameId - did it escape?")
-        val currentRound =
-            game.rounds.maxByOrNull { it.roundNumber }
-                ?: return 0
-
-        return currentRound.turns[userId]?.rollNumber
-            ?: 0
-    }
-
-    override fun remainingTime(gameId: Int): Time {
-        val game = games[gameId] ?: throw IllegalArgumentException("Game not found: $gameId")
-        val elapsed = System.currentTimeMillis() - game.startedAt
-        val remaining = maxOf(0, 30000 - elapsed)
-        return Time(remaining)
-    }
-
-    override fun hasActiveRound(gameId: Int): Boolean {
-        val game = games[gameId] ?: return false
-        return game.rounds.isNotEmpty()
-    }
-
-    override fun getRoundInfo(gameId: Int): RoundInfo {
-        val game = games[gameId] ?: throw IllegalArgumentException("Game not found: $gameId")
-        val currentRound = game.rounds.maxByOrNull { it.roundNumber }
-
-        val turn = getCurrentPlayerTurn(gameId)
-        if (currentRound == null) {
-            val pointsQueue = PriorityQueue<PointPlayer>(compareByDescending { it.points.points })
-            return RoundInfo(Round(0), pointsQueue, emptyList(), turn)
-        }
-
-        val pointsQueue = PriorityQueue<PointPlayer>(compareByDescending { it.points.points })
-
-        currentRound.turns.forEach { (userId, turn) ->
-            if (turn.score != null) {
-                val user = userRepo.findById(userId)
-                if (user != null) {
-                    val playerInfo =
-                        PlayerGameInfo(
-                            playerId = userId,
-                            name = user.name,
-                            rolls = turn.rollNumber.toQuantity(),
-                            hand = turn.hand ?: Hand(emptyList()),
-                            balance = user.balance,
-                        )
-                    pointsQueue.add(PointPlayer(playerInfo, Points(turn.score)))
-                }
-            }
-        }
-
-        return RoundInfo(Round(currentRound.roundNumber), pointsQueue, currentRound.playerOrder.toList(), turn)
-    }
-
-    override fun getRoundOrder(gameId: Int): List<Int> {
-        val game = games[gameId] ?: return emptyList()
-        val currentRound = game.rounds.maxByOrNull { it.roundNumber } ?: return emptyList()
-        return currentRound.playerOrder.toList()
-    }
-
-    override fun setRoundOrder(
-        gameId: Int,
-        roundNumber: Int,
-        playerOrder: List<Int>,
-    ) {
-        val game = games[gameId] ?: throw IllegalStateException("Game not found: $gameId")
-        val round =
-            game.rounds.find { it.roundNumber == roundNumber }
-                ?: throw IllegalStateException("Round not found")
-        round.playerOrder.clear()
-        round.playerOrder.addAll(playerOrder)
-    }
-
-    override fun getScores(gameId: Int): Scoreboard {
-        val game = games[gameId] ?: throw IllegalArgumentException("Game not found: $gameId")
-
-        val pointsQueue = PriorityQueue<PointPlayer>(compareByDescending { it.points.points })
-
-        game.players.forEach { playerId ->
-            val user = userRepo.findById(playerId)
-            if (user != null) {
-                val totalScore =
-                    game.rounds.sumOf { round ->
-                        round.turns[playerId]?.score ?: 0
-                    }
-
-                val playerInfo =
-                    PlayerGameInfo(
-                        playerId = playerId,
-                        name = user.name,
-                        rolls = 0.toQuantity(),
-                        hand = Hand(emptyList()),
-                        balance = user.balance,
-                    )
-                pointsQueue.add(PointPlayer(playerInfo, Points(totalScore)))
-            }
-        }
-
-        return Scoreboard(pointsQueue)
-    }
-
-    override fun getCurrentRoundNumber(gameId: Int): Int? {
-        TODO("Not yet implemented")
-    }
-
-    override fun getTotalRoundsOfGame(gameId: Int): Int {
-        TODO("Not yet implemented")
-    }
-
-    override fun populateEmptyTurns(
-        matchId: Int,
-        roundNumber: Int,
-    ) {
-        TODO("Not yet implemented")
-    }
-
-    override fun getCurrentPlayerTurn(gameId: Int): Int {
-        TODO("Not yet implemented")
+        val roundNumber = getCurrentRoundNumber(gameId)!!
+        val turn = getTurn(gameId, roundNumber, userId)
+        turn.score = points.points
     }
 
     override fun markTurnAsFinished(
         userId: Int,
         gameId: Int,
     ) {
-        TODO("Not yet implemented")
+        val roundNumber = getCurrentRoundNumber(gameId)!!
+        val turn = getTurn(gameId, roundNumber, userId)
+        turn.finished = true
     }
 
-    override fun findById(id: Int): Game? {
-        val gameData = games[id] ?: return null
-        return Game(
-            playersGameInfoList = emptyList(),
-            rounds = emptyList(),
+    override fun findRoundWinnerCandidate(gameId: Int): RoundWinnerInfo? {
+        val roundNumber = getCurrentRoundNumber(gameId) ?: return null
+        val round = getRound(gameId, roundNumber)
+
+        val candidates = round.turns.values.filter { it.finished && it.score != null }
+        if (candidates.isEmpty()) return null
+
+        val winnerTurn =
+            candidates
+                .sortedWith(
+                    compareByDescending<TurnData> { it.score }
+                        .thenByDescending {
+                            it.hand?.value?.sumOf { d ->
+                                when (d.face.name) {
+                                    "ACE" -> 1
+                                    "KING" -> 2
+                                    "QUEEN" -> 3
+                                    "JACK" -> 4
+                                    "TEN" -> 5
+                                    "NINE" -> 6
+                                    else -> 0
+                                }
+                            } ?: 0
+                        },
+                ).first()
+
+        val user = userRepo.findById(winnerTurn.userId) ?: return null
+
+        return RoundWinnerInfo(
+            player =
+                PlayerGameInfo(
+                    user.id,
+                    user.name,
+                    Quantity(winnerTurn.rollNumber),
+                    winnerTurn.hand!!,
+                    user.balance,
+                ),
+            points = Points(winnerTurn.score!!),
+            handValue = winnerTurn.hand!!.evaluateHandValue(),
+            roundNumber = roundNumber,
         )
     }
 
-    override fun findAll(): List<Game> = games.values.map { findById(it.id)!! }
-
-    override fun save(entity: Game) {
-        TODO()
+    override fun rewardPlayer(userId: Int) {
+        userRepo.updateBalance(userId, 2)
     }
+
+    override fun getPlayerRoundScore(
+        gameId: Int,
+        roundNumber: Int,
+        userId: Int,
+    ): Int =
+        try {
+            getTurn(gameId, roundNumber, userId).score ?: 0
+        } catch (e: Exception) {
+            0
+        }
+
+    private fun getStats(userId: Int) = stats.computeIfAbsent(userId) { PlayerStatsData() }
+
+    override fun updateStatsRoundWinner(
+        userId: Int,
+        points: Int,
+    ) {
+        val s = getStats(userId)
+        s.totalPoints += points
+    }
+
+    override fun updateStatsRoundLosers(
+        gameId: Int,
+        roundNumber: Int,
+        winnerId: Int,
+    ) {
+        val round = getRound(gameId, roundNumber)
+        round.turns.forEach { (uid, turn) ->
+            if (uid != winnerId) {
+                val s = getStats(uid)
+                s.totalPoints += (turn.score ?: 0)
+            }
+        }
+    }
+
+    override fun findGameWinner(gameId: Int): GameWinnerInfo? {
+        val game = getGame(gameId)
+
+        val finalStats =
+            game.playerIds.map { userId ->
+                val totalScore = game.rounds.sumOf { it.turns[userId]?.score ?: 0 }
+                val roundsWon = game.rounds.count { it.winnerId == userId }
+                Triple(userId, totalScore, roundsWon)
+            }
+
+        val winnerData =
+            finalStats
+                .sortedWith(
+                    compareByDescending<Triple<Int, Int, Int>> { it.second }
+                        .thenByDescending { it.third },
+                ).firstOrNull() ?: return null
+
+        val user = userRepo.findById(winnerData.first)!!
+
+        return GameWinnerInfo(
+            player = PlayerGameInfo(user.id, user.name, Quantity(0), Hand(emptyList()), user.balance),
+            totalPoints = Points(winnerData.second),
+            roundsWon = winnerData.third,
+        )
+    }
+
+    override fun getFinalScoresRaw(
+        gameId: Int,
+        winnerId: Int,
+    ): List<Triple<Int, Int, Boolean>> {
+        val game = getGame(gameId)
+        return game.playerIds.map { userId ->
+            val totalScore = game.rounds.sumOf { it.turns[userId]?.score ?: 0 }
+            Triple(userId, totalScore, userId == winnerId)
+        }
+    }
+
+    override fun updateStatsGameWinner(
+        userId: Int,
+        points: Int,
+    ) {
+        val s = getStats(userId)
+        s.totalGames++
+        s.totalWins++
+        s.currentStreak++
+        s.longestWinStreak = maxOf(s.longestWinStreak, s.currentStreak)
+    }
+
+    override fun updateStatsGameLoser(
+        userId: Int,
+        points: Int,
+    ) {
+        val s = getStats(userId)
+        s.totalGames++
+        s.totalLosses++
+        s.currentStreak = 0
+    }
+
+    override fun save(entity: Game) {}
 
     override fun deleteById(id: Int) {
         games.remove(id)
@@ -403,26 +543,6 @@ class RepositoryGameMem : RepositoryGame {
 
     override fun clear() {
         games.clear()
-        nextGameId = 1
-    }
-
-    fun setPlayerHand(
-        userId: Int,
-        gameId: Int,
-        hand: Hand,
-    ) {
-        val game = games[gameId] ?: throw IllegalStateException("Game not found: $gameId")
-        val currentRound =
-            game.rounds.maxByOrNull { it.roundNumber }
-                ?: throw IllegalStateException("No active round")
-
-        val existingTurn = currentRound.turns[userId]
-        currentRound.turns[userId] =
-            TurnData(
-                userId = userId,
-                hand = hand,
-                rollNumber = existingTurn?.rollNumber ?: 1,
-                score = existingTurn?.score,
-            )
+        stats.clear()
     }
 }

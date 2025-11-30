@@ -25,7 +25,7 @@ enum class GameEventType {
     GAME_ENDED,
 }
 
-private const val KEEP_ALIVE_INTERVAL = 25L
+private const val KEEP_ALIVE_INTERVAL = 5L
 
 @Service
 class GameNotificationService {
@@ -61,7 +61,7 @@ class GameNotificationService {
         lock.withLock {
             val key = "$userId-$gameId"
 
-            // Remove conexão anterior do mesmo usuário se existir
+            // Remove conexão anterior do mesmo utilizador se existir
             userGameEmitters[key]?.let { (_, oldEmitter) ->
                 try {
                     oldEmitter.complete()
@@ -77,17 +77,17 @@ class GameNotificationService {
 
             emitter.onCompletion {
                 logger.info("User $userId disconnected from game $gameId (completion)")
-                unsubscribe(userId, gameId)
+                unsubscribe(userId, gameId, emitter)
             }
 
             emitter.onTimeout {
                 logger.info("User $userId connection timed out in game $gameId")
-                unsubscribe(userId, gameId)
+                unsubscribe(userId, gameId, emitter)
             }
 
             emitter.onError { error ->
                 logger.error("Error in SSE connection for user $userId in game $gameId: ${error.message}")
-                unsubscribe(userId, gameId)
+                unsubscribe(userId, gameId, emitter)
             }
         }
     }
@@ -98,14 +98,22 @@ class GameNotificationService {
     private fun unsubscribe(
         userId: Int,
         gameId: Int,
+        emitter: SseEmitter,
     ) {
         lock.withLock {
             val key = "$userId-$gameId"
-            userGameEmitters.remove(key)
-            gameUsers[gameId]?.remove(userId)
+            val currentPair = userGameEmitters[key]
 
-            if (gameUsers[gameId]?.isEmpty() == true) {
-                gameUsers.remove(gameId)
+            if (currentPair != null && currentPair.second === emitter) {
+                userGameEmitters.remove(key)
+
+                gameUsers[gameId]?.remove(userId)
+                if (gameUsers[gameId]?.isEmpty() == true) {
+                    gameUsers.remove(gameId)
+                }
+                logger.info("Unsubscribed user $userId from game $gameId")
+            } else {
+                logger.debug("Ignored unsubscribe for user $userId (emitter mismatch or already removed)")
             }
         }
     }
@@ -120,7 +128,7 @@ class GameNotificationService {
         val userIds = gameUsers[gameId]?.toList() ?: return
         logger.info("Sending event ${event.type} to ${userIds.size} listeners in game $gameId")
 
-        val failedUsers = mutableListOf<Int>()
+        val failedUsers = mutableListOf<Triple<Int, Int, SseEmitter>>()
         userIds.forEach { userId ->
             val key = "$userId-$gameId"
             val (_, emitter) = userGameEmitters[key] ?: return@forEach
@@ -142,15 +150,15 @@ class GameNotificationService {
                 )
             } catch (ex: Exception) {
                 logger.error("Error sending event to user $userId in game $gameId: ${ex.message}")
-                failedUsers.add(userId)
+                failedUsers.add(Triple(userId, gameId, emitter))
             }
         }
 
         // Remove users com falha na conexão
         if (failedUsers.isNotEmpty()) {
             lock.withLock {
-                failedUsers.forEach { userId ->
-                    unsubscribe(userId, gameId)
+                failedUsers.forEach { (uid, gid, em) ->
+                    unsubscribe(uid, gid, em)
                 }
             }
         }
@@ -185,7 +193,7 @@ class GameNotificationService {
 
         gamesToCheck.forEach { gameId ->
             val userIds = gameUsers[gameId]?.toList() ?: return@forEach
-            val failedUsers = mutableListOf<Int>()
+            val failedUsers = mutableListOf<Triple<Int, Int, SseEmitter>>()
 
             userIds.forEach { userId ->
                 val key = "$userId-$gameId"
@@ -200,14 +208,14 @@ class GameNotificationService {
                     )
                 } catch (ex: Exception) {
                     logger.debug("Keep-alive failed for user $userId in game $gameId: ${ex.message}")
-                    failedUsers.add(userId)
+                    failedUsers.add(Triple(userId, gameId, emitter))
                 }
             }
 
             if (failedUsers.isNotEmpty()) {
                 lock.withLock {
-                    failedUsers.forEach { userId ->
-                        unsubscribe(userId, gameId)
+                    failedUsers.forEach { (uid, gid, em) ->
+                        unsubscribe(uid, gid, em)
                     }
                 }
             }

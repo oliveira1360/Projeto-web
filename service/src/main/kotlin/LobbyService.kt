@@ -6,6 +6,7 @@ import jakarta.inject.Named
 import org.example.config.LobbiesDomainConfig
 import org.example.entity.core.toName
 import org.example.entity.lobby.Lobby
+import org.example.game.GameService
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -36,6 +37,7 @@ class LobbyService(
     private val trxManager: TransactionManager,
     private val config: LobbiesDomainConfig,
     private val notificationService: LobbyNotificationService,
+    private val gameService: GameService,
 ) {
     private val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
 
@@ -257,7 +259,7 @@ class LobbyService(
                 ),
             )
 
-            val gameId = repositoryGame.createGame(lobby.hostId, lobby.id)
+            val gameId = gameService.createGame(lobby.hostId, lobby.id)
 
             notificationService.notifyLobby(
                 lobby.id,

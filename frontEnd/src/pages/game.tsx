@@ -5,7 +5,8 @@ import GameLoading from "../components/game/GameLoading";
 import GameError from "../components/game/GameError";
 import GameFinished from "../components/game/GameFinished";
 import GameLayout from "../components/game/GameLayout";
-import {PlayerInfoResponse, playerService} from "../services/player/playerService";
+import {playerService} from "../services/player/playerService";
+import {PlayerInfoResponse} from "../services/player/playerResponseTypes";
 
 
 const GamePage: React.FC = () => {
@@ -23,8 +24,7 @@ const GamePage: React.FC = () => {
 
     const userId = userInfo?.userId ?? null;
 
-    const game = useGame(Number(gameId), userId);
-
+    const game = useGame(gameId ? Number(gameId) : undefined, userId ?? undefined);
     const {
         players,
         hand,

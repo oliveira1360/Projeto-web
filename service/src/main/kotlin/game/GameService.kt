@@ -1,6 +1,7 @@
 package org.example.game
 
 import jakarta.inject.Named
+import org.example.Const
 import org.example.Either
 import org.example.GameEvent
 import org.example.GameEventType
@@ -40,15 +41,24 @@ class GameService(
                 repositoryLobby.findById(lobbyId)
                     ?: return@run failure(GameError.LobbyNotFound)
 
+            val lobbyPlayers = repositoryLobby.findById(lobbyId)?.currentPlayers ?: return@run failure(GameError.LobbyNotFound)
+
             if (!repositoryLobby.isUserInLobby(userId, lobbyId)) {
                 return@run failure(GameError.UserNotInGame)
             }
 
-            val gameId = repositoryGame.createGame(userId, lobbyId)
+            val gameId = repositoryGame.insertMatch(lobby.rounds)
+
+            lobbyPlayers.forEachIndexed { index, player ->
+                repositoryGame.insertMatchPlayer(gameId, player.id, index + 1)
+            }
+
+            val betAmount = Const.MONEY_REMOVE * lobby.rounds
+            repositoryGame.deductBalance(gameId, betAmount)
 
             val playerRandomOrder = lobby.currentPlayers.shuffled().map { it.id }
-
             repositoryGame.setRoundOrder(gameId, 1, playerRandomOrder)
+
             success(CreatedGame(gameId))
         }
 
@@ -107,8 +117,22 @@ class GameService(
                 return@run failure(GameError.AllPlayersNotFinished)
             }
 
-            val winner = repositoryGame.getGameWinner(gameId)
-            success(winner)
+            val winnerInfo =
+                repositoryGame.findGameWinner(gameId)
+                    ?: return@run failure(GameError.GameNotFinished)
+
+            val winnerId = winnerInfo.player.playerId
+            repositoryGame.setGameWinnerAndFinish(gameId, winnerId)
+            val finalScores = repositoryGame.getFinalScoresRaw(gameId, winnerId)
+            finalScores.forEach { (userId, totalScore, isWinner) ->
+                if (isWinner) {
+                    repositoryGame.updateStatsGameWinner(userId, totalScore)
+                } else {
+                    repositoryGame.updateStatsGameLoser(userId, totalScore)
+                }
+            }
+
+            success(winnerInfo)
         }
 
     fun getScores(gameId: Int): Either<GameError, Scoreboard> =

@@ -13,6 +13,8 @@ import org.example.failure
 import org.example.onFailure
 import org.example.success
 
+const val MAX_ROLL_COUNT = 3
+
 @Named
 class PlayerTurnService(
     private val trxManager: TransactionManager,
@@ -55,15 +57,16 @@ class PlayerTurnService(
             validationService.run { validatePlayerTurn(userId, gameId) }.onFailure { return@run failure(it) }
 
             val currentRollCount = repositoryGame.getRollCount(userId, gameId)
-            if (currentRollCount >= 3) {
+            if (currentRollCount >= MAX_ROLL_COUNT) {
                 return@run failure(GameError.TooManyRolls)
             }
 
             val currentHand = repositoryGame.getPlayerHand(userId, gameId)?.value?.toMutableList()
+            val newRollCount = currentRollCount + 1
 
             if (currentHand == null) {
                 val newHand = Hand(List(5) { createRandomDice() })
-                repositoryGame.shuffle(userId, newHand, gameId)
+                repositoryGame.updateHandAndRoll(userId, gameId, newHand, newRollCount)
                 return@run success(newHand)
             }
 
@@ -77,7 +80,7 @@ class PlayerTurnService(
             }
 
             val newHand = Hand(currentHand)
-            val hand = repositoryGame.shuffle(userId, newHand, gameId)
+            repositoryGame.updateHandAndRoll(userId, gameId, newHand, newRollCount)
 
             notificationService.notifyGame(
                 gameId,
@@ -87,7 +90,7 @@ class PlayerTurnService(
                     message = "player $userId has rolled the dice",
                     data =
                         mapOf(
-                            "new hand" to hand,
+                            "new hand" to newHand.value,
                         ),
                 ),
             )
