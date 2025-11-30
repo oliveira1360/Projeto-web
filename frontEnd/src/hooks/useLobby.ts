@@ -25,7 +25,7 @@ export function useLobby(): LobbyHookResult {
         setError(null);
         try {
             const data = await lobbyService.listLobbies();
-            setLobbies(data);
+            setLobbies(data.lobbies);
         } catch (e: any) {
             setError(`Failed to list lobbies: ${e.message}`);
         } finally {

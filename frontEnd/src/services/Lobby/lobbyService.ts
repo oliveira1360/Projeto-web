@@ -30,12 +30,12 @@ export const lobbyService = {
         };
     },
 
-    // 💡 SEGUE O PADRÃO: Response -> json() -> Mapeamento
+    //SEGUE O PADRÃO: Response -> json() -> Mapeamento
     async listLobbies(): Promise<ListLobbiesResponse> {
         const response = await request(`/lobbies`);
         const data = await response.json();
         return {
-            lobbies: data.lobbies as Lobby[], // Assumimos que data.lobbies é o array de lobbies
+            lobbies: data.lobbies as Lobby[],
             _links: data._links,
         };
     },
