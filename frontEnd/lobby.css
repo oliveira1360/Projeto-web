@@ -50,6 +50,59 @@
     margin-bottom: 40px;
 }
 
+.lobby-page .loading-message,
+.lobby-page .error-message {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.lobby-page .error-message {
+    color: #dc3545;
+}
+
+/* --- Inputs e Labels --- */
+
+.lobby-page input[type="text"],
+.lobby-page input[type="number"] {
+    color: #000000; /* Texto preto */
+    background-color: #ffffff; /* Fundo branco */
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-size: 1em;
+    width: 100%;
+    transition: border-color 0.3s ease;
+}
+
+.lobby-page input[type="text"]:focus,
+.lobby-page input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 5px rgba(255, 193, 7, 0.5);
+}
+
+.lobby-page label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+/* --- Formulário de Criação --- */
+
+.lobby-page .creation-form {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 30px;
+    background-color: var(--card-background);
+    border-radius: 12px;
+    box-shadow: 0 8px 15px var(--shadow-color);
+}
+
+.lobby-page .creation-form label {
+    margin-bottom: 20px;
+}
+
 /* --- Botões (Confiando nas regras base do CSS de Jogo/Login para a estrutura .btn) --- */
 
 .lobby-page .btn {
@@ -205,13 +258,40 @@
     border-color: var(--border-color);
 }
 
+/* --- Container com Scroll para a Grid de Lobbies --- */
+
+.lobby-page .lobby-grid-container {
+    max-height: 600px; /* Altura máxima fixa */
+    overflow-y: auto; /* Scroll vertical quando necessário */
+    padding-right: 10px; /* Espaço para a scrollbar */
+    margin-bottom: 30px;
+}
+
+/* Estilização da scrollbar (opcional, funciona no Chrome/Edge) */
+.lobby-page .lobby-grid-container::-webkit-scrollbar {
+    width: 10px;
+}
+
+.lobby-page .lobby-grid-container::-webkit-scrollbar-track {
+    background: var(--card-background);
+    border-radius: 10px;
+}
+
+.lobby-page .lobby-grid-container::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 10px;
+}
+
+.lobby-page .lobby-grid-container::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-gold);
+}
+
 /* --- Grid e Cards do Lobby --- */
 
 .lobby-page .lobby-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 25px;
-    margin-top: 40px;
 }
 
 .lobby-page .lobby-card {
@@ -230,4 +310,10 @@
 .lobby-page .lobby-card:hover {
     transform: translateY(-5px);
     border-color: var(--accent-gold);
+}
+
+.lobby-page hr {
+    border: none;
+    border-top: 2px solid var(--border-color);
+    margin: 30px 0;
 }

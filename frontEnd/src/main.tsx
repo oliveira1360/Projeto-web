@@ -24,7 +24,7 @@ const authRoutes: Page[] = [
     {path: '/about', element: <AboutPage /> },
     {path: '/game/:gameId', element: <GamePage /> },
     {path: '/lobbies', element: <LobbiesPage /> },
-    {path: '/lobby', element: <LobbyPage /> },
+    {path: '/lobby/:lobbyId', element: <LobbyPage /> },
     {path: '/lobbyCreation', element: <LobbyCreationPage /> },
     {path: '/playerProfile', element: <PlayerProfilePage /> },
 ]

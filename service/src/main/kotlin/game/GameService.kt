@@ -56,8 +56,10 @@ class GameService(
             val betAmount = Const.MONEY_REMOVE * lobby.rounds
             repositoryGame.deductBalance(gameId, betAmount)
 
+            val firstRoundNumber = repositoryGame.insertRound(gameId)
+
             val playerRandomOrder = lobby.currentPlayers.shuffled().map { it.id }
-            repositoryGame.setRoundOrder(gameId, 1, playerRandomOrder)
+            repositoryGame.setRoundOrder(gameId, firstRoundNumber, playerRandomOrder)
 
             success(CreatedGame(gameId))
         }

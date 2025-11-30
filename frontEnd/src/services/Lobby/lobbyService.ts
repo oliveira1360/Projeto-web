@@ -1,15 +1,16 @@
 // src/services/lobby/lobbyService.ts
 
-import { BASE_URL, getToken } from "../../utils/comman";
+
 import {
     CreateLobbyResponse,
     ListLobbiesResponse,
     LobbyDetailsResponse,
-    JoinLeaveLobbyResponse,
+    JoinLeaveLobbyResponse, LobbyEventResponse,
 } from "./lobbyResponseTypes";
 // Assumimos que 'request' agora retorna Promise<Response>
 import { request } from "../request";
 import { Lobby } from "./lobbyResponseTypes";
+import {BASE_URL} from "../../utils/comman";
 
 
 export const lobbyService = {
@@ -84,17 +85,16 @@ export const lobbyService = {
      * Estabelece uma conexão SSE (Server-Sent Events) para receber eventos do lobby.
      */
 
-    /*
+
     subscribeToLobbyEvents(
         lobbyId: number,
         onEvent: (data: LobbyEventResponse) => void,
         onError?: (err: any) => void,
         onClose?: () => void
     ) {
-        const token = getToken();
-        // Nota: Assumindo que BASE_URL está acessível
         const eventSource = new EventSource(
-            `${BASE_URL}/lobbies/${lobbyId}/events?token=${token}`
+            `${BASE_URL}/lobbies/${lobbyId}/events?`,
+                { withCredentials: true }
         );
 
         eventSource.onmessage = (event) => {
@@ -102,7 +102,7 @@ export const lobbyService = {
             onEvent(data);
         };
 
-        const events = ["player_joined", "player_left", "game_starting", "lobby_closed", "connected"];
+        const events = ["PLAYER_JOINED", "PLAYER_LEFT", "GAME_STARTED", "LOBBY_CLOSED", "CONNECTED"];
         events.forEach((e) => {
             eventSource.addEventListener(e, (event: MessageEvent) => {
                 const data = JSON.parse(event.data);
@@ -124,5 +124,4 @@ export const lobbyService = {
     }
 
 
-     */
 };

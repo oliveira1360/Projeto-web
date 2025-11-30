@@ -31,7 +31,7 @@ const LobbyCreationPage: React.FC = () => {
             alert(`Lobby '${result.name}' criado com sucesso! ID: ${result.lobbyId}`);
 
             // Redirecionamento para a página principal de lobbies
-            navigate('/lobby');
+            navigate('/lobby/' + result.lobbyId);
 
         } catch (e: any) {
             console.error("Creation Error:", e);
@@ -44,12 +44,7 @@ const LobbyCreationPage: React.FC = () => {
     return (
         <div className="lobby-creation-container lobby-page">
 
-            <button
-                onClick={handleGoBack}
-                className="btn btn-secondary btn-back-to-lobbies"
-            >
-                VOLTAR AOS LOBBIES
-            </button>
+
 
             <h2>Criar Novo Lobby</h2>
 
@@ -94,6 +89,13 @@ const LobbyCreationPage: React.FC = () => {
                     {loading ? 'A Criar...' : 'Criar Lobby'}
                 </button>
             </form>
+            <h2></h2>
+            <button
+                onClick={handleGoBack}
+                className="btn btn-secondary btn-back-to-lobbies"
+            >
+                VOLTAR AOS LOBBIES
+            </button>
         </div>
     );
 };

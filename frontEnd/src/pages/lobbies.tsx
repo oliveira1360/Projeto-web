@@ -1,11 +1,13 @@
 // pages/LobbyPage.tsx
 
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useLobby } from "../hooks/useLobby";
 import {LobbyCard, LobbyDetails, LobbyHeaderControls} from "../components/lobby/LobbyElements";
 
 
 const LobbyPage: React.FC = () => {
+    const navigate = useNavigate();
     const {
         lobbies,
         currentLobbyDetails,
@@ -34,9 +36,13 @@ const LobbyPage: React.FC = () => {
         setSelectedLobbyId(lobbyId === selectedLobbyId ? null : lobbyId);
     };
 
-    const handleJoinLobby = (lobbyId: number) => {
-        joinLobby(lobbyId);
-        setSelectedLobbyId(lobbyId);
+    const handleJoinLobby = async (lobbyId: number) => {
+        try {
+            await joinLobby(lobbyId);
+            navigate(`/lobby/${lobbyId}`);
+        } catch (error) {
+            console.error("Erro ao entrar no lobby:", error);
+        }
     };
 
     const handleLeaveLobby = (lobbyId: number) => {
@@ -47,33 +53,36 @@ const LobbyPage: React.FC = () => {
     return (
         <div className="lobby-container lobby-page">
 
-            <LobbyHeaderControls />
 
             <h2>Lobbies Disponíveis</h2>
 
-            {loading && lobbies.length === 0 && <h2>A carregar Lobbies...</h2>}
+            {loading && lobbies.length === 0 && <p className="loading-message">A carregar Lobbies...</p>}
             {error && <p className="error-message">Erro: {error}</p>}
 
-            <div className="lobby-grid">
-                {lobbies.map((lobby) => (
-                    <LobbyCard
-                        key={lobby.lobbyId}
-                        lobby={lobby}
-                        isSelected={selectedLobbyId === lobby.lobbyId}
-                        onSelect={handleSelectLobby}
-                        onJoin={handleJoinLobby}
-                    />
-                ))}
+            <div className="lobby-grid-container">
+                <div className="lobby-grid">
+                    {lobbies.map((lobby) => (
+                        <LobbyCard
+                            key={lobby.lobbyId}
+                            lobby={lobby}
+                            isSelected={selectedLobbyId === lobby.lobbyId}
+                            onSelect={handleSelectLobby}
+                            onJoin={handleJoinLobby}
+                        />
+                    ))}
+                </div>
             </div>
 
-            <hr />
-
             {selectedLobbyId && currentLobbyDetails && (
-                <LobbyDetails
-                    details={currentLobbyDetails}
-                    onLeave={handleLeaveLobby}
-                />
+                <>
+                    <hr />
+                    <LobbyDetails
+                        details={currentLobbyDetails}
+                        onLeave={handleLeaveLobby}
+                    />
+                </>
             )}
+            <LobbyHeaderControls/>
         </div>
     );
 };
