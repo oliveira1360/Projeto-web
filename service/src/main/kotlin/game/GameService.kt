@@ -57,9 +57,12 @@ class GameService(
             repositoryGame.deductBalance(gameId, betAmount)
 
             val firstRoundNumber = repositoryGame.insertRound(gameId)
+            repositoryGame.initTurn(gameId, firstRoundNumber)
 
             val playerRandomOrder = lobby.currentPlayers.shuffled().map { it.id }
-            repositoryGame.setRoundOrder(gameId, firstRoundNumber, playerRandomOrder)
+            playerRandomOrder.forEachIndexed { index, userId ->
+                repositoryGame.insertRoundOrder(gameId, firstRoundNumber, index + 1, userId)
+            }
 
             success(CreatedGame(gameId))
         }
