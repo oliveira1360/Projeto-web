@@ -122,6 +122,7 @@ class RepositoryGameMem : RepositoryGame {
 
                 RoundInfo(
                     round = Round(roundData.roundNumber),
+                    totalRounds = Round(gameData.totalRounds),
                     pointsQueue = pointsQueue,
                     roundOrder = roundData.playerOrder,
                     turn = currentTurnUserId,
@@ -209,9 +210,11 @@ class RepositoryGameMem : RepositoryGame {
         val roundNumber = getCurrentRoundNumber(gameId) ?: 0
         val roundOrder = if (roundNumber > 0) getRoundOrder(gameId) else emptyList()
         val turn = getCurrentPlayerTurn(gameId)
+        val gameData = games[gameId] ?: throw IllegalStateException("Game not found")
 
         return RoundInfo(
             round = Round(roundNumber),
+            totalRounds = Round(gameData.totalRounds),
             pointsQueue = PriorityQueue(),
             roundOrder = roundOrder,
             turn = turn,

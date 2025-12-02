@@ -85,6 +85,7 @@ class GameService(
             )
 
             repositoryGame.closeGame(gameId)
+            notificationService.closeGameConnections(gameId)
             success(Unit)
         }
 
