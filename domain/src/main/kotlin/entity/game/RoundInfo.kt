@@ -5,6 +5,7 @@ import java.util.PriorityQueue
 
 data class RoundInfo(
     val round: Round,
+    val totalRounds: Round,
     val pointsQueue: PriorityQueue<PointPlayer>,
     val roundOrder: List<Int>,
     val turn: Int,

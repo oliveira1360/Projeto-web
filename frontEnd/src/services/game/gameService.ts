@@ -116,6 +116,7 @@ export const gameService = {
         const data = await response.json();
         return {
             round: data.round,
+            maxRoundNumber: data.maxRoundNumber,
             players: data.players,
             order: data.order,
             pointsQueue: data.pointsQueue,

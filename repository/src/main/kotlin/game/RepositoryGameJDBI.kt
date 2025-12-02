@@ -192,9 +192,12 @@ class RepositoryGameJDBI(
 
         val roundOrder = getRoundOrder(gameId)
         val turn = getCurrentPlayerTurn(gameId)
+        val maxRoundNumber = getTotalRoundsOfGame(gameId)
+
 
         return RoundInfo(
             round = Round(roundNumber),
+            totalRounds = Round(maxRoundNumber),
             pointsQueue = pointsQueue,
             roundOrder = roundOrder,
             turn = turn,
