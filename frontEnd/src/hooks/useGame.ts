@@ -77,6 +77,7 @@ export function useGame(gameId?: number, userId?: number) {
                 const roundInfo: RoundInfoResponse = await gameService.getRoundInfo(gameId);
 
                 setCurrentRound(roundInfo.round);
+                setTotalRounds(roundInfo.maxRoundNumber)
 
 
                 const nextPlayerId = roundInfo.turn;

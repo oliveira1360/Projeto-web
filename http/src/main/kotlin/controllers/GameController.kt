@@ -287,6 +287,7 @@ class GameController(
 
             mapOf(
                 "round" to it.round,
+                "maxRoundNumber" to it.totalRounds,
                 "players" to it.pointsQueue.size,
                 "order" to
                     it.roundOrder.map { value ->

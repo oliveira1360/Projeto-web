@@ -118,6 +118,7 @@ class GameMapper : RowMapper<Game> {
 
                     RoundInfo(
                         round = Round(roundNumber),
+                        totalRounds = Round(20),
                         pointsQueue = pointsQueue,
                         roundOrder = emptyList(),
                         turn = 0,
