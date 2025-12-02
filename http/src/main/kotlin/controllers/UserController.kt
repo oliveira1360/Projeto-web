@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.example.Either
 import org.example.Failure
+import org.example.InviteService
 import org.example.Success
 import org.example.TokenCreationError
 import org.example.UserAuthService
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/user")
 class UserController(
     private val userServices: UserAuthService,
+    private val inviteService: InviteService,
 ) {
     @PostMapping(
         "/create",
@@ -159,6 +161,16 @@ class UserController(
                 "longestStreak" to it.longestStreak,
                 "currentStreak" to it.currentStreak,
                 "_links" to UserLinks.userStats(it.userId),
+            )
+        }
+
+    @PostMapping("/invite/create")
+    private fun createInvite(
+        auth: AuthenticatedUserDto,
+    ): ResponseEntity<*> =
+        handleUserResult("invite/create", inviteService.createInvite()){
+            mapOf(
+                "invite" to it.token
             )
         }
 
