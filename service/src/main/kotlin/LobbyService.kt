@@ -212,19 +212,6 @@ class LobbyService(
                 when {
                     timeElapsed >= config.lobbyTimeoutSeconds -> {
                         if (currentPlayerCount >= config.minPlayersToStart) {
-                            notificationService.notifyLobby(
-                                lobby.id,
-                                LobbyEvent(
-                                    type = LobbyEventType.LOBBY_STARTING,
-                                    lobbyId = lobby.id,
-                                    message = "Timeout reached! Starting game with $currentPlayerCount players...",
-                                    data =
-                                        mapOf(
-                                            "reason" to "TIMEOUT",
-                                            "currentPlayers" to currentPlayerCount,
-                                        ),
-                                ),
-                            )
                             startLobby(lobby)
                         } else {
                             closeLobbyAndNotify(
@@ -242,34 +229,24 @@ class LobbyService(
         trxManager.run {
             logger.info("Starting lobby ${lobby.id} with ${lobby.currentPlayers.size} players")
 
-            notificationService.notifyLobby(
-                lobby.id,
-                LobbyEvent(
-                    type = LobbyEventType.LOBBY_STARTING,
-                    lobbyId = lobby.id,
-                    message = "Game is starting!",
-                    data =
-                        mapOf(
-                            "currentPlayers" to lobby.currentPlayers.size,
-                            "players" to
-                                lobby.currentPlayers.map {
-                                    mapOf("id" to it.id, "nickName" to it.nickName.value)
-                                },
+            val game = gameService.createGame(lobby.hostId, lobby.id)
+
+            when(game){
+                is Success -> {
+                    notificationService.notifyLobby(
+                        lobby.id,
+                        LobbyEvent(
+                            type = LobbyEventType.GAME_STARTED,
+                            lobbyId = lobby.id,
+                            message = "Game has started!",
+                            data = mapOf("gameId" to game.value.gameId),
                         ),
-                ),
-            )
-
-            val gameId = gameService.createGame(lobby.hostId, lobby.id)
-
-            notificationService.notifyLobby(
-                lobby.id,
-                LobbyEvent(
-                    type = LobbyEventType.GAME_STARTED,
-                    lobbyId = lobby.id,
-                    message = "Game has started!",
-                    data = mapOf("gameId" to gameId),
-                ),
-            )
+                    )
+                }
+                is Failure -> {
+                    return@run
+                }
+            }
 
             repositoryLobby.closeLobby(lobby.id)
             notificationService.closeLobbyConnections(lobby.id)
