@@ -121,7 +121,8 @@ CREATE TABLE lobbies (
                          name TEXT NOT NULL,
                          max_players INT NOT NULL CHECK (max_players > 0),
                          rounds INT NOT NULL CHECK (rounds > 0 AND mod(rounds, max_players) = 0),
-                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                         is_closed BOOLEAN NOT NULL
 );
 
 

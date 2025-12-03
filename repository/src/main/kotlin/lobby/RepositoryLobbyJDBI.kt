@@ -27,13 +27,14 @@ class RepositoryLobbyJDBI(
             handle
                 .createUpdate(
                     """
-                INSERT INTO lobbies (host_id, name, max_players, rounds)
-                VALUES (:host_id, :name, :max_players, :rounds)
+                INSERT INTO lobbies (host_id, name, max_players, rounds, is_closed)
+                VALUES (:host_id, :name, :max_players, :rounds, :is_closed)
                 """,
                 ).bind("host_id", hostId)
                 .bind("name", name.value)
                 .bind("max_players", maxPlayers)
                 .bind("rounds", rounds)
+                .bind("is_closed", false)
                 .executeAndReturnGeneratedKeys()
                 .mapTo(Int::class.java)
                 .one()
@@ -118,17 +119,9 @@ class RepositoryLobbyJDBI(
     }
 
     override fun closeLobby(lobbyId: Int) {
-        // First, remove all players from the lobby
         handle
             .createUpdate(
-                "DELETE FROM lobby_players WHERE lobby_id = :lobby_id",
-            ).bind("lobby_id", lobbyId)
-            .execute()
-
-        // Then, delete the lobby itself
-        handle
-            .createUpdate(
-                "DELETE FROM lobbies WHERE id = :lobby_id",
+                "UPDATE lobbies SET is_closed = TRUE WHERE id = :lobby_id",
             ).bind("lobby_id", lobbyId)
             .execute()
     }
@@ -179,7 +172,7 @@ class RepositoryLobbyJDBI(
     override fun findById(id: Int): Lobby? {
         val lobby =
             handle
-                .createQuery("SELECT * FROM lobbies WHERE id = :id")
+                .createQuery("SELECT * FROM lobbies WHERE id = :id AND is_closed = FALSE")
                 .bind("id", id)
                 .map(LobbyMapper())
                 .findOne()
@@ -204,7 +197,7 @@ class RepositoryLobbyJDBI(
     override fun findAll(): List<Lobby> {
         val lobbies =
             handle
-                .createQuery("SELECT * FROM lobbies ORDER BY created_at DESC")
+                .createQuery("SELECT * FROM lobbies WHERE is_closed = FALSE ORDER BY created_at DESC")
                 .map(LobbyMapper())
                 .list()
 

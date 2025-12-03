@@ -147,10 +147,10 @@ VALUES
 -- === LOBBIES ===
 INSERT INTO lobbies (host_id, name, max_players, rounds, created_at)
 VALUES
-    (1, 'Friday Night Dice', 4, 20, '2025-11-17 18:00:00'),
-    (3, 'Quick Game', 2, 10, '2025-11-17 19:00:00'),
-    (4, 'Tournament Lobby', 6, 30, '2025-11-17 20:00:00'),
-    (2, 'Casual Play', 3, 15, '2025-11-17 17:30:00');
+    (1, 'Friday Night Dice', 4, 20, '2025-11-17 18:00:00', FALSE),
+    (3, 'Quick Game', 2, 10, '2025-11-17 19:00:00', FALSE),
+    (4, 'Tournament Lobby', 6, 30, '2025-11-17 20:00:00', FALSE),
+    (2, 'Casual Play', 3, 15, '2025-11-17 17:30:00', TRUE);
 
 -- === LOBBY PLAYERS ===
 INSERT INTO lobby_players (lobby_id, user_id, joined_at)

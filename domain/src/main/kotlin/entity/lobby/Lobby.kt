@@ -12,4 +12,5 @@ data class Lobby(
     val rounds: Int,
     val currentPlayers: List<User>,
     val createdAt: Instant = Instant.now(),
+    val is_closed: Boolean = false,
 )
