@@ -30,7 +30,7 @@ export const LobbyCard: React.FC<LobbyCardProps> = ({
         >
             <h3>{name}</h3>
             <p>Jogadores: **{currentPlayers}/{maxPlayers}**</p>
-            {/* REMOVIDO: Linha das Rondas */}
+
 
             <div className="card-actions">
                 <button
@@ -59,7 +59,7 @@ export const LobbyCard: React.FC<LobbyCardProps> = ({
 
 export const LobbyHeaderControls: React.FC = () => (
     <div className="lobby-controls">
-        <Link to="/" className="btn btn-secondary">
+        <Link to="/home" className="btn btn-secondary">
             VOLTAR PARA HOME
         </Link>
         <Link to="/lobbyCreation" className="btn btn-primary">

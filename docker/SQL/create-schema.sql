@@ -120,7 +120,7 @@ CREATE TABLE lobbies (
                          host_id INT REFERENCES users(id) ON DELETE CASCADE,
                          name TEXT NOT NULL,
                          max_players INT NOT NULL CHECK (max_players > 0),
-                         rounds INT NOT NULL CHECK (rounds > 0 AND mod(rounds, max_players) = 0),
+                         rounds INT NOT NULL CHECK (rounds > 0),
                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                          is_closed BOOLEAN NOT NULL
 );

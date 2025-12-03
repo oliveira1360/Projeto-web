@@ -66,7 +66,51 @@ export const lobbyService = {
         };
     },
 
-    async leaveLobby(lobbyId: number): Promise<JoinLeaveLobbyResponse> {
+    async joinLobbyWithGameStart(lobbyId: number, timeoutMs: number = 2000): Promise<number> {
+        return new Promise(async (resolve, reject) => {
+            let subscription: { close: () => void } | null = null;
+            const timeoutId = setTimeout(() => {
+                subscription?.close();
+                reject(new Error("Timeout esperando início do jogo"));
+            }, timeoutMs);
+
+            try {
+                subscription = this.subscribeToLobbyEvents(
+                    lobbyId,
+                    (eventData) => {
+                        const { type, data } = eventData;
+                        if (type === "GAME_STARTED") {
+                            clearTimeout(timeoutId);
+                            const gameId = data.data.gameId;
+                            if (gameId) {
+                                subscription?.close();
+                                resolve(Number(gameId));
+                            }
+                        }
+                    },
+                    (err) => {
+                        clearTimeout(timeoutId);
+                        subscription?.close();
+                        reject(err);
+                    }
+                );
+
+                // Faz o join após estabelecer a conexão SSE
+                await this.joinLobby(lobbyId);
+
+            } catch (error) {
+                clearTimeout(timeoutId);
+                subscription?.close();
+                reject(error);
+            }
+        });
+    },
+
+
+
+
+
+async leaveLobby(lobbyId: number): Promise<JoinLeaveLobbyResponse> {
         const response = await request(`/lobbies/leave/${lobbyId}`, {
             method: "POST",
         });
@@ -102,7 +146,7 @@ export const lobbyService = {
             onEvent(data);
         };
 
-        const events = ["PLAYER_JOINED", "PLAYER_LEFT", "GAME_STARTED", "LOBBY_CLOSED", "CONNECTED"];
+        const events = ["PLAYER_JOINED", "PLAYER_LEFT", "GAME_STARTED", "LOBBY_CLOSED", "CONNECTED", ];
         events.forEach((e) => {
             eventSource.addEventListener(e, (event: MessageEvent) => {
                 const data = JSON.parse(event.data);

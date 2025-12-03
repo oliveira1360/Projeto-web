@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLobby } from "../hooks/useLobby";
 import {LobbyCard, LobbyDetails, LobbyHeaderControls} from "../components/lobby/LobbyElements";
+import {lobbyService} from "../services/Lobby/lobbyService";
 
 
 const LobbyPage: React.FC = () => {
@@ -38,11 +39,21 @@ const LobbyPage: React.FC = () => {
 
     const handleJoinLobby = async (lobbyId: number) => {
         try {
-            await joinLobby(lobbyId);
-            navigate(`/lobby/${lobbyId}`);
+            // Tenta fazer o join e espera pelo gameId se o jogo começar
+            const gameId = await lobbyService.joinLobbyWithGameStart(lobbyId);
+            // Se chegou aqui, recebemos um gameId do evento GAME_STARTED
+            navigate(`/game/${gameId}`);
         } catch (error) {
-            console.error("Erro ao entrar no lobby:", error);
+            if (error.message === "Timeout esperando início do jogo") {
+                // Se der timeout, significa que o jogo não começou imediatamente
+                // então navegamos para a sala do lobby
+                navigate(`/lobby/${lobbyId}`);
+            } else {
+                console.error("Erro ao entrar no lobby:", error);
+            }
         }
+
+
     };
 
     const handleLeaveLobby = (lobbyId: number) => {
