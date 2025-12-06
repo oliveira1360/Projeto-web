@@ -23,6 +23,7 @@ enum class LobbyEventType {
     LOBBY_CLOSED,
     LOBBY_STARTING,
     GAME_STARTED,
+    LOBBY_LIST_UPDATED,
 }
 
 private const val KEEP_ALIVE_INTERVAL = 5L

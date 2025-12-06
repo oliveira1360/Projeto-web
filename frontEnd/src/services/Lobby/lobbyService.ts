@@ -7,7 +7,7 @@ import {
     LobbyDetailsResponse,
     JoinLeaveLobbyResponse, LobbyEventResponse,
 } from "./lobbyResponseTypes";
-// Assumimos que 'request' agora retorna Promise<Response>
+
 import { request } from "../request";
 import { Lobby } from "./lobbyResponseTypes";
 import {BASE_URL} from "../../utils/comman";
@@ -75,13 +75,30 @@ export const lobbyService = {
             }, timeoutMs);
 
             try {
+                //  função para ser chamada apenas quando a conexão SSE estiver ABERTA
+                const onConnected = async () => {
+                    try {
+                        // Faz o join APÓS garantir que estamos a ouvir eventos
+                        await this.joinLobby(lobbyId);
+                    } catch (error) {
+                        clearTimeout(timeoutId);
+                        subscription?.close();
+                        reject(error);
+                    }
+                };
+
                 subscription = this.subscribeToLobbyEvents(
                     lobbyId,
                     (eventData) => {
                         const { type, data } = eventData;
                         if (type === "GAME_STARTED") {
                             clearTimeout(timeoutId);
-                            const gameId = data.data.gameId;
+
+                            let gameId = data.data.gameId;
+                            if (gameId && typeof gameId === 'object' && gameId.value?.gameId) {
+                                gameId = gameId.value.gameId;
+                            }
+
                             if (gameId) {
                                 subscription?.close();
                                 resolve(Number(gameId));
@@ -92,11 +109,12 @@ export const lobbyService = {
                         clearTimeout(timeoutId);
                         subscription?.close();
                         reject(err);
-                    }
+                    },
+                    undefined, // onClose
+                    onConnected // Passamos a função de callback para quando abrir a conexão
                 );
 
-                // Faz o join após estabelecer a conexão SSE
-                await this.joinLobby(lobbyId);
+
 
             } catch (error) {
                 clearTimeout(timeoutId);
@@ -131,22 +149,22 @@ async leaveLobby(lobbyId: number): Promise<JoinLeaveLobbyResponse> {
 
 
     subscribeToLobbyEvents(
-        lobbyId: number,
-        onEvent: (data: LobbyEventResponse) => void,
-        onError?: (err: any) => void,
-        onClose?: () => void
-    ) {
+        lobbyId: number, onEvent: (data: LobbyEventResponse) => void, onError?: (err: any) => void, onClose?: () => void, onConnected?: () => Promise<void>    ) {
         const eventSource = new EventSource(
             `${BASE_URL}/lobbies/${lobbyId}/events?`,
-                { withCredentials: true }
+            { withCredentials: true }
         );
+
+        eventSource.onopen = () => {
+            if (onConnected) onConnected();
+        };
 
         eventSource.onmessage = (event) => {
             const data = JSON.parse(event.data);
             onEvent(data);
         };
 
-        const events = ["PLAYER_JOINED", "PLAYER_LEFT", "GAME_STARTED", "LOBBY_CLOSED", "CONNECTED", ];
+        const events = ["PLAYER_JOINED", "PLAYER_LEFT", "GAME_STARTED", "LOBBY_CLOSED", "CONNECTED", "LOBBY_LIST_UPDATED"];
         events.forEach((e) => {
             eventSource.addEventListener(e, (event: MessageEvent) => {
                 const data = JSON.parse(event.data);
