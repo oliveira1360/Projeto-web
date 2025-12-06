@@ -73,6 +73,33 @@ export function useLobby(): LobbyHookResult {
         }
     }, [listAllLobbies]);
 
+    useEffect(() => {
+        const DASHBOARD_LOBBY_ID = 0;
+
+        const connection = lobbyService.subscribeToLobbyEvents(
+            DASHBOARD_LOBBY_ID,
+            (event) => {
+                if (event.type === "LOBBY_LIST_UPDATED" || event.type === "LOBBY_CLOSED") {
+                    console.log("Evento SSE recebido. A aguardar commit DB...");
+
+                    // Pequeno delay (300ms) para garantir que o Backend acabou de gravar os dados novos
+                    setTimeout(() => {
+                        console.log("A atualizar lista de lobbies...");
+                        listAllLobbies();
+                    }, 300);
+                }
+            },
+            (err) => {
+                //Tratar erros silenciosamente ou reconectar
+                console.warn("SSE Dashboard connection warning:", err);
+            }
+        );
+
+        return () => {
+            connection.close();
+        };
+    }, [listAllLobbies]);
+
     return {
         lobbies,
         currentLobbyDetails,

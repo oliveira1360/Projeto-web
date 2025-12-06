@@ -98,7 +98,7 @@ export function useLobbyRoom(lobbyId: number | undefined, userId: number | undef
                         console.log("Jogo iniciando:", data);
 
                         // Navegar para a página do jogo
-                        const gameId = data.data.gameId;
+                        const gameId = data.data.gameId.value.gameId;
                         console.log(gameId);
                         if (gameId) {
                             navigate(`/game/${Number(gameId)}`);

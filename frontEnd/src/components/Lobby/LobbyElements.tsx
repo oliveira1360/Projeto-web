@@ -29,7 +29,9 @@ export const LobbyCard: React.FC<LobbyCardProps> = ({
             onClick={() => onSelect(lobbyId)}
         >
             <h3>{name}</h3>
-            <p>Jogadores: **{currentPlayers}/{maxPlayers}**</p>
+            <p>
+                Jogadores: <strong>{currentPlayers}/{maxPlayers}</strong>
+            </p>
 
 
             <div className="card-actions">
