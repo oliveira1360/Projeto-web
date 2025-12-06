@@ -11,6 +11,7 @@ import LobbiesPage from "./pages/lobbies";
 import LobbyPage from "./pages/lobby";
 import LobbyCreationPage from "./pages/lobbyCreation";
 import PlayerProfilePage from "./pages/playerProfile";
+import UpdatePlayerProfilePage from "./pages/updatePlayerProfile";
 import {JSX} from "react";
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -27,6 +28,7 @@ const authRoutes: Page[] = [
     {path: '/lobby/:lobbyId', element: <LobbyPage /> },
     {path: '/lobbyCreation', element: <LobbyCreationPage /> },
     {path: '/playerProfile', element: <PlayerProfilePage /> },
+    {path: '/playerProfile/update', element: <UpdatePlayerProfilePage /> },
 ]
 
 const publicRoutes: Page[] = [

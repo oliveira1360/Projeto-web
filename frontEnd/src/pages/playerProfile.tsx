@@ -1,6 +1,7 @@
 import * as React from "react";
 import { playerService } from "../services/player/playerService";
 import { PlayerInfoResponse } from "../services/player/playerResponseTypes";
+import { Link } from "react-router";
 
 function PlayerProfilePage() {
     const [userInfo, setUserInfo] = React.useState<PlayerInfoResponse>();
@@ -19,10 +20,11 @@ function PlayerProfilePage() {
     return (
         <div className="home-container lobby-page">
             <h1>Player Profile</h1>
+            <Link to="/home">Home</Link>
             <div>
                 {userInfo ? (
                     <div>
-                        {userInfo.imageUrl && <img src="https://avatar.iran.liara.run/public" alt="User Avatar" />}
+                        {userInfo.imageUrl && <img src={userInfo.imageUrl} alt="User Avatar" />}
                         <p><strong>Name:</strong> {userInfo.name}</p>
                         <p><strong>Nickname:</strong> {userInfo.nickName}</p>
                         <p><strong>Email:</strong> {userInfo.email}</p>
@@ -31,6 +33,11 @@ function PlayerProfilePage() {
                 ) : (
                     <p>Loading user information...</p>
                 )}
+                <div>
+                    <Link to="/playerProfile/update" state={{ user: userInfo }}>
+                        Update Profile
+                    </Link>
+                </div>
             </div>
         </div>
     );
