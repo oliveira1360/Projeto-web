@@ -182,8 +182,8 @@ class GameController(
     ): ResponseEntity<*> =
         errorHandler.handleResult("/game/$gameId/player/shuffle", gameService.shuffle(user.user.id, shuffleDTO.lockedDice, gameId)) { it ->
             mapOf(
-                "hand" to it.value.map { hand -> hand.face.name },
-                "rollNumber" to it.value.size,
+                "hand" to it.hand.value.map { hand -> hand.face.name },
+                "rollNumber" to it.rollNumber,
                 "_links" to GameLinks.shuffle(gameId),
             )
         }

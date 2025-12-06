@@ -2,6 +2,8 @@ export interface Player {
     playerId: number;
     username?: string;
     points?: number;
+    rolls?: number;
+    hand?: string[];
 }
 
 

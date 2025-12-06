@@ -42,6 +42,7 @@ const GamePage: React.FC = () => {
         finishTurn,
         startRound,
         leaveGame,
+        rollNumber
     } = game;
 
     const [showRoundWinner, setShowRoundWinner] = useState(false);
@@ -83,6 +84,7 @@ const GamePage: React.FC = () => {
             showRoundWinner={showRoundWinner}
             roundWinner={roundWinner}
             userId={userId}
+            rollNumber={rollNumber}
         />
     );
 };

@@ -15,6 +15,11 @@ import org.example.success
 
 const val MAX_ROLL_COUNT = 3
 
+data class HandWithValues(
+    val hand: Hand,
+    val rollNumber: Number,
+)
+
 @Named
 class PlayerTurnService(
     private val trxManager: TransactionManager,
@@ -44,7 +49,7 @@ class PlayerTurnService(
         userId: Int,
         lockedDice: List<Int>,
         gameId: Int,
-    ): Either<GameError, Hand> =
+    ): Either<GameError, HandWithValues> =
         trxManager.run {
             validationService.validateUserId(userId).onFailure { return@run failure(it) }
             validationService.validateGameId(gameId).onFailure { return@run failure(it) }
@@ -67,7 +72,7 @@ class PlayerTurnService(
             if (currentHand == null) {
                 val newHand = Hand(List(5) { createRandomDice() })
                 repositoryGame.updateHandAndRoll(userId, gameId, newHand, newRollCount)
-                return@run success(newHand)
+                return@run success(HandWithValues(newHand, newRollCount))
             }
 
             if (currentHand.size != 5) {
@@ -95,7 +100,7 @@ class PlayerTurnService(
                 ),
             )
 
-            success(newHand)
+            success(HandWithValues(newHand, newRollCount))
         }
 
     fun finishTurn(

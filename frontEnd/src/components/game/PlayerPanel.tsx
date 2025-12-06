@@ -10,11 +10,9 @@ interface PlayerSlotProps {
 }
 
 
-export const PlayerSlot: React.FC<PlayerSlotProps> = ({ player, isCurrentPlayer = false, isActiveTurn = false, positionClass }) => {
-    const defaultPlayer: Partial<Player> = { username: "empty" };
-    const p = (player && player.username) ? player : (defaultPlayer as Player);
-    const initial = p.username?.[0]?.toUpperCase() || "E";
-    const name = p.username || "empty";
+export const PlayerSlot: React.FC<PlayerSlotProps> = ({ player, isCurrentPlayer = false, isActiveTurn = false, positionClass }: PlayerSlotProps) => {
+    const initial = player?.username?.[0]?.toUpperCase() || "E";
+    const name = player?.username || "empty";
 
     const isPlaceholder = name === "empty";
 

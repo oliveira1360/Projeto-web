@@ -5,9 +5,10 @@ interface GameControlsProps {
     onRoll: () => Promise<void>;
     onFinishTurn: () => Promise<void>;
     dices: any[];
+    rollCount: number;
 }
 
-export const GameControls = ({ isPlayerTurn, onRoll, onFinishTurn, dices }: GameControlsProps) => {
+export const GameControls = ({ isPlayerTurn, onRoll, onFinishTurn, dices, rollCount }: GameControlsProps) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -51,14 +52,15 @@ export const GameControls = ({ isPlayerTurn, onRoll, onFinishTurn, dices }: Game
         }
     };
 
+    const rollAvalible = rollCount  < 3
     return (
         <div className="game-controls">
             <button
                 onClick={handleRoll}
-                disabled={!isPlayerTurn || isLoading}
+                disabled={!isPlayerTurn || isLoading || !rollAvalible}
                 className={!isPlayerTurn ? "button-disabled" : ""}
             >
-                {isLoading ? "Aguarde..." : "Rolar"}
+                {isLoading ? "Aguarde..." : `Rolar ${rollCount} / 3`}
             </button>
 
             <button

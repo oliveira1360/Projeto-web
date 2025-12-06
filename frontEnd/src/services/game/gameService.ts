@@ -28,7 +28,13 @@ export const gameService = {
         const response = await request(`/game/${gameId}/players`);
         const data = await response.json();
         return {
-            players: data.players,
+            players: data.players.map((p: any) => ({
+                playerId: p.playerId,
+                username: p.name,
+                points: p.balance,
+                rolls: p.rolls,
+                hand: p.hand.value
+            })),
             _links: data._links,
         };
     },

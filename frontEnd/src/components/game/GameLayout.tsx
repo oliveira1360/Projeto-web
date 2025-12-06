@@ -22,6 +22,7 @@ interface GameLayoutProps {
     showRoundWinner: boolean;
     roundWinner: any;
     userId: number | null;
+    rollNumber: number;
 }
 
 // @ts-ignore
@@ -40,6 +41,7 @@ const GameLayout: React.FC<GameLayoutProps> = ({
                                                    showRoundWinner,
                                                    roundWinner,
                                                    userId,
+                                                   rollNumber
                                                }) => (
     <div className="game-container" style={{ backgroundImage: `url(${backgroundImage})` }}>
         <div className="game-header">
@@ -89,6 +91,7 @@ const GameLayout: React.FC<GameLayoutProps> = ({
                             onRoll={rollDice}
                             onFinishTurn={finishTurn}
                             dices={hand}
+                            rollCount={rollNumber}
                         />
                     )}
                 </div>

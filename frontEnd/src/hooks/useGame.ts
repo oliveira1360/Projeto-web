@@ -25,16 +25,25 @@ export function useGame(gameId?: number, userId?: number) {
 
     const [isMyTurn, setIsMyTurn] = useState(false);
 
+    const [rollNumber, setRollNumber] = useState(0);
+    const [gamePointsUser, setGamePointsUser] = useState(0);
+
     const navigate = useNavigate();
+
+
 
 
     const loadGameWinner = async () => {
         if (!gameId) return;
         try {
+            const playersData = await gameService.listPlayers(gameId);
             const gameWinner = await gameService.getGameWinner(gameId);
+            const player = playersData.players.find(
+                p => p.playerId === gameWinner.winner.playerId
+            );
             setWinner({
                 playerId: gameWinner.winner.playerId,
-                username: players.find(p => p.playerId === gameWinner.winner.playerId)?.username || "Unknown",
+                username:player?.username || "Unknown",
                 points: gameWinner.winner.totalPoints,
             });
         } catch (e: any) {
@@ -111,6 +120,7 @@ export function useGame(gameId?: number, userId?: number) {
                         break;
                     case "ROUND_STARTED":
                         loadGameState(false);
+                        setRollNumber(0);
                         break;
                     case "ROUND_ENDED":
                         console.log("Round ended, winner:", data.data.winner);
@@ -124,10 +134,10 @@ export function useGame(gameId?: number, userId?: number) {
                         break;
                     case "GAME_ENDED":
                         setGameStatus("FINISHED");
-                        loadGameWinner();
+                        await loadGameWinner();
                         break;
                     case "connected":
-                        loadGameState();
+                        await loadGameState();
                         break;
                 }
             },
@@ -159,6 +169,7 @@ export function useGame(gameId?: number, userId?: number) {
 
             const newHandData = await gameService.shuffle(gameId, locked);
             setHand(newHandData.hand.map((v) => ({ value: v, held: false })));
+            setRollNumber(newHandData.rollNumber);
         } catch (e: any) {
             setError(e.message);
         }
@@ -211,6 +222,7 @@ export function useGame(gameId?: number, userId?: number) {
         finishTurn,
         startRound,
         leaveGame,
+        rollNumber
     };
 }
 

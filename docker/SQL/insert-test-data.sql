@@ -145,7 +145,7 @@ VALUES
     (6, 1, 4, NULL, 0, NULL);
 
 -- === LOBBIES ===
-INSERT INTO lobbies (host_id, name, max_players, rounds, created_at)
+INSERT INTO lobbies (host_id, name, max_players, rounds, created_at, is_closed)
 VALUES
     (1, 'Friday Night Dice', 4, 20, '2025-11-17 18:00:00', FALSE),
     (3, 'Quick Game', 2, 10, '2025-11-17 19:00:00', FALSE),
