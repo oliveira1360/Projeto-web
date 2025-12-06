@@ -94,7 +94,38 @@ export async function getUserStats() {
     return response.json();
 }
 
+export type InviteToken = {
+    token: string;
+}
+
+export async function createInviteToken(): Promise<InviteToken> {
+    const response = await fetch(`${BASE_URL}/user/invite/create`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to create invite token');
+    }
+
+    const data = await response.json();
+    console.log("Invite Token Data:", data);
+    return {
+        token: data.invite,
+    }
+}
+
 export function isSafePassword(password: string): boolean {
+    let hasUpperCase = /[A-Z]/.test(password);
+    let hasNumbers = /[0-9]/.test(password);
+    let isLongEnough = password.length >= 8;
+    return hasUpperCase && hasNumbers && isLongEnough;
+}
+
+export function isSafeUpdatePassword(password?: string): boolean {
+    if (!password) return true; // Allow empty password (no change)
     let hasUpperCase = /[A-Z]/.test(password);
     let hasNumbers = /[0-9]/.test(password);
     let isLongEnough = password.length >= 8;

@@ -2,6 +2,7 @@ import * as React from "react";
 import { playerService } from "../services/player/playerService";
 import { PlayerInfoResponse } from "../services/player/playerResponseTypes";
 import { Link } from "react-router";
+import "./playerProfile.css";
 
 function PlayerProfilePage() {
     const [userInfo, setUserInfo] = React.useState<PlayerInfoResponse>();
@@ -18,27 +19,40 @@ function PlayerProfilePage() {
         fetchUserInfo();
     }, [userInfo != undefined]);
     return (
-        <div className="home-container lobby-page">
-            <h1>Player Profile</h1>
-            <Link to="/home">Home</Link>
-            <div>
-                {userInfo ? (
-                    <div>
-                        {userInfo.imageUrl && <img src={userInfo.imageUrl} alt="User Avatar" />}
-                        <p><strong>Name:</strong> {userInfo.name}</p>
-                        <p><strong>Nickname:</strong> {userInfo.nickName}</p>
-                        <p><strong>Email:</strong> {userInfo.email}</p>
-                        <p><strong>Balance:</strong> {userInfo.balance} <strong> €</strong></p>
-                    </div>
-                ) : (
-                    <p>Loading user information...</p>
-                )}
-                <div>
-                    <Link to="/playerProfile/update" state={{ user: userInfo }}>
-                        Update Profile
-                    </Link>
-                </div>
+        <div className="player-profile-container">
+            <div className="player-profile-header">
+                <h1>Player Profile</h1>
             </div>
+            
+            <nav className="player-profile-nav">
+                <Link to="/home">Home</Link>
+            </nav>
+
+            {userInfo ? (
+                <div className="player-profile-card">
+                    <div className="player-profile-avatar">
+                        {userInfo.imageUrl && (
+                            <img src={userInfo.imageUrl} alt="User Avatar" />
+                        )}
+                        <h2>{userInfo.name}</h2>
+                        <p>@{userInfo.nickName}</p>
+                    </div>
+                    
+                    <div className="player-profile-info">
+                        <p><strong>Email</strong> <span>{userInfo.email}</span></p>
+                        <p><strong>Balance</strong> <span>{userInfo.balance} €</span></p>
+                    </div>
+                    
+                    <div className="player-profile-actions">
+                        <Link to="/playerProfile/update" state={{ user: userInfo }}>
+                            Update Profile
+                        </Link>
+                        <Link to="/createInvite">Create Invite</Link>
+                    </div>
+                </div>
+            ) : (
+                <div className="player-profile-loading">Loading user information...</div>
+            )}
         </div>
     );
 }
