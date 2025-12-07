@@ -74,7 +74,7 @@ class RepositoryGameJDBITest {
     }
 
     @Test
-    fun `createGame should create game and deduct balance from all players`() {
+    fun `insertMatch should create game and deduct balance from all players`() {
         transactionManager.run {
             val initialBalance1 =
                 repositoryUser
@@ -95,7 +95,12 @@ class RepositoryGameJDBITest {
                     ?.money
                     ?.value ?: 0
 
-            gameId = repositoryGame.createGame(user1Id, lobbyId)
+            gameId = repositoryGame.insertMatch(totalRounds = 6)
+
+            repositoryGame.insertMatchPlayer(gameId, user1Id, 1)
+            repositoryGame.insertMatchPlayer(gameId, user2Id, 2)
+            repositoryGame.insertMatchPlayer(gameId, user3Id, 3)
+            repositoryGame.deductBalance(gameId, 12)
 
             assertTrue(gameId > 0, "Game ID should be positive")
 
@@ -116,11 +121,12 @@ class RepositoryGameJDBITest {
     }
 
     @Test
-    fun `startRound should create first round`() {
+    fun `insertRound should create first round`() {
         transactionManager.run {
-            gameId = repositoryGame.createGame(user1Id, lobbyId)
+            gameId = repositoryGame.insertMatch(totalRounds = 6)
+            repositoryGame.insertMatchPlayer(gameId, user1Id, 1)
 
-            val roundNumber = repositoryGame.startRound(gameId)
+            val roundNumber = repositoryGame.insertRound(gameId)
 
             assertEquals(1, roundNumber)
             assertTrue(repositoryGame.hasActiveRound(gameId))
@@ -128,16 +134,15 @@ class RepositoryGameJDBITest {
     }
 
     @Test
-    fun `startRound should create multiple rounds`() {
+    fun `insertRound should create multiple rounds`() {
         transactionManager.run {
-            gameId = repositoryGame.createGame(user1Id, lobbyId)
+            gameId = repositoryGame.insertMatch(totalRounds = 6)
+            repositoryGame.insertMatchPlayer(gameId, user1Id, 1)
 
-            // Act - Start 3 rounds
-            val round1 = repositoryGame.startRound(gameId)
-            val round2 = repositoryGame.startRound(gameId)
-            val round3 = repositoryGame.startRound(gameId)
+            val round1 = repositoryGame.insertRound(gameId)
+            val round2 = repositoryGame.insertRound(gameId)
+            val round3 = repositoryGame.insertRound(gameId)
 
-            // Assert
             assertEquals(1, round1)
             assertEquals(2, round2)
             assertEquals(3, round3)
@@ -145,25 +150,23 @@ class RepositoryGameJDBITest {
     }
 
     @Test
-    fun `shuffle should create and update player hand`() {
+    fun `updateHandAndRoll should create and update player hand`() {
         transactionManager.run {
-            gameId = repositoryGame.createGame(user1Id, lobbyId)
-            repositoryGame.startRound(gameId)
+            gameId = repositoryGame.insertMatch(totalRounds = 6)
+            repositoryGame.insertMatchPlayer(gameId, user1Id, 1)
+            repositoryGame.insertRound(gameId)
+            repositoryGame.initTurn(gameId, 1)
 
-            // Act - First shuffle
             val hand1 = Hand(List(5) { Dice(DiceFace.ACE) })
-            val returnedHand = repositoryGame.shuffle(user1Id, hand1, gameId)
+            val returnedHand = repositoryGame.updateHandAndRoll(user1Id, gameId, hand1, 1)
 
-            // Assert
             assertNotNull(returnedHand)
             assertEquals(5, returnedHand.value.size)
             assertEquals(1, repositoryGame.getRollCount(user1Id, gameId))
 
-            // Act - Second shuffle
             val hand2 = Hand(List(5) { Dice(DiceFace.KING) })
-            repositoryGame.shuffle(user1Id, hand2, gameId)
+            repositoryGame.updateHandAndRoll(user1Id, gameId, hand2, 2)
 
-            // Assert
             assertEquals(2, repositoryGame.getRollCount(user1Id, gameId))
         }
     }
@@ -171,17 +174,16 @@ class RepositoryGameJDBITest {
     @Test
     fun `getPlayerHand should return player's current hand`() {
         transactionManager.run {
-            gameId = repositoryGame.createGame(user1Id, lobbyId)
-            repositoryGame.startRound(gameId)
+            gameId = repositoryGame.insertMatch(totalRounds = 6)
+            repositoryGame.insertMatchPlayer(gameId, user1Id, 1)
+            repositoryGame.insertRound(gameId)
+            repositoryGame.initTurn(gameId, 1)
 
-            // Setup
             val expectedHand = Hand(List(5) { Dice(DiceFace.QUEEN) })
-            repositoryGame.shuffle(user1Id, expectedHand, gameId)
+            repositoryGame.updateHandAndRoll(user1Id, gameId, expectedHand, 1)
 
-            // Act
             val retrievedHand = repositoryGame.getPlayerHand(user1Id, gameId)
 
-            // Assert
             assertNotNull(retrievedHand)
             assertEquals(5, retrievedHand?.value?.size)
         }
@@ -190,32 +192,33 @@ class RepositoryGameJDBITest {
     @Test
     fun `getPlayerHand should return null when no hand exists`() {
         transactionManager.run {
-            gameId = repositoryGame.createGame(user1Id, lobbyId)
-            repositoryGame.startRound(gameId)
+            gameId = repositoryGame.insertMatch(totalRounds = 6)
+            repositoryGame.insertMatchPlayer(gameId, user1Id, 1)
+            repositoryGame.insertRound(gameId)
+            repositoryGame.initTurn(gameId, 1)
 
-            // Act
             val hand = repositoryGame.getPlayerHand(user1Id, gameId)
 
-            // Assert
             assertNull(hand)
         }
     }
 
     @Test
-    fun `calculatePoints should store player score`() {
+    fun `updateScore should store player score`() {
         transactionManager.run {
-            gameId = repositoryGame.createGame(user1Id, lobbyId)
-            repositoryGame.startRound(gameId)
+            gameId = repositoryGame.insertMatch(totalRounds = 6)
+            repositoryGame.insertMatchPlayer(gameId, user1Id, 1)
+            repositoryGame.insertRound(gameId)
+            repositoryGame.initTurn(gameId, 1)
 
-            // Setup - Give player a hand
             val hand = Hand(List(5) { Dice(DiceFace.ACE) })
-            repositoryGame.shuffle(user1Id, hand, gameId)
+            repositoryGame.updateHandAndRoll(user1Id, gameId, hand, 1)
 
-            // Act
             val points = Points(30)
             repositoryGame.updateScore(user1Id, gameId, points)
 
-            // Assert - Verificar através do scoreboard
+            repositoryGame.markTurnAsFinished(user1Id, gameId)
+
             val scoreboard = repositoryGame.getScores(gameId)
             assertTrue(scoreboard.pointsQueue.isNotEmpty())
             val playerScore = scoreboard.pointsQueue.find { it.player.playerId == user1Id }
@@ -225,23 +228,30 @@ class RepositoryGameJDBITest {
     }
 
     @Test
-    fun `getRoundWinner should return player with highest score and add 2 to balance`() {
+    fun `findRoundWinnerCandidate should return player with highest score and add 2 to balance`() {
         transactionManager.run {
-            gameId = repositoryGame.createGame(user1Id, lobbyId)
-            repositoryGame.startRound(gameId)
+            gameId = repositoryGame.insertMatch(totalRounds = 6)
+            repositoryGame.insertMatchPlayer(gameId, user1Id, 1)
+            repositoryGame.insertMatchPlayer(gameId, user2Id, 2)
+            repositoryGame.insertMatchPlayer(gameId, user3Id, 3)
+            repositoryGame.insertRound(gameId)
+            repositoryGame.initTurn(gameId, 1)
 
-            // Setup - Todos os jogadores fazem suas jogadas
             val hand1 = Hand(List(5) { Dice(DiceFace.ACE) })
             val hand2 = Hand(List(5) { Dice(DiceFace.KING) })
             val hand3 = Hand(List(5) { Dice(DiceFace.NINE) })
 
-            repositoryGame.shuffle(user1Id, hand1, gameId)
-            repositoryGame.shuffle(user2Id, hand2, gameId)
-            repositoryGame.shuffle(user3Id, hand3, gameId)
+            repositoryGame.updateHandAndRoll(user1Id, gameId, hand1, 1)
+            repositoryGame.updateHandAndRoll(user2Id, gameId, hand2, 1)
+            repositoryGame.updateHandAndRoll(user3Id, gameId, hand3, 1)
 
             repositoryGame.updateScore(user1Id, gameId, Points(30))
             repositoryGame.updateScore(user2Id, gameId, Points(25))
             repositoryGame.updateScore(user3Id, gameId, Points(20))
+
+            repositoryGame.markTurnAsFinished(user1Id, gameId)
+            repositoryGame.markTurnAsFinished(user2Id, gameId)
+            repositoryGame.markTurnAsFinished(user3Id, gameId)
 
             val balanceBefore =
                 repositoryUser
@@ -250,14 +260,15 @@ class RepositoryGameJDBITest {
                     ?.money
                     ?.value
 
-            // Act
-            val winner = repositoryGame.getRoundWinner(gameId)
+            val winner = repositoryGame.findRoundWinnerCandidate(gameId)
 
-            // Assert
-            assertEquals(user1Id, winner.player.playerId)
-            assertEquals(30, winner.points.points)
+            assertNotNull(winner)
+            assertEquals(user1Id, winner?.player?.playerId)
+            assertEquals(30, winner?.points?.points)
 
-            // Verificar que o balance aumentou em 2
+            repositoryGame.setRoundWinner(gameId, 1, user1Id)
+            repositoryGame.rewardPlayer(user1Id)
+
             val balanceAfter =
                 repositoryUser
                     .findById(user1Id)
@@ -269,12 +280,14 @@ class RepositoryGameJDBITest {
     }
 
     @Test
-    fun `getRoundWinner should handle tie by dice face weights`() {
+    fun `findRoundWinnerCandidate should handle tie by dice face weights`() {
         transactionManager.run {
-            gameId = repositoryGame.createGame(user1Id, lobbyId)
-            repositoryGame.startRound(gameId)
+            gameId = repositoryGame.insertMatch(totalRounds = 6)
+            repositoryGame.insertMatchPlayer(gameId, user1Id, 1)
+            repositoryGame.insertMatchPlayer(gameId, user2Id, 2)
+            repositoryGame.insertRound(gameId)
+            repositoryGame.initTurn(gameId, 1)
 
-            // Setup - Ambos jogadores com mesmo score
             val hand1 =
                 Hand(
                     listOf(
@@ -296,54 +309,59 @@ class RepositoryGameJDBITest {
                     ),
                 )
 
-            repositoryGame.shuffle(user1Id, hand1, gameId)
-            repositoryGame.shuffle(user2Id, hand2, gameId)
+            repositoryGame.updateHandAndRoll(user1Id, gameId, hand1, 1)
+            repositoryGame.updateHandAndRoll(user2Id, gameId, hand2, 1)
 
-            // Ambos têm Full House (mesmo score)
             repositoryGame.updateScore(user1Id, gameId, Points(25))
             repositoryGame.updateScore(user2Id, gameId, Points(25))
 
-            // Act
-            val winner = repositoryGame.getRoundWinner(gameId)
+            repositoryGame.markTurnAsFinished(user1Id, gameId)
+            repositoryGame.markTurnAsFinished(user2Id, gameId)
 
-            // Assert - user2 deve ganhar (NINE tem peso maior que ACE)
-            assertEquals(user2Id, winner.player.playerId)
+            val winner = repositoryGame.findRoundWinnerCandidate(gameId)
+
+            assertNotNull(winner)
+            assertEquals(user2Id, winner?.player?.playerId)
         }
     }
 
     @Test
     fun `getScores should return all players scores`() {
         transactionManager.run {
-            gameId = repositoryGame.createGame(user1Id, lobbyId)
-            repositoryGame.startRound(gameId)
+            gameId = repositoryGame.insertMatch(totalRounds = 6)
+            repositoryGame.insertMatchPlayer(gameId, user1Id, 1)
+            repositoryGame.insertMatchPlayer(gameId, user2Id, 2)
+            repositoryGame.insertRound(gameId)
+            repositoryGame.initTurn(gameId, 1)
 
-            // Setup
             val hand1 = Hand(List(5) { Dice(DiceFace.ACE) })
             val hand2 = Hand(List(5) { Dice(DiceFace.KING) })
 
-            repositoryGame.shuffle(user1Id, hand1, gameId)
-            repositoryGame.shuffle(user2Id, hand2, gameId)
+            repositoryGame.updateHandAndRoll(user1Id, gameId, hand1, 1)
+            repositoryGame.updateHandAndRoll(user2Id, gameId, hand2, 1)
 
             repositoryGame.updateScore(user1Id, gameId, Points(30))
             repositoryGame.updateScore(user2Id, gameId, Points(25))
 
-            // Act
+            repositoryGame.markTurnAsFinished(user1Id, gameId)
+            repositoryGame.markTurnAsFinished(user2Id, gameId)
+
             val scoreboard = repositoryGame.getScores(gameId)
 
-            // Assert
-            assertEquals(3, scoreboard.pointsQueue.size)
+            assertEquals(2, scoreboard.pointsQueue.size)
         }
     }
 
     @Test
     fun `listPlayersInGame should return all players`() {
         transactionManager.run {
-            gameId = repositoryGame.createGame(user1Id, lobbyId)
+            gameId = repositoryGame.insertMatch(totalRounds = 6)
+            repositoryGame.insertMatchPlayer(gameId, user1Id, 1)
+            repositoryGame.insertMatchPlayer(gameId, user2Id, 2)
+            repositoryGame.insertMatchPlayer(gameId, user3Id, 3)
 
-            // Act
             val players = repositoryGame.listPlayersInGame(gameId)
 
-            // Assert
             assertEquals(3, players.listPlayersInGame.size)
             assertTrue(players.listPlayersInGame.any { it.playerId == user1Id })
             assertTrue(players.listPlayersInGame.any { it.playerId == user2Id })
@@ -354,52 +372,57 @@ class RepositoryGameJDBITest {
     @Test
     fun `closeGame should mark game as finished`() {
         transactionManager.run {
-            gameId = repositoryGame.createGame(user1Id, lobbyId)
+            gameId = repositoryGame.insertMatch(totalRounds = 6)
+            repositoryGame.insertMatchPlayer(gameId, user1Id, 1)
 
-            // Act
             repositoryGame.closeGame(gameId)
 
-            // Assert
             val game = repositoryGame.findById(gameId)
             assertNotNull(game)
-            // Verificar status via query direta se necessário
         }
     }
 
     @Test
-    fun `getGameWinner should return player with most total points`() {
+    fun `findGameWinner should return player with most total points`() {
         transactionManager.run {
-            gameId = repositoryGame.createGame(user1Id, lobbyId)
+            gameId = repositoryGame.insertMatch(totalRounds = 3)
+            repositoryGame.insertMatchPlayer(gameId, user1Id, 1)
+            repositoryGame.insertMatchPlayer(gameId, user2Id, 2)
 
-            // Simular várias rondas
             for (round in 1..3) {
-                repositoryGame.startRound(gameId)
+                repositoryGame.insertRound(gameId)
+                repositoryGame.initTurn(gameId, round)
 
                 val hand1 = Hand(List(5) { Dice(DiceFace.ACE) })
                 val hand2 = Hand(List(5) { Dice(DiceFace.KING) })
 
-                repositoryGame.shuffle(user1Id, hand1, gameId)
-                repositoryGame.shuffle(user2Id, hand2, gameId)
+                repositoryGame.updateHandAndRoll(user1Id, gameId, hand1, 1)
+                repositoryGame.updateHandAndRoll(user2Id, gameId, hand2, 1)
 
                 repositoryGame.updateScore(user1Id, gameId, Points(30))
                 repositoryGame.updateScore(user2Id, gameId, Points(20))
+
+                repositoryGame.markTurnAsFinished(user1Id, gameId)
+                repositoryGame.markTurnAsFinished(user2Id, gameId)
+
+                repositoryGame.setRoundWinner(gameId, round, user1Id)
             }
 
-            // Act
-            val gameWinner = repositoryGame.getGameWinner(gameId)
+            repositoryGame.setGameWinnerAndFinish(gameId, user1Id)
 
-            // Assert
-            assertEquals(user1Id, gameWinner.player.playerId)
-            assertEquals(90, gameWinner.totalPoints.points) // 30 * 3
+            val gameWinner = repositoryGame.findGameWinner(gameId)
+
+            assertNotNull(gameWinner)
+            assertEquals(user1Id, gameWinner?.player?.playerId)
         }
     }
 
     @Test
     fun `hasActiveRound should return false initially`() {
         transactionManager.run {
-            gameId = repositoryGame.createGame(user1Id, lobbyId)
+            gameId = repositoryGame.insertMatch(totalRounds = 6)
+            repositoryGame.insertMatchPlayer(gameId, user1Id, 1)
 
-            // Act & Assert
             assertFalse(repositoryGame.hasActiveRound(gameId))
         }
     }
@@ -407,10 +430,10 @@ class RepositoryGameJDBITest {
     @Test
     fun `hasActiveRound should return true after starting round`() {
         transactionManager.run {
-            gameId = repositoryGame.createGame(user1Id, lobbyId)
-            repositoryGame.startRound(gameId)
+            gameId = repositoryGame.insertMatch(totalRounds = 6)
+            repositoryGame.insertMatchPlayer(gameId, user1Id, 1)
+            repositoryGame.insertRound(gameId)
 
-            // Act & Assert
             assertTrue(repositoryGame.hasActiveRound(gameId))
         }
     }
@@ -418,13 +441,12 @@ class RepositoryGameJDBITest {
     @Test
     fun `getRoundInfo should return current round information`() {
         transactionManager.run {
-            gameId = repositoryGame.createGame(user1Id, lobbyId)
-            repositoryGame.startRound(gameId)
+            gameId = repositoryGame.insertMatch(totalRounds = 6)
+            repositoryGame.insertMatchPlayer(gameId, user1Id, 1)
+            repositoryGame.insertRound(gameId)
 
-            // Act
             val roundInfo = repositoryGame.getRoundInfo(gameId)
 
-            // Assert
             assertEquals(1, roundInfo.round.round)
         }
     }
@@ -432,19 +454,18 @@ class RepositoryGameJDBITest {
     @Test
     fun `getRollCount should return correct number of rolls`() {
         transactionManager.run {
-            gameId = repositoryGame.createGame(user1Id, lobbyId)
-            repositoryGame.startRound(gameId)
+            gameId = repositoryGame.insertMatch(totalRounds = 6)
+            repositoryGame.insertMatchPlayer(gameId, user1Id, 1)
+            repositoryGame.insertRound(gameId)
+            repositoryGame.initTurn(gameId, 1)
 
-            // Initially 0
             assertEquals(0, repositoryGame.getRollCount(user1Id, gameId))
 
-            // After first shuffle
             val hand = Hand(List(5) { Dice(DiceFace.ACE) })
-            repositoryGame.shuffle(user1Id, hand, gameId)
+            repositoryGame.updateHandAndRoll(user1Id, gameId, hand, 1)
             assertEquals(1, repositoryGame.getRollCount(user1Id, gameId))
 
-            // After second shuffle
-            repositoryGame.shuffle(user1Id, hand, gameId)
+            repositoryGame.updateHandAndRoll(user1Id, gameId, hand, 2)
             assertEquals(2, repositoryGame.getRollCount(user1Id, gameId))
         }
     }

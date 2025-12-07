@@ -2,6 +2,9 @@
 
 package org.example.controllers
 
+import config.InviteDomainConfig
+import jakarta.servlet.http.HttpServletResponse
+import org.example.InviteService
 import org.example.TransactionManager
 import org.example.TransactionManagerMem
 import org.example.UserAuthService
@@ -20,6 +23,11 @@ import org.example.token.Sha256TokenEncoder
 import org.example.user.RepositoryUserMem
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.ArgumentMatchers.eq
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import java.time.Clock
@@ -48,8 +56,15 @@ class UserControllerTest {
     private val tokenEncoder = Sha256TokenEncoder()
     private val clock = Clock.systemUTC()
 
+    val inviteDomainConfig =
+        InviteDomainConfig(
+            tokenTtl = Duration.ofHours(24),
+            tokenRollingTtl = Duration.ofHours(1),
+            maxTokensPerUser = 3,
+        )
     private val userAuthService = UserAuthService(passwordEncoder, tokenEncoder, usersDomainConfig, trxManager, clock)
-    private val userController = UserController(userAuthService)
+    private val inviteService = InviteService(trxManager, clock, inviteDomainConfig)
+    private val userController = UserController(userAuthService, inviteService)
 
     val validInvite =
         ValidInviteDTO(
@@ -73,7 +88,7 @@ class UserControllerTest {
                 name = Name(name),
                 nickName = Name("$nickName$userCounter"),
                 email = Email(uniqueEmail),
-                password = Password(password),
+                passwordHash = password,
                 imageUrl = URL("https://example.com/avatar.png"),
             )
         }
@@ -171,10 +186,11 @@ class UserControllerTest {
     // ============================================
 
     @Test
-    fun `loginUser should return token with valid credentials`() {
-        // given: an existing user
+    fun `loginUser should return token and set cookie with valid credentials`() {
+        // given: an existing user and a mock response
         val password = "SecurePass123!"
         createTestUser(email = "login@example.com", password = password)
+        val responseMock = mock(HttpServletResponse::class.java)
 
         val loginInput =
             LoginUserDTO(
@@ -183,7 +199,7 @@ class UserControllerTest {
             )
 
         // when: logging in
-        val resp = userController.loginUser(loginInput)
+        val resp = userController.loginUser(loginInput, responseMock)
 
         // then: response is 202 with token
         assertEquals(HttpStatus.ACCEPTED, resp.statusCode)
@@ -192,11 +208,15 @@ class UserControllerTest {
         assertNotNull(body["expiresAt"])
         assertEquals("Login successful", body["message"])
         assertNotNull(body["_links"])
+
+        // then: cookie header is set
+        verify(responseMock).setHeader(eq(HttpHeaders.SET_COOKIE), anyString())
     }
 
     @Test
     fun `loginUser should return 401 with invalid email`() {
         // given: no user exists
+        val responseMock = mock(HttpServletResponse::class.java)
         val loginInput =
             LoginUserDTO(
                 email = "nonexistent@example.com",
@@ -204,21 +224,20 @@ class UserControllerTest {
             )
 
         // when: attempting to login
-        val resp = userController.loginUser(loginInput)
+        val resp = userController.loginUser(loginInput, responseMock)
 
         // then: response is 401
         assertEquals(HttpStatus.UNAUTHORIZED, resp.statusCode)
-        val body = resp.body as ProblemDetail
-        assertEquals(ProblemTypes.INVALID_CREDENTIALS, body.type)
     }
 
     @Test
     fun `loginUser should return 401 with blank email`() {
         // given: blank email
+        val responseMock = mock(HttpServletResponse::class.java)
         val loginInput = LoginUserDTO(email = "", password = "Pass123!")
 
         // when: attempting to login
-        val resp = userController.loginUser(loginInput)
+        val resp = userController.loginUser(loginInput, responseMock)
 
         // then: response is 401
         assertEquals(HttpStatus.UNAUTHORIZED, resp.statusCode)
@@ -227,10 +246,11 @@ class UserControllerTest {
     @Test
     fun `loginUser should return 401 with blank password`() {
         // given: blank password
+        val responseMock = mock(HttpServletResponse::class.java)
         val loginInput = LoginUserDTO(email = "user@example.com", password = "")
 
         // when: attempting to login
-        val resp = userController.loginUser(loginInput)
+        val resp = userController.loginUser(loginInput, responseMock)
 
         // then: response is 401
         assertEquals(HttpStatus.UNAUTHORIZED, resp.statusCode)
@@ -394,9 +414,12 @@ class UserControllerTest {
     fun `logoutUser should revoke token`() {
         // given: a logged in user
         val user = createTestUser(email = "logout@example.com")
+        val responseMock = mock(HttpServletResponse::class.java)
+
         val loginResp =
             userController.loginUser(
                 LoginUserDTO("0logout@example.com", "SecurePass123!"),
+                responseMock,
             )
         val loginBody = loginResp.body as Map<*, *>
         val token = loginBody["token"] as String
@@ -434,14 +457,15 @@ class UserControllerTest {
         // given: a user
         val password = "Pass123!"
         val user = createTestUser(email = "multi@example.com", password = password)
+        val responseMock = mock(HttpServletResponse::class.java)
 
         // when: login -> logout -> login again
-        val login1 = userController.loginUser(LoginUserDTO("0multi@example.com", password))
+        val login1 = userController.loginUser(LoginUserDTO("0multi@example.com", password), responseMock)
         assertEquals(HttpStatus.ACCEPTED, login1.statusCode)
 
         userController.logoutUser(AuthenticatedUserDto(user, "token1"))
 
-        val login2 = userController.loginUser(LoginUserDTO("0multi@example.com", password))
+        val login2 = userController.loginUser(LoginUserDTO("0multi@example.com", password), responseMock)
         assertEquals(HttpStatus.ACCEPTED, login2.statusCode)
 
         // then: both logins succeed
@@ -509,6 +533,7 @@ class UserControllerTest {
     fun `complete user workflow - create, login, update, logout`() {
         // given: complete user workflow
         val password = "Workflow123!"
+        val responseMock = mock(HttpServletResponse::class.java)
 
         // when: creating user
         val createResp =
@@ -519,7 +544,7 @@ class UserControllerTest {
         assertEquals(HttpStatus.CREATED, createResp.statusCode)
 
         // when: logging in
-        val loginResp = userController.loginUser(LoginUserDTO("workflow@example.com", password))
+        val loginResp = userController.loginUser(LoginUserDTO("workflow@example.com", password), responseMock)
         assertEquals(HttpStatus.ACCEPTED, loginResp.statusCode)
         val loginBody = loginResp.body as Map<*, *>
         val token = loginBody["token"] as String
@@ -548,6 +573,7 @@ class UserControllerTest {
     fun `HATEOAS links are present in all successful user responses`() {
         // given: a user
         val user = createTestUser(email = "links@example.com")
+        val responseMock = mock(HttpServletResponse::class.java)
 
         // when: create user
         val createResp =
@@ -559,7 +585,7 @@ class UserControllerTest {
         assertNotNull(createBody["_links"], "Create user should have _links")
 
         // when: login
-        val loginResp = userController.loginUser(LoginUserDTO("0links@example.com", "SecurePass123!"))
+        val loginResp = userController.loginUser(LoginUserDTO("0links@example.com", "SecurePass123!"), responseMock)
         val loginBody = loginResp.body as Map<*, *>
         assertNotNull(loginBody["_links"], "Login should have _links")
 

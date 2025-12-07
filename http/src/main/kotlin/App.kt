@@ -72,13 +72,14 @@ open class App {
             tokenRollingTtl = Duration.ofHours(1),
             maxTokensPerUser = 3,
         )
-    @Bean
-    open fun inviteDomainConfig() = InviteDomainConfig(
-        tokenTtl = Duration.ofHours(24),
-        tokenRollingTtl = Duration.ofHours(1),
-        maxTokensPerUser = 3,
-    )
 
+    @Bean
+    open fun inviteDomainConfig() =
+        InviteDomainConfig(
+            tokenTtl = Duration.ofHours(24),
+            tokenRollingTtl = Duration.ofHours(1),
+            maxTokensPerUser = 3,
+        )
 
     @Bean
     open fun lobbiesDomainConfig() =

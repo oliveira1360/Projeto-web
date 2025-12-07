@@ -5,7 +5,6 @@ import org.example.entity.core.Name
 import org.example.entity.core.toEmail
 import org.example.entity.core.toMoney
 import org.example.entity.core.toName
-import org.example.entity.core.toPassword
 import org.example.entity.core.toUrlOrNull
 import org.example.entity.lobby.Lobby
 import org.example.entity.player.User

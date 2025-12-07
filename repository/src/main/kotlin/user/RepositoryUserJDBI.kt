@@ -3,12 +3,10 @@ package org.example.user
 import org.example.entity.core.Balance
 import org.example.entity.core.Email
 import org.example.entity.core.Name
-import org.example.entity.core.Password
 import org.example.entity.core.URL
 import org.example.entity.core.toBalance
 import org.example.entity.core.toEmail
 import org.example.entity.core.toName
-import org.example.entity.core.toPassword
 import org.example.entity.core.toUrlOrNull
 import org.example.entity.player.User
 import org.example.entity.player.UserInfo

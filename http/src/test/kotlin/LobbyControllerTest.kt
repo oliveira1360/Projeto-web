@@ -3,12 +3,17 @@
 package org.example.controllers
 
 import org.example.*
+import org.example.config.GameDomainConfig
 import org.example.config.LobbiesDomainConfig
 import org.example.dto.inputDto.AuthenticatedUserDto
 import org.example.dto.inputDto.CreateLobbyDTO
 import org.example.entity.core.*
 import org.example.entity.player.User
+import org.example.game.GameService
+import org.example.game.GameValidationService
+import org.example.game.PlayerTurnService
 import org.example.game.RepositoryGameMem
+import org.example.game.RoundService
 import org.example.general.RepositoryInviteMem
 import org.example.lobby.RepositoryLobbyMem
 import org.example.user.RepositoryUserMem
@@ -36,7 +41,22 @@ class LobbyControllerTest {
     private val generalMem = RepositoryInviteMem()
     private val trxManager = TransactionManagerMem(userMem, lobbyMem, gameMem, generalMem)
 
-    private val lobbyService = LobbyService(trxManager, lobbiesDomainConfig, lobbyNotificationService)
+    val gameDomainConfig = GameDomainConfig(moneyRemove = 1)
+    val notificationService = MockGameNotificationService()
+    val validationService = GameValidationService()
+    val roundService = RoundService(trxManager, validationService, notificationService)
+    val playerTurnService = PlayerTurnService(trxManager, validationService, notificationService, roundService)
+    var gameService =
+        GameService(
+            trxManager,
+            gameDomainConfig,
+            notificationService,
+            validationService,
+            roundService,
+            playerTurnService,
+        )
+
+    private val lobbyService = LobbyService(trxManager, lobbiesDomainConfig, lobbyNotificationService, gameService)
     private val controllerEvents = LobbyController(lobbyService, lobbyNotificationService)
 
     private lateinit var user1: User
@@ -54,7 +74,7 @@ class LobbyControllerTest {
                 name = Name(name),
                 nickName = Name("$nickName$userCounter"),
                 email = uniqueEmail,
-                password = Password("SecurePass123!"),
+                passwordHash = "SecurePass123!",
                 imageUrl = URL("https://example.com/avatar.png"),
             )
         }
@@ -75,7 +95,7 @@ class LobbyControllerTest {
                     name = Name("John Doe"),
                     nickName = Name("john"),
                     email = Email("john@example.com"),
-                    password = Password("SecurePass123!"),
+                    passwordHash = "SecurePass123!",
                     imageUrl = URL("https://example.com/john.png"),
                 )
             }
@@ -86,7 +106,7 @@ class LobbyControllerTest {
                     name = Name("Jane Smith"),
                     nickName = Name("jane"),
                     email = Email("jane@example.com"),
-                    password = Password("SecurePass123!"),
+                    passwordHash = "SecurePass123!",
                     imageUrl = URL("https://example.com/jane.png"),
                 )
             }

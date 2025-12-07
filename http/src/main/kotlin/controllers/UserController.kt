@@ -1,6 +1,5 @@
 package org.example.controllers
 
-import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.example.Either
 import org.example.Failure
@@ -64,7 +63,10 @@ class UserController(
     ): ResponseEntity<*> {
         val result = userServices.createToken(body.email, body.password)
         return when (result) {
-            is Failure -> handleTokenError(result.value, "/user/login")
+            is Failure -> {
+                handleTokenError(result.value, "/user/login")
+            }
+
             is Success -> {
                 response.setHeader(HttpHeaders.SET_COOKIE, "token=${result.value.tokenValue}; HttpOnly; Path=/; Max-Age=86400")
 
@@ -165,12 +167,10 @@ class UserController(
         }
 
     @PostMapping("/invite/create")
-    private fun createInvite(
-        auth: AuthenticatedUserDto,
-    ): ResponseEntity<*> =
-        handleUserResult("invite/create", inviteService.createInvite()){
+    private fun createInvite(auth: AuthenticatedUserDto): ResponseEntity<*> =
+        handleUserResult("invite/create", inviteService.createInvite()) {
             mapOf(
-                "invite" to it.token
+                "invite" to it.token,
             )
         }
 
@@ -179,7 +179,7 @@ class UserController(
         instance: String,
     ): ResponseEntity<ProblemDetail> =
         when (error) {
-            is TokenCreationError.UserOrPasswordAreInvalid ->
+            is TokenCreationError.UserOrPasswordAreInvalid -> {
                 ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -192,6 +192,7 @@ class UserController(
                             instance = instance,
                         ),
                     )
+            }
         }
 
     private fun handleUserError(
@@ -199,7 +200,7 @@ class UserController(
         instance: String,
     ): ResponseEntity<ProblemDetail> =
         when (error) {
-            is UserError.InsecurePassword ->
+            is UserError.InsecurePassword -> {
                 ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -212,8 +213,9 @@ class UserController(
                             instance = instance,
                         ),
                     )
+            }
 
-            is UserError.AlreadyUsedEmailAddress ->
+            is UserError.AlreadyUsedEmailAddress -> {
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -226,8 +228,9 @@ class UserController(
                             instance = instance,
                         ),
                     )
+            }
 
-            is UserError.InvalidCredentials ->
+            is UserError.InvalidCredentials -> {
                 ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -240,6 +243,7 @@ class UserController(
                             instance = instance,
                         ),
                     )
+            }
         }
 
     private inline fun <T> handleUserResult(

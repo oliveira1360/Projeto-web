@@ -28,7 +28,7 @@ enum class GameEventType {
 private const val KEEP_ALIVE_INTERVAL = 5L
 
 @Service
-class GameNotificationService {
+open class GameNotificationService {
     // Mapa de userId -> (gameId, emitter) - only one connection per user per game
     private val userGameEmitters = ConcurrentHashMap<String, Pair<Int, SseEmitter>>()
 

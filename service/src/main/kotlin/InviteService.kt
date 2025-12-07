@@ -14,31 +14,31 @@ class InviteService(
     private val config: InviteDomainConfig,
 ) {
     private val expirationTimeInSeconds = 10L
+
     fun getInvite(invite: String): Invite? =
         trxManager.run {
             val result = repositoryGeneral.getInvite(invite) ?: return@run null
-            if (isInviteTimeValild(clock, result)){
+            if (isInviteTimeValild(clock, result)) {
                 return@run null
             }
             result
         }
 
-    fun createInvite() : Either<UserError, Invite> =
+    fun createInvite(): Either<UserError, Invite> =
         trxManager.run {
             val inviteCode = UUID.randomUUID().toString()
             val now = clock.instant()
-            val invite = Invite(
-                id = 0,
-                token = inviteCode,
-                createdAt = now,
-                expiresAt = now.plusSeconds(expirationTimeInSeconds),
-                used = false,
-            )
+            val invite =
+                Invite(
+                    id = 0,
+                    token = inviteCode,
+                    createdAt = now,
+                    expiresAt = now.plusSeconds(expirationTimeInSeconds),
+                    used = false,
+                )
             val result = repositoryGeneral.createInvite(invite) ?: return@run Failure(UserError.InvalidCredentials)
             Success(result)
-
         }
-
 
     private fun isInviteTimeValild(
         clock: Clock,
@@ -46,6 +46,6 @@ class InviteService(
     ): Boolean {
         val now = clock.instant()
         return invite.createdAt <= now &&
-                Duration.between(now, invite.createdAt) <= config.tokenTtl
+            Duration.between(now, invite.createdAt) <= config.tokenTtl
     }
 }

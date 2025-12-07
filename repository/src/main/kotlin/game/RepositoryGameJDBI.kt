@@ -194,7 +194,6 @@ class RepositoryGameJDBI(
         val turn = getCurrentPlayerTurn(gameId)
         val maxRoundNumber = getTotalRoundsOfGame(gameId)
 
-
         return RoundInfo(
             round = Round(roundNumber),
             totalRounds = Round(maxRoundNumber),

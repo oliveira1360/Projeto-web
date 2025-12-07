@@ -6,13 +6,17 @@ import org.example.LobbyNotificationService
 import org.example.LobbyService
 import org.example.Success
 import org.example.TransactionManagerMem
+import org.example.config.GameDomainConfig
 import org.example.config.LobbiesDomainConfig
 import org.example.entity.core.Email
 import org.example.entity.core.Name
-import org.example.entity.core.Password
 import org.example.entity.core.URL
 import org.example.entity.player.User
+import org.example.game.GameService
+import org.example.game.GameValidationService
+import org.example.game.PlayerTurnService
 import org.example.game.RepositoryGameMem
+import org.example.game.RoundService
 import org.example.general.RepositoryInviteMem
 import org.example.lobby.RepositoryLobbyMem
 import org.example.user.RepositoryUserMem
@@ -51,7 +55,21 @@ class LobbyServiceTest {
     private var generalMem: RepositoryInviteMem = RepositoryInviteMem()
     private var trx: TransactionManagerMem = TransactionManagerMem(userMem, lobbyMem, gameMem, generalMem)
 
-    private val service = LobbyService(trx, dominConfig, lobbyNotificationService)
+    val gameDomainConfig = GameDomainConfig(moneyRemove = 1)
+    val notificationService = MockGameNotificationService()
+    val validationService = GameValidationService()
+    val roundService = RoundService(trx, validationService, notificationService)
+    val playerTurnService = PlayerTurnService(trx, validationService, notificationService, roundService)
+    var gameService =
+        GameService(
+            trx,
+            gameDomainConfig,
+            notificationService,
+            validationService,
+            roundService,
+            playerTurnService,
+        )
+    private val service = LobbyService(trx, dominConfig, lobbyNotificationService, gameService)
 
     private var counter = 0
 
@@ -65,7 +83,7 @@ class LobbyServiceTest {
             Name(name),
             Name(nickName),
             newEmail,
-            Password("SuperSecret123!"),
+            "SuperSecret123!",
             URL("https://example.com/avatar.png"),
         )
     }
