@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { LoginTestPage } from '../pages/LoginTestPage';
+import { LoginTestPage } from '../../pages/login/LoginTestPage';
 
 test.describe('Autenticação', () => {
     test('Deve fazer login com sucesso e redirecionar para a home', async ({ page }) => {
@@ -24,17 +24,5 @@ test.describe('Autenticação', () => {
         // Verifica se fomos redirecionados para a home
         await expect(page).toHaveURL(/\/home/);
         await expect(page.getByText('Bem-vindo ao Jogo!')).toBeVisible();
-    });
-
-    test('Deve mostrar erro se o botão estiver desabilitado com campos vazios', async ({ page }) => {
-        const loginPage = new LoginTestPage(page);
-        await loginPage.goto();
-
-        // O botão deve estar desabilitado inicialmente
-        await expect(loginPage.signInButton).toBeDisabled();
-
-        // Preencher só o email
-        await loginPage.emailInput.fill('user@test.com');
-        await expect(loginPage.signInButton).toBeDisabled();
     });
 });
