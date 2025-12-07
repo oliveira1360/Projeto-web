@@ -21,9 +21,6 @@ const mapError = async (err: any): Promise<string> => {
     return ERROR_MESSAGES.UNKNOWN_ERROR;
 };
 
-
-
-
 function AuthenticationPage() {
 
     const [isPanelActive, setIsPanelActive] = useState(false);

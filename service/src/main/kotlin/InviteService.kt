@@ -4,7 +4,6 @@ import config.InviteDomainConfig
 import jakarta.inject.Named
 import org.example.entity.core.Invite
 import java.time.Clock
-import java.time.Duration
 import java.util.UUID
 
 @Named
