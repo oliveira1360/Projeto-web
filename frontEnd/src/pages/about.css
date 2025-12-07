@@ -1,0 +1,116 @@
+.about-container {
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0;
+    background: #000;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.about-header {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    padding: 20px 16px;
+    border-bottom: 1px solid #333;
+}
+
+.about-header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.about-nav {
+    padding: 12px 16px;
+    background: #0a0a0a;
+    border-bottom: 1px solid #222;
+}
+
+.about-nav a {
+    padding: 8px 16px;
+    background: #1c1c1e;
+    color: #0a84ff;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    display: inline-block;
+}
+
+.about-nav a:hover {
+    background: #2c2c2e;
+}
+
+.about-card {
+    background: #1c1c1e;
+    margin: 24px;
+    border-radius: 12px;
+    padding: 0;
+    overflow: hidden;
+}
+
+.about-content {
+    padding: 24px;
+}
+
+.about-content p {
+    margin: 0 0 20px 0;
+    color: #fff;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.about-content p:last-of-type {
+    margin-bottom: 24px;
+}
+
+.about-team {
+    padding-top: 24px;
+    border-top: 1px solid #2c2c2e;
+}
+
+.about-team strong {
+    color: #8e8e93;
+    font-size: 16px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 16px;
+}
+
+.about-team ul {
+    margin: 0;
+    padding: 0 0 0 24px;
+    list-style: none;
+}
+
+.about-team li {
+    color: #fff;
+    font-size: 16px;
+    line-height: 1.8;
+    position: relative;
+    padding-left: 12px;
+}
+
+.about-team li::before {
+    content: "•";
+    color: #0a84ff;
+    font-size: 20px;
+    position: absolute;
+    left: -12px;
+    top: -2px;
+}
+
+.about-footer {
+    padding: 20px 24px;
+    border-top: 1px solid #2c2c2e;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+}
+
+.about-footer p {
+    margin: 0;
+    color: #8e8e93;
+    font-size: 14px;
+    text-align: center;
+}
