@@ -1,0 +1,130 @@
+.invite-container {
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0;
+    background: #000;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.invite-header {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    padding: 20px 16px;
+    border-bottom: 1px solid #333;
+}
+
+.invite-header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.invite-nav {
+    padding: 12px 16px;
+    background: #0a0a0a;
+    border-bottom: 1px solid #222;
+}
+
+.invite-nav a {
+    padding: 8px 16px;
+    background: #1c1c1e;
+    color: #0a84ff;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    display: inline-block;
+}
+
+.invite-nav a:hover {
+    background: #2c2c2e;
+}
+
+.invite-error {
+    color: #ff453a;
+    background-color: #2d1818;
+    padding: 12px 16px;
+    margin: 12px 24px;
+    border-radius: 8px;
+    border: 1px solid #3d1818;
+    font-size: 14px;
+}
+
+.invite-card {
+    background: #1c1c1e;
+    margin: 24px;
+    border-radius: 12px;
+    padding: 24px;
+    overflow: hidden;
+}
+
+.invite-button-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.invite-button-container button {
+    padding: 14px 24px;
+    background: #0a84ff;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.invite-button-container button:hover:not(:disabled) {
+    background: #0077ed;
+}
+
+.invite-button-container button:disabled {
+    background: #2c2c2e;
+    color: #8e8e93;
+    cursor: not-allowed;
+}
+
+.invite-success {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #2c2c2e;
+}
+
+.invite-success h2 {
+    margin: 0 0 24px 0;
+    color: #30d158;
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.invite-token-display {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.invite-token-label {
+    margin: 0;
+    color: #8e8e93;
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.invite-token-code {
+    padding: 16px 20px;
+    background: #2c2c2e;
+    border: 1px solid #3a3a3c;
+    border-radius: 8px;
+    word-break: break-all;
+    font-size: 15px;
+    color: #fff;
+    font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+    line-height: 1.6;
+}

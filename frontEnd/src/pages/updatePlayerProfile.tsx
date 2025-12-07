@@ -2,7 +2,8 @@ import * as React from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { playerService } from "../services/player/playerService";
 import { PlayerInfoResponse } from "../services/player/playerResponseTypes";
-import { isSafePassword } from "../services/user/userApi";
+import { isSafeUpdatePassword } from "../services/user/userApi";
+import "./updatePlayerProfile.css";
 
 type FormState = {
     name: string;
@@ -117,22 +118,24 @@ function UpdatePlayerProfilePage() {
     }
 
     return (
-        <div className="home-container lobby-page">
-            <h1>Update Player Profile</h1>
+        <div className="update-profile-container">
+            <div className="update-profile-header">
+                <h1>Update Player Profile</h1>
+            </div>
 
             {state.errorMessage && (
-                <p style={{ color: "red" }}>{state.errorMessage}</p>
+                <p className="update-profile-error">{state.errorMessage}</p>
             )}
             {state.status === "success" && (
-                <p style={{ color: "green" }}>Profile updated successfully.</p>
+                <p className="update-profile-success">Profile updated successfully.</p>
             )}
 
             {!sucess && <div className="profile-update">
-                <form className="profile-form" onSubmit={handleSubmit} style={{ display: "grid", gap: "12px", maxWidth: "480px", alignItems: "center" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <p style={{ margin: 0 }}>Name:</p>
-                        <label style={{ margin: 0 }}>
-                            Name
+                <form className="profile-form" onSubmit={handleSubmit}>
+                    <div className="profile-form-field">
+                        <p>Name:</p>
+                        <label>
+                            <span>Name</span>
                             <input
                                 name="name"
                                 type="text"
@@ -144,10 +147,10 @@ function UpdatePlayerProfilePage() {
                         </label>
                     </div>
                     
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <div className="profile-form-field">
                         <p>Nickname:</p>
-                        <label style={{ margin: 0 }}>
-                            Nickname
+                        <label>
+                            <span>Nickname</span>
                             <input
                                 name="nickName"
                                 type="text"
@@ -159,10 +162,10 @@ function UpdatePlayerProfilePage() {
                         </label>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <div className="profile-form-field">
                         <p>Email:</p>
-                        <label style={{ margin: 0 }}>
-                            Email
+                        <label>
+                            <span>Email</span>
                             <input
                                 name="email"
                                 type="email"
@@ -171,14 +174,14 @@ function UpdatePlayerProfilePage() {
                                 readOnly
                                 aria-disabled="true"
                             />
-                            <small style={{ color: "#666", display: "block" }}>Email cannot be changed.</small>
+                            <small>Email cannot be changed.</small>
                         </label>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <div className="profile-form-field">
                         <p>Password:</p>
-                        <label style={{ margin: 0 }}>
-                            New Password
+                        <label>
+                            <span>New Password</span>
                             <input
                                 name="password"
                                 type="password"
@@ -186,14 +189,14 @@ function UpdatePlayerProfilePage() {
                                 onChange={handleChange}
                                 placeholder="Enter new password"
                             />
-                            <small style={{ color: "#666", display: "block" }}>Leave blank to keep your current password.</small>
+                            <small>Leave blank to keep your current password.</small>
                         </label>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <div className="profile-form-field">
                         <p>Avatar URL:</p>
-                        <label style={{ margin: 0 }}>
-                            Avatar URL
+                        <label>
+                            <span>Avatar URL</span>
                             <input
                                 name="imageUrl"
                                 type="url"
@@ -204,8 +207,8 @@ function UpdatePlayerProfilePage() {
                         </label>
                     </div>
                 
-                    <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                        <button type="submit" disabled={isSaving || !isSafePassword(state.formData.password || "")}>
+                    <div className="profile-form-actions">
+                        <button type="submit" disabled={isSaving || !isSafeUpdatePassword(state.formData.password)}>
                             {isSaving ? "Saving..." : "Save changes"}
                         </button>
                         <Link to="/playerProfile">
