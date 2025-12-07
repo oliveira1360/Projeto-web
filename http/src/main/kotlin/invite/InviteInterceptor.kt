@@ -23,8 +23,20 @@ class InviteInterceptor(
         ) {
             val invite = inviteProcessor.processorInviteHeaderValue(request.getHeader(NAME_AUTHORIZATION_HEADER))
             return if (invite == null) {
-                response.status = 401
-                response.addHeader(NAME_WWW_AUTHENTICATE_HEADER, InviteProcessor.SCHEME)
+                response.status = 403
+                response.contentType = "application/problem+json"
+                response.writer.write(
+                    """
+                    {
+                      "type": "https://github.com/isel-leic-daw/2025-daw-leic52d-2025-leic52d-14/tree/main/docs/problemTypes/invalid-invite.kt",
+                      "title": "Invalid Invite Code",
+                      "status": 403,
+                      "detail": "The provided invite code is invalid or expired.",
+                      "instance": "${request.requestURI}",
+                      "timestamp": ${System.currentTimeMillis()}
+                    }
+                    """.trimIndent(),
+                )
                 false
             } else {
                 InviteArgumentResolver.addInviteTo(invite, request)

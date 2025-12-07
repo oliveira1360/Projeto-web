@@ -6,7 +6,8 @@ export type TokenExternalInfo = {
 }
 
 export type TokenCreationError = {
-    message: string;
+    title: string;
+    detail: string;
 }
 
 // @ts-ignore
@@ -33,7 +34,10 @@ export async function login(email: string, password: string): Promise<TokenExter
     if (!response.ok) {
         const errorData: TokenCreationError = await response.json();
 
-        throw new Error(errorData.message || 'Failed to login');
+        throw {
+            code: errorData.title || "UNKNOWN_ERROR",
+            detail: errorData.detail || "Erro desconhecido"
+        };
     }
     return response.json();
 }
@@ -58,7 +62,10 @@ export async function register(name: string, nickName: string, email: string, pa
 
     if (!response.ok) {
         const errorData: TokenCreationError = await response.json();
-        throw new Error(errorData.message || 'Failed to sign up');
+        throw {
+            code: errorData.title || "UNKNOWN_ERROR",
+            detail: errorData.detail || "Erro desconhecido"
+        };
     }
     return login(email, password);
 }
@@ -90,7 +97,7 @@ export async function getUserStats() {
     });
     if (!response.ok) {
         const errorData: TokenCreationError = await response.json();
-        throw new Error(errorData.message || 'Failed to get user stats');
+        throw new Error(errorData.title || 'Failed to get user stats');
     }
     return response.json();
 }
