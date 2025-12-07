@@ -3,92 +3,38 @@ package org.example.game.sql
 object GameSqlRead {
     val FIND_BY_ID =
         """
-        SELECT 
-            m.id AS match_id,
-            jsonb_agg(
-                DISTINCT jsonb_build_object(
-                    'id', u.id,
-                    'name', u.username,
-                    'nickName', u.nick_name,
-                    'password_hash', u.password_hash,
-                    'email', u.email,
-                    'imageUrl', u.avatar_url,
-                    'balance', u.balance
-                )
-            ) FILTER (WHERE u.id IS NOT NULL) AS players_json,
-            COALESCE(
-                (
-                    SELECT jsonb_agg(
-                        DISTINCT jsonb_build_object(
-                            'roundNumber', r2.round_number,
-                            'points', (
-                                SELECT jsonb_agg(
-                                    jsonb_build_object(
-                                        'playerId', t.user_id,
-                                        'score', t.score
-                                    )
-                                ) 
-                                FROM turn t 
-                                WHERE t.match_id = r2.match_id 
-                                AND t.round_number = r2.round_number
-                            )
-                        )
-                    )
-                    FROM rounds r2
-                    WHERE r2.match_id = m.id
-                ),
-                '[]'::jsonb
-            ) AS rounds_json
-        FROM matches m
-        LEFT JOIN match_players mp ON mp.match_id = m.id
-        LEFT JOIN users u ON u.id = mp.user_id
-        WHERE m.id = :id
-        GROUP BY m.id
+        SELECT id, total_rounds, status, winner_id 
+        FROM matches 
+        WHERE id = :id
         """.trimIndent()
 
     val FIND_ALL =
         """
-        SELECT 
-            m.id AS match_id,
-            jsonb_agg(
-                DISTINCT jsonb_build_object(
-                    'id', u.id,
-                    'name', u.username,
-                    'nickName', u.nick_name,
-                    'password_hash', u.password_hash,
-                    'email', u.email,
-                    'imageUrl', u.avatar_url,
-                    'balance', u.balance
-                )
-            ) FILTER (WHERE u.id IS NOT NULL) AS players_json,
-            COALESCE(
-                (
-                    SELECT jsonb_agg(
-                        DISTINCT jsonb_build_object(
-                            'roundNumber', r2.round_number,
-                            'points', (
-                                SELECT jsonb_agg(
-                                    jsonb_build_object(
-                                        'playerId', t.user_id,
-                                        'score', t.score
-                                    )
-                                ) 
-                                FROM turn t 
-                                WHERE t.match_id = r2.match_id 
-                                AND t.round_number = r2.round_number
-                            )
-                        )
-                    )
-                    FROM rounds r2
-                    WHERE r2.match_id = m.id
-                ),
-                '[]'::jsonb
-            ) AS rounds_json
-        FROM matches m
-        LEFT JOIN match_players mp ON mp.match_id = m.id
-        LEFT JOIN users u ON u.id = mp.user_id
-        GROUP BY m.id
+         SELECT id, total_rounds, status, winner_id 
+        FROM matches
         """.trimIndent()
+
+    const val FIND_PLAYERS_BY_MATCH = """
+        SELECT u.id, u.username, u.nick_name, u.password_hash, 
+               u.email, u.avatar_url, u.balance
+        FROM users u
+        JOIN match_players mp ON u.id = mp.user_id
+        WHERE mp.match_id = :matchId
+        ORDER BY mp.seat_number
+    """
+
+    const val FIND_ROUNDS_BY_MATCH = """
+        SELECT round_number
+        FROM rounds
+        WHERE match_id = :matchId
+        ORDER BY round_number
+    """
+
+    const val FIND_ROUND_SCORES = """
+        SELECT user_id, score
+        FROM turn
+        WHERE match_id = :matchId AND round_number = :roundNumber
+    """
 
     const val LIST_PLAYERS_IN_GAME = """
             SELECT u.id AS user_id,

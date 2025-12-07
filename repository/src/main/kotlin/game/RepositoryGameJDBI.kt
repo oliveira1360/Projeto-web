@@ -15,7 +15,7 @@ import org.example.entity.game.Scoreboard
 import org.example.entity.lobby.ListPlayersInGame
 import org.example.entity.player.Hand
 import org.example.entity.player.PointPlayer
-import org.example.game.mappers.GameMapper
+import org.example.entity.player.User
 import org.example.game.mappers.HandMapper
 import org.example.game.mappers.PlayerGameInfoMapper
 import org.example.game.mappers.PlayerScoreMapper
@@ -24,6 +24,7 @@ import org.example.game.sql.GameSqlWrite
 import org.example.game.sql.RoundSql
 import org.example.game.sql.StatsSql
 import org.example.game.sql.TurnSql
+import org.example.mapper.UserMapper
 import org.jdbi.v3.core.Handle
 import java.sql.Time
 import java.util.PriorityQueue
@@ -31,19 +32,36 @@ import java.util.PriorityQueue
 class RepositoryGameJDBI(
     private val handle: Handle,
 ) : RepositoryGame {
-    override fun findById(id: Int): Game? =
-        handle
-            .createQuery(GameSqlRead.FIND_BY_ID)
-            .bind("id", id)
-            .map(GameMapper())
-            .findOne()
-            .orElse(null)
+    override fun findById(id: Int): Game? {
+        val matchExists =
+            handle
+                .createQuery(GameSqlRead.FIND_BY_ID)
+                .bind("id", id)
+                .mapTo(Int::class.java)
+                .findOne()
+                .orElse(null) ?: return null
 
-    override fun findAll(): List<Game> =
-        handle
-            .createQuery(GameSqlRead.FIND_ALL)
-            .map(GameMapper())
-            .list()
+        val players = fetchPlayers(id)
+
+        val rounds = fetchRounds(id, players)
+
+        return Game(
+            playersGameInfoList = players,
+            rounds = rounds,
+        )
+    }
+
+    override fun findAll(): List<Game> {
+        val matchIds =
+            handle
+                .createQuery(GameSqlRead.FIND_ALL)
+                .mapTo(Int::class.java)
+                .list()
+
+        return matchIds.mapNotNull { matchId ->
+            findById(matchId)
+        }
+    }
 
     override fun listPlayersInGame(gameId: Int): ListPlayersInGame =
         ListPlayersInGame(
@@ -498,4 +516,117 @@ class RepositoryGameJDBI(
     override fun clear() {
         handle.createUpdate(GameSqlWrite.CLEAR_ALL).execute()
     }
+
+    private fun fetchPlayers(matchId: Int): List<User> =
+        handle
+            .createQuery(GameSqlRead.FIND_PLAYERS_BY_MATCH)
+            .bind("matchId", matchId)
+            .map(UserMapper())
+            .list()
+
+    private fun fetchRounds(
+        matchId: Int,
+        players: List<User>,
+    ): List<RoundInfo> {
+        val roundNumbers =
+            handle
+                .createQuery(GameSqlRead.FIND_ROUNDS_BY_MATCH)
+                .bind("matchId", matchId)
+                .mapTo(Int::class.java)
+                .list()
+
+        return roundNumbers.map { roundNum ->
+            buildRoundInfo(matchId, roundNum, players)
+        }
+    }
+
+    private fun buildRoundInfo(
+        matchId: Int,
+        roundNumber: Int,
+        players: List<User>,
+    ): RoundInfo {
+        val scores = fetchRoundScores(matchId, roundNumber)
+        val pointsQueue = buildPointsQueue(scores, players, matchId, roundNumber)
+
+        return RoundInfo(
+            round = Round(roundNumber),
+            totalRounds = Round(getTotalRoundsOfGame(matchId)),
+            pointsQueue = pointsQueue,
+            roundOrder = emptyList(),
+            turn = 0,
+        )
+    }
+
+    private fun fetchRoundScores(
+        matchId: Int,
+        roundNumber: Int,
+    ): List<Pair<Int, Int>> =
+        handle
+            .createQuery(GameSqlRead.FIND_ROUND_SCORES)
+            .bind("matchId", matchId)
+            .bind("roundNumber", roundNumber)
+            .map { rs, _ ->
+                val userId = rs.getInt("user_id")
+                val score = rs.getInt("score")
+                userId to score
+            }.list()
+
+    private fun buildPointsQueue(
+        scores: List<Pair<Int, Int>>,
+        players: List<User>,
+        matchId: Int,
+        roundNumber: Int,
+    ): PriorityQueue<PointPlayer> {
+        val queue = PriorityQueue<PointPlayer>(compareByDescending { it.points.points })
+
+        scores.forEach { (userId, score) ->
+            val player = players.find { it.id == userId }
+            if (player != null) {
+                queue.add(
+                    PointPlayer(
+                        player =
+                            PlayerGameInfo(
+                                playerId = userId,
+                                name = player.name,
+                                rolls = fetchPlayerRolls(matchId, roundNumber, userId),
+                                hand = fetchPlayerHand(matchId, roundNumber, userId),
+                                balance = player.balance,
+                            ),
+                        points = Points(score),
+                    ),
+                )
+            }
+        }
+
+        return queue
+    }
+
+    private fun fetchPlayerRolls(
+        matchId: Int,
+        roundNumber: Int,
+        userId: Int,
+    ): Quantity =
+        handle
+            .createQuery(TurnSql.GET_ROLL_COUNT)
+            .bind("gameId", matchId)
+            .bind("userId", userId)
+            .bind("roundNumber", roundNumber)
+            .mapTo(Int::class.java)
+            .findOne()
+            .map { Quantity(it) }
+            .orElse(Quantity(0))
+
+    private fun fetchPlayerHand(
+        matchId: Int,
+        roundNumber: Int,
+        userId: Int,
+    ): Hand =
+        handle
+            .createQuery(TurnSql.GET_PLAYER_HAND)
+            .bind("userId", userId)
+            .bind("gameId", matchId)
+            .bind("roundNumber", roundNumber)
+            .map(HandMapper())
+            .findOne()
+            .orElse(Hand(emptyList()))
 }
