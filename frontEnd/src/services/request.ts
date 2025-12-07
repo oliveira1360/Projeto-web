@@ -1,10 +1,14 @@
 import {BASE_URL} from "../utils/comman";
 
 export async function request(url: string, options: RequestInit = {}): Promise<Response> {
+    const defaultHeaders = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+    };
+
     return await fetch(`${BASE_URL}${url}`, {
         headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
+            ...defaultHeaders,
             ...(options.headers ?? {}),
         },
         credentials: "include",

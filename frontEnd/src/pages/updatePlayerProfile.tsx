@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router";
 import { playerService } from "../services/player/playerService";
 import { PlayerInfoResponse } from "../services/player/playerResponseTypes";
 import { isSafeUpdatePassword } from "../services/user/userApi";
-import "./updatePlayerProfile.css";
+import "../../style/updatePlayerProfile.css";
 
 type FormState = {
     name: string;

@@ -2,7 +2,7 @@ import * as React from "react";
 import { playerService } from "../services/player/playerService";
 import { PlayerInfoResponse } from "../services/player/playerResponseTypes";
 import { Link } from "react-router";
-import "./playerProfile.css";
+import "../../style/playerProfile.css";
 
 function PlayerProfilePage() {
     const [userInfo, setUserInfo] = React.useState<PlayerInfoResponse>();

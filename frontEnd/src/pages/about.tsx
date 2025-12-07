@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Link } from "react-router";
-import "./about.css";
+import "../../style/about.css";
 
 
 function AboutPage() {

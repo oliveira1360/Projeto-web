@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Link } from "react-router";
 import { createInviteToken, InviteToken } from "../services/user/userApi";
-import "./invite.css";
+import "../../style/invite.css";
 
 type Status = "idle" | "creating" | "success" | "error";
 

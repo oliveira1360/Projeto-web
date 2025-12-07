@@ -50,6 +50,7 @@ export async function register(name: string, nickName: string, email: string, pa
     const response = await request('/user/create', {
         method: 'POST',
         headers: {
+            'Content-Type': 'application/json',
             'Authorization': 'invite ' + inviteCode,
         },
         body: JSON.stringify({ name, nickName, email, password: passwordHashHex }),

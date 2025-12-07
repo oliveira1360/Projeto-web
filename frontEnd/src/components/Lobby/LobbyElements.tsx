@@ -4,7 +4,7 @@ import React from 'react';
 import { Lobby, LobbyDetailsResponse } from '../../services/lobby/lobbyService';
 import { Link, useNavigate } from "react-router-dom";
 import { NavBar } from '../navBar';
-import '../../../LobbyRoom.css';
+import '../../../style/LobbyRoom.css';
 
 // Propriedades para o Card de um Lobby
 interface LobbyCardProps {

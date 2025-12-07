@@ -13,12 +13,12 @@ class InviteService(
     private val clock: Clock,
     private val config: InviteDomainConfig,
 ) {
-    private val expirationTimeInSeconds = 10L
+    private val expirationTimeInSeconds = (60 * 5).toLong()
 
     fun getInvite(invite: String): Invite? =
         trxManager.run {
             val result = repositoryGeneral.getInvite(invite) ?: return@run null
-            if (isInviteTimeValild(clock, result)) {
+            if (!isInviteTimeValid(clock, result)) {
                 return@run null
             }
             result
@@ -40,12 +40,11 @@ class InviteService(
             Success(result)
         }
 
-    private fun isInviteTimeValild(
+    private fun isInviteTimeValid(
         clock: Clock,
         invite: Invite,
     ): Boolean {
         val now = clock.instant()
-        return invite.createdAt <= now &&
-            Duration.between(now, invite.createdAt) <= config.tokenTtl
+        return now >= invite.createdAt && now <= invite.expiresAt
     }
 }
