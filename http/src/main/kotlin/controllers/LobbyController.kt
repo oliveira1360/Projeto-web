@@ -88,7 +88,13 @@ class LobbyController(
                             "lobbyId" to lobby.id,
                             "name" to lobby.name.value,
                             "maxPlayers" to lobby.maxPlayers,
-                            "currentPlayers" to lobby.currentPlayers.size,
+                            "currentPlayers" to
+                                lobby.currentPlayers.map { user ->
+                                    mapOf(
+                                        "id" to user.id,
+                                        "name" to user.name.value,
+                                    )
+                                },
                         )
                     },
                 "_links" to LobbyLinks.listLobbies(),
@@ -103,12 +109,18 @@ class LobbyController(
     fun getLobbyDetails(
         @PathVariable lobbyId: Int,
     ): ResponseEntity<*> =
-        handleResult("/lobbies/$lobbyId", lobbyService.getLobbyDetails(lobbyId)) {
+        handleResult("/lobbies/$lobbyId", lobbyService.getLobbyDetails(lobbyId)) { it ->
             mapOf(
                 "lobbyId" to it.id,
                 "name" to it.name.value,
                 "maxPlayers" to it.maxPlayers,
-                "currentPlayers" to it.currentPlayers.size,
+                "currentPlayers" to
+                    it.currentPlayers.map { user ->
+                        mapOf(
+                            "id" to user.id,
+                            "name" to user.name.value,
+                        )
+                    },
                 "rounds" to it.rounds,
                 "_links" to LobbyLinks.lobbyDetails(lobbyId),
             )
@@ -150,7 +162,7 @@ class LobbyController(
         instance: String,
     ): ResponseEntity<ProblemDetail> =
         when (error) {
-            is LobbyError.LobbyNotFound ->
+            is LobbyError.LobbyNotFound -> {
                 ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -163,8 +175,9 @@ class LobbyController(
                             instance = instance,
                         ),
                     )
+            }
 
-            is LobbyError.LobbyFull ->
+            is LobbyError.LobbyFull -> {
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -177,8 +190,9 @@ class LobbyController(
                             instance = instance,
                         ),
                     )
+            }
 
-            is LobbyError.AlreadyInLobby ->
+            is LobbyError.AlreadyInLobby -> {
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -191,8 +205,9 @@ class LobbyController(
                             instance = instance,
                         ),
                     )
+            }
 
-            is LobbyError.NotInLobby ->
+            is LobbyError.NotInLobby -> {
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -205,8 +220,9 @@ class LobbyController(
                             instance = instance,
                         ),
                     )
+            }
 
-            is LobbyError.InvalidLobbyData ->
+            is LobbyError.InvalidLobbyData -> {
                 ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -219,8 +235,9 @@ class LobbyController(
                             instance = instance,
                         ),
                     )
+            }
 
-            is LobbyError.UserNotFound ->
+            is LobbyError.UserNotFound -> {
                 ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -233,6 +250,7 @@ class LobbyController(
                             instance = instance,
                         ),
                     )
+            }
         }
 
     private inline fun <T> handleResult(

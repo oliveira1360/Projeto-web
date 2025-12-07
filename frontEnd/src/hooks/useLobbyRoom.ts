@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { lobbyService } from "../services/lobby/lobbyService";
 import {gameService} from "../services/game/gameService";
+import {PlayerInfo} from "../services/Lobby/lobbyResponseTypes";
 
 interface Player {
     userId: number;
@@ -11,10 +12,10 @@ interface Player {
 interface LobbyRoomState {
     lobbyId: number;
     name: string;
-    currentPlayers: number;
+    currentPlayers: PlayerInfo[];
     maxPlayers: number;
     rounds: number;
-    players: Player[];
+    players: PlayerInfo[];
     loading: boolean;
     error: string | null;
     leaveLobby: () => Promise<void>;
@@ -23,10 +24,10 @@ interface LobbyRoomState {
 export function useLobbyRoom(lobbyId: number | undefined, userId: number | undefined): LobbyRoomState {
     const navigate = useNavigate();
     const [name, setName] = useState<string>("");
-    const [currentPlayers, setCurrentPlayers] = useState<number>(0);
+    const [currentPlayers, setCurrentPlayers] = useState<PlayerInfo[]>([]);
     const [maxPlayers, setMaxPlayers] = useState<number>(0);
     const [rounds, setRounds] = useState<number>(0);
-    const [players, setPlayers] = useState<Player[]>([]);
+    const [players, setPlayers] = useState<PlayerInfo[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -46,14 +47,13 @@ export function useLobbyRoom(lobbyId: number | undefined, userId: number | undef
             setRounds(details.rounds);
 
 
-            // Por enquanto, criamos uma lista básica
-            const playersList: Player[] = [];           //TODO fazer um endpoint para isto?
-            for (let i = 0; i < details.currentPlayers; i++) {
-                playersList.push({
-                    userId: i,
-                    username: `Jogador ${i + 1}`
-                });
-            }
+
+            const playersList: PlayerInfo[] = details.currentPlayers.map((player) => (
+                {
+                id: player.id,
+                username: player.username,
+            }));
+
             setPlayers(playersList);
 
             setLoading(false);
@@ -81,17 +81,15 @@ export function useLobbyRoom(lobbyId: number | undefined, userId: number | undef
 
                     case "PLAYER_JOINED":
                         console.log("Jogador entrou:", data);
-                        setCurrentPlayers(prev => prev + 1);
                         setPlayers(prev => [...prev, {
-                            userId: data.userId || prev.length,
-                            username: data.username || `Jogador ${prev.length + 1}`
+                            id: data.data.userId || prev.length,
+                            username: data.data.userName || `aa ${prev.length + 1}`
                         }]);
                         break;
 
                     case "PLAYER_LEFT":
                         console.log("Jogador saiu:", data);
-                        setCurrentPlayers(prev => Math.max(0, prev - 1));
-                        setPlayers(prev => prev.filter(p => p.userId !== data.userId));
+                        setPlayers(prev => prev.filter(p => p.id !== data.userId));
                         break;
 
                     case "GAME_STARTED":

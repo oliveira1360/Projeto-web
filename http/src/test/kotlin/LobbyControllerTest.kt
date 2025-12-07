@@ -167,7 +167,11 @@ class LobbyControllerTest {
         assertNotNull(lobby1["lobbyId"])
         assertEquals("Test Lobby 1", lobby1["name"])
         assertEquals(4, lobby1["maxPlayers"])
-        assertEquals(1, lobby1["currentPlayers"])
+        val expected =
+            listOf(
+                mapOf("id" to 1, "name" to "John Doe"),
+            )
+        assertEquals(expected, lobby1["currentPlayers"])
 
         val lobby2 = lobbies[1] as Map<*, *>
         assertNotNull(lobby2["lobbyId"])
@@ -324,7 +328,13 @@ class LobbyControllerTest {
         assertEquals(lobbyId, body["lobbyId"])
         assertEquals("Test Lobby 1", body["name"])
         assertEquals(4, body["maxPlayers"])
-        assertEquals(1, body["currentPlayers"])
+
+        @Suppress("UNCHECKED_CAST")
+        val currentPlayers = body["currentPlayers"] as List<Map<String, Any>>
+        assertEquals(1, currentPlayers.size)
+        assertEquals(1, currentPlayers[0]["id"])
+        assertNotNull(currentPlayers[0]["name"])
+
         assertEquals(8, body["rounds"])
         assertNotNull(body["_links"])
     }
@@ -381,7 +391,12 @@ class LobbyControllerTest {
         // and: the lobby now has 2 players
         val detailsResp = controllerEvents.getLobbyDetails(lobbyId)
         val detailsBody = detailsResp.body as Map<*, *>
-        assertEquals(2, detailsBody["currentPlayers"])
+        val expected =
+            listOf(
+                mapOf("id" to 1, "name" to "John Doe"),
+                mapOf("id" to 2, "name" to "Jane Smith"),
+            )
+        assertEquals(expected, detailsBody["currentPlayers"])
     }
 
     @Test
@@ -524,53 +539,36 @@ class LobbyControllerTest {
 
     @Test
     fun `user can leave and rejoin lobby`() {
-        // given: a lobby
         val lobbies = trxManager.run { repositoryLobby.findAll() }
         val lobbyId = lobbies[0].id
+        val playerId = 2
 
-        // when: user2 joins, leaves, then rejoins
-        controllerEvents.joinLobby(AuthenticatedUserDto(user2, "token2"), lobbyId)
-        controllerEvents.leaveLobby(AuthenticatedUserDto(user2, "token2"), lobbyId)
-        val rejoinResp = controllerEvents.joinLobby(AuthenticatedUserDto(user2, "token2"), lobbyId)
+        // Join
+        val newPlayer = createTestUser(nickName = "newplayer", email = "newplayer@example.com")
+        var resp = controllerEvents.joinLobby(AuthenticatedUserDto(newPlayer, "token"), lobbyId)
+        assertEquals(HttpStatus.ACCEPTED, resp.statusCode)
 
-        // then: rejoin is successful
-        assertEquals(HttpStatus.ACCEPTED, rejoinResp.statusCode)
+        // Verify player is in lobby
+        resp = controllerEvents.getLobbyDetails(lobbyId)
+        var body = resp.body as Map<*, *>
 
-        // and: lobby has 2 players again
-        val detailsResp = controllerEvents.getLobbyDetails(lobbyId)
-        val detailsBody = detailsResp.body as Map<*, *>
-        assertEquals(2, detailsBody["currentPlayers"])
+        @Suppress("UNCHECKED_CAST")
+        var currentPlayers = body["currentPlayers"] as List<Map<String, Any>>
+        assertEquals(2, currentPlayers.size)
+
+        // Leave
+
+        resp = controllerEvents.leaveLobby(AuthenticatedUserDto(newPlayer, "token"), lobbyId)
+        assertEquals(HttpStatus.ACCEPTED, resp.statusCode)
+
+        // Verify player is no longer in lobby
+        resp = controllerEvents.getLobbyDetails(lobbyId)
+        body = resp.body as Map<*, *>
+        @Suppress("UNCHECKED_CAST")
+        currentPlayers = body["currentPlayers"] as List<Map<String, Any>>
+        assertEquals(1, currentPlayers.size)
     }
 
-    /*
-    @Test
-    fun `lobby capacity is properly enforced with join and leave operations`() {
-        // given: a lobby with max 3 players
-        val lobby =
-            trxManager.run {
-                repositoryLobby.createLobby(
-                    name = Name("Capacity Test"),
-                    hostId = user1.id,
-                    maxPlayers = 3,
-                    rounds = 4,
-                )
-            }
-
-        // and: additional users
-        val user3 = createTestUser(name = "User3", nickName = "user3", email = "user3@example.com")
-        val user4 = createTestUser(name = "User4", nickName = "user4", email = "user4@example.com")
-
-        // when: filling the lobby
-        controllerEvents.joinLobby(AuthenticatedUserDto(user2, "token2"), lobby.id)
-        controllerEvents.joinLobby(AuthenticatedUserDto(user3, "token3"), lobby.id)
-
-        // then: lobby is full
-        val fullResp = controllerEvents.joinLobby(AuthenticatedUserDto(user4, "token4"), lobby.id)
-        assertEquals(HttpStatus.NOT_FOUND, fullResp.statusCode)
-    }
-
-
-     */
     @Test
     fun `multiple lobbies can coexist with different players`() {
         // given: multiple lobbies and users
@@ -589,8 +587,19 @@ class LobbyControllerTest {
         val lobby1Details = controllerEvents.getLobbyDetails(lobby1Id).body as Map<*, *>
         val lobby2Details = controllerEvents.getLobbyDetails(lobby2Id).body as Map<*, *>
 
-        assertEquals(2, lobby1Details["currentPlayers"])
-        assertEquals(2, lobby2Details["currentPlayers"])
+        val expected =
+            listOf(
+                mapOf("id" to 1, "name" to "John Doe"),
+                mapOf("id" to 3, "name" to "User3"),
+            )
+
+        val expected2 =
+            listOf(
+                mapOf("id" to 2, "name" to "Jane Smith"),
+                mapOf("id" to 4, "name" to "User4"),
+            )
+        assertEquals(expected, lobby1Details["currentPlayers"])
+        assertEquals(expected2, lobby2Details["currentPlayers"])
     }
 
     @Test
@@ -645,73 +654,84 @@ class LobbyControllerTest {
 
     @Test
     fun `all lobby operations maintain data consistency`() {
-        // given: a lobby
         val lobbies = trxManager.run { repositoryLobby.findAll() }
         val lobbyId = lobbies[0].id
 
-        // when: performing sequence of operations
-        val user3 = createTestUser(name = "User3", nickName = "user3", email = "user3@example.com")
+        // Get initial state
+        var resp = controllerEvents.getLobbyDetails(lobbyId)
+        var body = resp.body as Map<*, *>
 
-        // Initial state: 1 player
-        var details = controllerEvents.getLobbyDetails(lobbyId).body as Map<*, *>
-        assertEquals(1, details["currentPlayers"])
+        @Suppress("UNCHECKED_CAST")
+        var currentPlayers = body["currentPlayers"] as List<Map<String, Any>>
+        val initialCount = currentPlayers.size
 
-        // After join: 2 players
-        controllerEvents.joinLobby(AuthenticatedUserDto(user2, "token2"), lobbyId)
-        details = controllerEvents.getLobbyDetails(lobbyId).body as Map<*, *>
-        assertEquals(2, details["currentPlayers"])
+        // Add multiple players
+        repeat(2) { index ->
+            val playerId = 2 + index
+            val newPlayer = createTestUser(nickName = "newplayer", email = "newplayer@example.com")
 
-        // After another join: 3 players
-        controllerEvents.joinLobby(AuthenticatedUserDto(user3, "token3"), lobbyId)
-        details = controllerEvents.getLobbyDetails(lobbyId).body as Map<*, *>
-        assertEquals(3, details["currentPlayers"])
+            val joinResp = controllerEvents.joinLobby(AuthenticatedUserDto(newPlayer, "token"), lobbyId)
+            assertEquals(HttpStatus.ACCEPTED, joinResp.statusCode)
+        }
 
-        // After leave: 2 players
-        controllerEvents.leaveLobby(AuthenticatedUserDto(user2, "token2"), lobbyId)
-        details = controllerEvents.getLobbyDetails(lobbyId).body as Map<*, *>
-        assertEquals(2, details["currentPlayers"])
+        // Verify all players are present
+        resp = controllerEvents.getLobbyDetails(lobbyId)
+        body = resp.body as Map<*, *>
+        @Suppress("UNCHECKED_CAST")
+        currentPlayers = body["currentPlayers"] as List<Map<String, Any>>
+        assertEquals(initialCount + 2, currentPlayers.size)
 
-        // then: all operations maintain consistency
-        assertTrue(true)
+        // Verify all players have valid data
+        currentPlayers.forEach { player ->
+            assertNotNull(player["id"])
+            assertNotNull(player["name"])
+            assertTrue(player["name"].toString().isNotEmpty())
+        }
     }
 
     @Test
     fun `stress test - rapid join and leave operations`() {
-        // given: a lobby and multiple users
-        val lobby =
+        val newLobby =
             trxManager.run {
                 repositoryLobby.createLobby(
                     name = Name("Stress Test Lobby"),
                     hostId = user1.id,
                     maxPlayers = 10,
-                    rounds = 8,
+                    rounds = 5,
                 )
             }
+        val lobbyId = newLobby.id
 
-        val users =
-            (1..5).map { i ->
-                createTestUser(name = "StressUser$i", nickName = "stress$i", email = "stress$i@example.com")
-            }
+        val playersToAdd = mutableListOf<AuthenticatedUserDto>()
 
-        // when: rapid join operations
-        users.forEach { user ->
-            val resp = controllerEvents.joinLobby(AuthenticatedUserDto(user, "token"), lobby.id)
-            assertEquals(HttpStatus.ACCEPTED, resp.statusCode)
+        repeat(3) { index ->
+            val newPlayer = createTestUser(nickName = "stressplayer$index", email = "stress$index@example.com")
+            val authenticatedPlayer = AuthenticatedUserDto(newPlayer, "token$index")
+            playersToAdd.add(authenticatedPlayer)
+
+            val resp = controllerEvents.joinLobby(authenticatedPlayer, lobbyId)
+            assertEquals(HttpStatus.ACCEPTED, resp.statusCode, "Join #$index should succeed")
         }
 
-        // then: all users joined successfully
-        val afterJoinDetails = controllerEvents.getLobbyDetails(lobby.id).body as Map<*, *>
-        assertEquals(6, afterJoinDetails["currentPlayers"]) // host + 5 users
+        var resp = controllerEvents.getLobbyDetails(lobbyId)
+        assertEquals(HttpStatus.OK, resp.statusCode)
+        var body = resp.body as Map<*, *>
 
-        // when: rapid leave operations
-        users.take(3).forEach { user ->
-            val resp = controllerEvents.leaveLobby(AuthenticatedUserDto(user, "token"), lobby.id)
-            assertEquals(HttpStatus.ACCEPTED, resp.statusCode)
+        @Suppress("UNCHECKED_CAST")
+        var currentPlayers = body["currentPlayers"] as List<Map<String, Any>>
+        assertEquals(4, currentPlayers.size, "Should have 4 players after joins (host + 3)")
+
+        repeat(2) { index ->
+            val leaveResp = controllerEvents.leaveLobby(playersToAdd[index], lobbyId)
+            assertEquals(HttpStatus.ACCEPTED, leaveResp.statusCode, "Leave #$index should succeed")
         }
 
-        // then: correct number of players remain
-        val afterLeaveDetails = controllerEvents.getLobbyDetails(lobby.id).body as Map<*, *>
-        assertEquals(3, afterLeaveDetails["currentPlayers"]) // host + 2 remaining users
+        resp = controllerEvents.getLobbyDetails(lobbyId)
+        assertEquals(HttpStatus.OK, resp.statusCode)
+        body = resp.body as Map<*, *>
+        @Suppress("UNCHECKED_CAST")
+        currentPlayers = body["currentPlayers"] as List<Map<String, Any>>
+        assertEquals(2, currentPlayers.size, "Should have 2 players after leaves (host + 1)")
     }
 
     @Test

@@ -4,7 +4,9 @@ import { useParams } from "react-router-dom";
 import { useLobbyRoom } from "../hooks/useLobbyRoom";
 import { playerService } from "../services/player/playerService";
 import { PlayerInfoResponse } from "../services/player/playerResponseTypes";
-import { LobbyLoading, LobbyError, LobbyRoom } from "../components/lobby/LobbyElements";
+import {LobbyLoading} from "../components/Lobby/LobbyLoading";
+import {LobbyError} from "../components/Lobby/LobbyError";
+import {LobbyRoom} from "../components/Lobby/LobbyRoom";
 
 function LobbyPage() {
     const { lobbyId } = useParams<{ lobbyId: string }>();

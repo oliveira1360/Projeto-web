@@ -3,8 +3,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLobby } from "../hooks/useLobby";
-import {LobbyCard, LobbyDetails, LobbyHeaderControls} from "../components/lobby/LobbyElements";
 import {lobbyService} from "../services/Lobby/lobbyService";
+import {LobbyCard} from "../components/Lobby/LobbyCard";
+import {LobbyDetails} from "../components/Lobby/LobbyDetails";
+import {LobbyHeaderControls} from "../components/Lobby/LobbyHeaderControls";
 
 
 const LobbyPage: React.FC = () => {

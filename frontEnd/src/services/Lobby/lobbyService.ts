@@ -48,7 +48,10 @@ export const lobbyService = {
             lobbyId: data.lobbyId,
             name: data.name,
             maxPlayers: data.maxPlayers,
-            currentPlayers: data.currentPlayers,
+            currentPlayers: data.currentPlayers.map((player: any) => ({
+                id: player.id,
+                username: player.name,
+            })),
             rounds: data.rounds,
             _links: data._links,
         };
@@ -66,7 +69,7 @@ export const lobbyService = {
         };
     },
 
-    async joinLobbyWithGameStart(lobbyId: number, timeoutMs: number = 2000): Promise<number> {
+    async joinLobbyWithGameStart(lobbyId: number, timeoutMs: number = 400): Promise<number> {
         return new Promise(async (resolve, reject) => {
             let subscription: { close: () => void } | null = null;
             const timeoutId = setTimeout(() => {

@@ -1,10 +1,15 @@
 
+export type PlayerInfo = {
+    id: number;
+    username: string;
+}
+
 
 export interface Lobby {
     lobbyId: number;
     name: string;
     maxPlayers: number;
-    currentPlayers: number;
+    currentPlayers: PlayerInfo[];
     rounds?: number;
 }
 
@@ -27,7 +32,7 @@ export type LobbyDetailsResponse = {
     lobbyId: number;
     name: string;
     maxPlayers: number;
-    currentPlayers: number;
+    currentPlayers: PlayerInfo[];
     rounds: number;
     _links?: any;
 };
