@@ -42,6 +42,7 @@ function reducer(state: State, action: Action): State {
 
 function CreateInvitePage() {
     const [state, dispatch] = React.useReducer(reducer, initialState);
+    const [copied, setCopied] = React.useState(false);
 
     const handleCreateInvite = async () => {
         dispatch({ type: "create_start" });
@@ -51,6 +52,18 @@ function CreateInvitePage() {
         } catch (error) {
             console.error("Error creating invite:", error);
             dispatch({ type: "create_error", payload: "Failed to create invite. Please try again." });
+        }
+    };
+
+    const handleCopyToken = async () => {
+        if (state.invite?.token) {
+            try {
+                await navigator.clipboard.writeText(state.invite.token);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            } catch (error) {
+                console.error("Failed to copy:", error);
+            }
         }
     };
 
@@ -91,8 +104,27 @@ function CreateInvitePage() {
                         <h2>Invite Created Successfully!</h2>
                         <div className="invite-token-display">
                             <p className="invite-token-label">Token:</p>
-                            <div className="invite-token-code">
-                                {state.invite.token}
+                            <div className="invite-token-code-wrapper">
+                                <div className="invite-token-code">
+                                    {state.invite.token}
+                                </div>
+                                <button
+                                    className="invite-copy-button"
+                                    onClick={handleCopyToken}
+                                    title="Copy to clipboard"
+                                >
+                                    {copied ? (
+                                        <>
+                                            <span className="copy-icon">✓</span>
+                                            <span className="copy-text">Copied!</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="copy-icon">📋</span>
+                                            <span className="copy-text">Copy</span>
+                                        </>
+                                    )}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -102,4 +134,4 @@ function CreateInvitePage() {
     );
 }
 
-export default CreateInvitePage
+export default CreateInvitePage;

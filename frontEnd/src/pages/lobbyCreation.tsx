@@ -1,4 +1,3 @@
-// pages/LobbyCreationPage.tsx
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +12,7 @@ const LobbyCreationPage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Hook para navegação programática
+
     const navigate = useNavigate();
 
     // Sempre que 'maxPlayers' muda, recalcula e ajusta 'rounds' se o limite for excedido.
@@ -25,7 +24,7 @@ const LobbyCreationPage: React.FC = () => {
         if (rounds > maxRoundsAllowed) {
             setRounds(maxRoundsAllowed);
         }
-    }, [maxPlayers, rounds]); // Depende de maxPlayers e rounds
+    }, [maxPlayers, rounds]);
 
     // Calcula o limite máximo de rondas que o input pode aceitar
     const maxRounds = Math.floor(MAX_TOTAL_LIMIT / maxPlayers);
@@ -45,7 +44,7 @@ const LobbyCreationPage: React.FC = () => {
     const handleRoundsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newRounds = Number(e.target.value);
 
-        // Garante que o input não é negativo (embora 'min="1"' já ajude)
+        // Garante que o input não é negativo
         if (newRounds >= 1) {
             setRounds(newRounds);
         }
@@ -65,7 +64,6 @@ const LobbyCreationPage: React.FC = () => {
 
         try {
             const result = await lobbyService.createLobby(name, maxPlayers, rounds);
-            alert(`Lobby '${result.name}' criado com sucesso! ID: ${result.lobbyId}`);
             navigate('/lobby/' + result.lobbyId);
 
         } catch (e: any) {

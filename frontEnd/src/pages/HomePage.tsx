@@ -1,4 +1,3 @@
-// src/pages/HomePage.tsx
 
 import React from 'react';
 import { HomeButton } from '../components/Home/HomeElements';

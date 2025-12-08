@@ -27,7 +27,7 @@ export type ListLobbiesResponse = {
     _links?: any;
 };
 
-// Detalhes geralmente têm as mesmas propriedades do Lobby, mas garantindo 'rounds'
+
 export type LobbyDetailsResponse = {
     lobbyId: number;
     name: string;
@@ -39,7 +39,7 @@ export type LobbyDetailsResponse = {
 
 // Resposta para Juntar/Sair do Lobby
 export type JoinLeaveLobbyResponse = {
-    lobbyId?: number; // Presente no Join
+    lobbyId?: number;
     message: string;
     _links?: any;
 };

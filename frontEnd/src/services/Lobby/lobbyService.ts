@@ -1,5 +1,3 @@
-// src/services/lobby/lobbyService.ts
-
 
 import {
     CreateLobbyResponse,
@@ -31,7 +29,7 @@ export const lobbyService = {
         };
     },
 
-    //SEGUE O PADRÃO: Response -> json() -> Mapeamento
+    // Response -> json() -> Mapeamento
     async listLobbies(): Promise<ListLobbiesResponse> {
         const response = await request(`/lobbies`);
         const data = await response.json();
@@ -78,10 +76,10 @@ export const lobbyService = {
             }, timeoutMs);
 
             try {
-                //  função para ser chamada apenas quando a conexão SSE estiver ABERTA
+                //  função para ser chamada apenas quando a conexão SSE estiver aberta
                 const onConnected = async () => {
                     try {
-                        // Faz o join APÓS garantir que estamos a ouvir eventos
+                        // Faz o join após garantir que estamos a ouvir eventos
                         await this.joinLobby(lobbyId);
                     } catch (error) {
                         clearTimeout(timeoutId);
@@ -145,10 +143,6 @@ async leaveLobby(lobbyId: number): Promise<JoinLeaveLobbyResponse> {
 
 
 
-    /**
-     * GET /lobbies/{lobbyId}/events
-     * Estabelece uma conexão SSE (Server-Sent Events) para receber eventos do lobby.
-     */
 
 
     subscribeToLobbyEvents(

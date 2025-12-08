@@ -1,4 +1,3 @@
-// pages/LobbyPage.tsx
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -48,7 +47,6 @@ const LobbyPage: React.FC = () => {
         } catch (error) {
             if (error.message === "Timeout esperando início do jogo") {
                 // Se der timeout, significa que o jogo não começou imediatamente
-                // então navegamos para a sala do lobby
                 navigate(`/lobby/${lobbyId}`);
             } else {
                 console.error("Erro ao entrar no lobby:", error);

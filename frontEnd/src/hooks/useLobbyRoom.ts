@@ -1,13 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { lobbyService } from "../services/lobby/lobbyService";
-import {gameService} from "../services/game/gameService";
 import {PlayerInfo} from "../services/Lobby/lobbyResponseTypes";
 
-interface Player {
-    userId: number;
-    username: string;
-}
 
 interface LobbyRoomState {
     lobbyId: number;
@@ -105,7 +100,6 @@ export function useLobbyRoom(lobbyId: number | undefined, userId: number | undef
 
                     case "LOBBY_CLOSED":
                         console.log("Lobby fechado:", data);
-                        // Navegar de volta para a lista de lobbies
                         navigate("/lobbies");
                         break;
 

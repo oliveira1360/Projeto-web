@@ -1,15 +1,14 @@
-/* --- Variáveis CSS (Tema Escuro/Jogo) --- */
-/* As variáveis são seguras e podem permanecer no :root */
+/* --- Variáveis CSS (Tema Acinzentado Escuro) --- */
 :root {
-    --background-dark: #1e2124;
-    --card-background: #282b30;
+    --background-dark: #1a1d23;
+    --card-background: #252932;
     --dark-green: #375338;
     --accent-gold: #ffc107;
     --text-light: #ffffff;
-    --text-secondary: #aaaaaa;
-    --border-color: #4f545c;
+    --text-secondary: #b8bcc8;
+    --border-color: #3d4453;
     --neutral-control: #95a5a6;
-    --shadow-color: rgba(0, 0, 0, 0.4);
+    --shadow-color: rgba(0, 0, 0, 0.3);
 }
 
 
@@ -18,14 +17,14 @@
 /* ======================================================= */
 
 .lobby-page {
-    /* FUNDO E COR DE TEXTO APLICADOS AQUI PARA ISOLAMENTO */
+
     background-color: var(--background-dark);
     color: var(--text-light);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 40px 20px;
     max-width: 1400px;
     margin: 0 auto;
-    min-height: 100vh; /* Garante que o fundo escuro preenche toda a vista */
+    min-height: 100vh;
 }
 
 /* --- Títulos --- */
@@ -33,7 +32,7 @@
 .lobby-page h1 {
     font-size: 3em;
     margin-bottom: 5px;
-    color: var(--accent-gold); /* Cor específica do Lobby/Home */
+    color: var(--accent-gold);
 }
 
 .lobby-page h2 {
@@ -64,8 +63,8 @@
 
 .lobby-page input[type="text"],
 .lobby-page input[type="number"] {
-    color: #000000; /* Texto preto */
-    background-color: #ffffff; /* Fundo branco */
+    color: #ffffff;
+    background-color: #2f3541;
     border: 2px solid var(--border-color);
     border-radius: 8px;
     padding: 10px 15px;
@@ -79,6 +78,7 @@
     outline: none;
     border-color: var(--accent-gold);
     box-shadow: 0 0 5px rgba(255, 193, 7, 0.5);
+    background-color: var(--card-background);
 }
 
 .lobby-page label {
@@ -106,7 +106,7 @@
 /* --- Botões (Confiando nas regras base do CSS de Jogo/Login para a estrutura .btn) --- */
 
 .lobby-page .btn {
-    /*  APENAS REGRAS ESPECÍFICAS DE FORMATO E DE HOVER */
+
     border-radius: 20px;
     transition: all 0.3s ease;
     text-transform: uppercase;
@@ -157,13 +157,14 @@
     padding: 10px 20px;
     box-shadow: 0 4px 6px var(--shadow-color);
     /* Garante que o texto base do botão é legível */
-    color: var(--background-dark) !important;
+    color: #ffffff !important;
 }
 
 .lobby-page .lobby-controls .btn-primary {
     /* Botão Criar Lobby (Dourado/Destaque) */
     background-color: var(--accent-gold);
     border-color: var(--accent-gold);
+    color: #1a1d23 !important;
 }
 
 .lobby-page .lobby-controls .btn-secondary {
@@ -245,7 +246,7 @@
 .lobby-page .btn-main-action {
     background-color: var(--accent-gold);
     border-color: var(--accent-gold);
-    color: var(--background-dark) !important;
+    color: #1a1d23 !important;
 }
 
 .lobby-page .btn-info-action {
@@ -267,7 +268,7 @@
     margin-bottom: 30px;
 }
 
-/* Estilização da scrollbar (opcional, funciona no Chrome/Edge) */
+
 .lobby-page .lobby-grid-container::-webkit-scrollbar {
     width: 10px;
 }
