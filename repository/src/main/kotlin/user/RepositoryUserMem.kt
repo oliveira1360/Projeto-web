@@ -44,7 +44,7 @@ class RepositoryUserMem : RepositoryUser {
                 email = email,
                 passwordHash = passwordHash,
                 imageUrl = imageUrl,
-                balance = Balance(0.toMoney()),
+                balance = Balance(1000.toMoney()),
             )
         _users.add(user)
         return user

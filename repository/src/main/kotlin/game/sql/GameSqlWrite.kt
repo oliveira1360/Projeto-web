@@ -27,4 +27,11 @@ object GameSqlWrite {
             status = 'FINISHED'
         WHERE id = :gameId
         """.trimIndent()
+
+    val REMOVE_PLAYER_FROM_GAME =
+        """
+        DELETE FROM match_players
+        where match_id = :match_id
+        and user_id = :user_id
+        """.trimIndent()
 }

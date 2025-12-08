@@ -82,6 +82,8 @@ interface RepositoryGame : Repository<Game> {
 
     fun closeGame(gameId: Int)
 
+    fun isGameActive(gameId: Int): Boolean
+
     fun setGameWinnerAndFinish(
         gameId: Int,
         winnerId: Int,
@@ -163,5 +165,10 @@ interface RepositoryGame : Repository<Game> {
     fun updateStatsGameLoser(
         userId: Int,
         points: Int,
+    )
+
+    fun removePlayerFromGame(
+        gameId: Int,
+        userId: Int,
     )
 }

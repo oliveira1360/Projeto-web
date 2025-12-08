@@ -12,6 +12,7 @@ import org.example.entity.core.Email
 import org.example.entity.core.Name
 import org.example.entity.core.URL
 import org.example.entity.player.User
+import org.example.game.GameEndService
 import org.example.game.GameService
 import org.example.game.GameValidationService
 import org.example.game.PlayerTurnService
@@ -58,16 +59,20 @@ class LobbyServiceTest {
     val gameDomainConfig = GameDomainConfig(moneyRemove = 1)
     val notificationService = MockGameNotificationService()
     val validationService = GameValidationService()
-    val roundService = RoundService(trx, validationService, notificationService)
+    val gameEndService =
+        GameEndService(
+            trx,
+            notificationService,
+            validationService,
+        )
+    val roundService = RoundService(trx, validationService, notificationService, gameEndService)
     val playerTurnService = PlayerTurnService(trx, validationService, notificationService, roundService)
     var gameService =
         GameService(
-            trx,
             gameDomainConfig,
-            notificationService,
-            validationService,
             roundService,
             playerTurnService,
+            gameEndService,
         )
     private val service = LobbyService(trx, dominConfig, lobbyNotificationService, gameService)
 

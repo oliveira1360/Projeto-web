@@ -174,7 +174,7 @@ export const gameService = {
             onEvent("message", data);
         };
 
-        const events = ["PLAYER_FINISHED_TURN", "ROUND_STARTED", "ROUND_ENDED", "connected", "GAME_ENDED", "keep-alive"];
+        const events = ["PLAYER_FINISHED_TURN", "ROUND_STARTED", "ROUND_ENDED", "connected", "GAME_ENDED","PLAYER_LEAVE", "keep-alive"];
         events.forEach((e) => {
             eventSource.addEventListener(e, (event: MessageEvent) => {
                 if (e === 'keep-alive') {

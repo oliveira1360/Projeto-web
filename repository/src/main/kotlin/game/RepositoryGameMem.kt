@@ -295,6 +295,11 @@ class RepositoryGameMem : RepositoryGame {
         game.status = "FINISHED"
     }
 
+    override fun isGameActive(gameId: Int): Boolean {
+        val game = games[gameId] ?: return false
+        return game.status == "ACTIVE"
+    }
+
     override fun setGameWinnerAndFinish(
         gameId: Int,
         winnerId: Int,
@@ -536,6 +541,12 @@ class RepositoryGameMem : RepositoryGame {
         s.totalGames++
         s.totalLosses++
         s.currentStreak = 0
+    }
+
+    override fun removePlayerFromGame(
+        gameId: Int,
+        userId: Int,
+    ) {
     }
 
     override fun save(entity: Game) {}

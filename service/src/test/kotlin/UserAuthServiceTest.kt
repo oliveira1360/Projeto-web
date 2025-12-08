@@ -100,7 +100,7 @@ class UserAuthServiceTest {
         assertEquals("johndoe", user.nickName.value)
         assertEquals("john@example.com", user.email.value)
         assertNotNull(user.imageUrl)
-        assertEquals(0, user.balance.money.value)
+        assertEquals(1000, user.balance.money.value)
     }
 
     @Test

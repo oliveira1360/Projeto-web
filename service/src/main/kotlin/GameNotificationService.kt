@@ -23,6 +23,7 @@ enum class GameEventType {
     PLAYER_FINISHED_TURN,
     ROUND_ENDED,
     GAME_ENDED,
+    PLAYER_LEAVE,
 }
 
 private const val KEEP_ALIVE_INTERVAL = 5L

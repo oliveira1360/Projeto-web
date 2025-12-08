@@ -81,20 +81,25 @@ class GameControllerTest {
 
         trxManager = TransactionManagerMem(userMem, lobbyMem, gameMem, generalMem)
         gameDomainConfig = GameDomainConfig(moneyRemove = 1)
-
         notificationService = MockGameNotificationService()
         validationService = GameValidationService()
-        roundService = RoundService(trxManager, validationService, notificationService)
+
+        val gameEndService =
+            GameEndService(
+                trxManager,
+                notificationService,
+                validationService,
+            )
+
+        roundService = RoundService(trxManager, validationService, notificationService, gameEndService)
         playerTurnService = PlayerTurnService(trxManager, validationService, notificationService, roundService)
 
         gameService =
             GameService(
-                trxManager,
                 gameDomainConfig,
-                notificationService,
-                validationService,
                 roundService,
                 playerTurnService,
+                gameEndService,
             )
 
         val passwordEncoder = BCryptPasswordEncoder()

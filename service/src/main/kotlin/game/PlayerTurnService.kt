@@ -38,6 +38,10 @@ class PlayerTurnService(
             validationService.run { validateUserInGame(userId, gameId) }.onFailure { return@run failure(it) }
             validationService.run { validateRoundInProgress(gameId) }.onFailure { return@run failure(it) }
 
+            if (!repositoryGame.isGameActive(gameId)) {
+                return@run failure(GameError.GameAlreadyFinished)
+            }
+
             val hand =
                 repositoryGame.getPlayerHand(userId, gameId)
                     ?: return@run failure(GameError.EmptyHand)

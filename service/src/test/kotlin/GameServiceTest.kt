@@ -74,16 +74,20 @@ class GameServiceTest {
 
         notificationService = MockGameNotificationService()
         validationService = GameValidationService()
-        roundService = RoundService(trxManager, validationService, notificationService)
+        val gameEndService =
+            GameEndService(
+                trxManager,
+                notificationService,
+                validationService,
+            )
+        roundService = RoundService(trxManager, validationService, notificationService, gameEndService)
         playerTurnService = PlayerTurnService(trxManager, validationService, notificationService, roundService)
         gameService =
             GameService(
-                trxManager,
                 gameDomainConfig,
-                notificationService,
-                validationService,
                 roundService,
                 playerTurnService,
+                gameEndService,
             )
 
         val email1 = Email("john@example.com")
@@ -112,6 +116,10 @@ class GameServiceTest {
             passwordHash = "SecurePass123!",
             imageUrl = URL("https://example.com/bob.png"),
         )
+
+        userRepo.updateBalance(user1.id, 100)
+        userRepo.updateBalance(user2.id, 100)
+        userRepo.updateBalance(user3.id, 100)
 
         lobby =
             lobbyRepo.createLobby(

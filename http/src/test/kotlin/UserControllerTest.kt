@@ -128,7 +128,7 @@ class UserControllerTest {
         assertEquals("John Doe", body["name"])
         assertEquals("johndoe", body["nickName"])
         assertEquals("john@example.com", body["email"])
-        assertEquals(0, body["balance"])
+        assertEquals(1000, body["balance"])
         assertNotNull(body["_links"])
     }
 
@@ -178,7 +178,7 @@ class UserControllerTest {
 
         // then: balance is 0
         val body = resp.body as Map<*, *>
-        assertEquals(0, body["balance"])
+        assertEquals(1000, body["balance"])
     }
 
     // ============================================
@@ -280,7 +280,7 @@ class UserControllerTest {
         assertEquals("Info User", body["name"])
         assertEquals(user.nickName.value, body["nickName"])
         assertEquals(user.email.value, body["email"])
-        assertEquals(0, body["balance"])
+        assertEquals(1000, body["balance"])
         assertNotNull(body["imageUrl"])
         assertNotNull(body["_links"])
     }

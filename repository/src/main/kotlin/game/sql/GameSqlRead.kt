@@ -162,4 +162,21 @@ object GameSqlRead {
         WHERE mp.match_id = :gameId
         GROUP BY mp.user_id
         """.trimIndent()
+
+    val GET_GAME_STATUS =
+        """
+        SELECT status 
+        FROM matches 
+        WHERE id = :gameId
+        """.trimIndent()
+
+    val IS_GAME_ACTIVE =
+        """
+        SELECT CASE 
+            WHEN status = 'ACTIVE' THEN TRUE 
+            ELSE FALSE 
+        END AS is_active
+        FROM matches 
+        WHERE id = :gameId
+        """.trimIndent()
 }

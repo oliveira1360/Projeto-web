@@ -29,7 +29,7 @@ CREATE TABLE users (
                        avatar_url TEXT,
                        creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                        last_login TIMESTAMP,
-                       balance INT DEFAULT 0
+                       balance INT DEFAULT 1000
 );
 
 -- === PLAYER STATS ===

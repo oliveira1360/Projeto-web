@@ -9,6 +9,7 @@ import org.example.dto.inputDto.AuthenticatedUserDto
 import org.example.dto.inputDto.CreateLobbyDTO
 import org.example.entity.core.*
 import org.example.entity.player.User
+import org.example.game.GameEndService
 import org.example.game.GameService
 import org.example.game.GameValidationService
 import org.example.game.PlayerTurnService
@@ -44,16 +45,21 @@ class LobbyControllerTest {
     val gameDomainConfig = GameDomainConfig(moneyRemove = 1)
     val notificationService = MockGameNotificationService()
     val validationService = GameValidationService()
-    val roundService = RoundService(trxManager, validationService, notificationService)
+    val gameEndService =
+        GameEndService(
+            trxManager,
+            notificationService,
+            validationService,
+        )
+    val roundService = RoundService(trxManager, validationService, notificationService, gameEndService)
+
     val playerTurnService = PlayerTurnService(trxManager, validationService, notificationService, roundService)
     var gameService =
         GameService(
-            trxManager,
             gameDomainConfig,
-            notificationService,
-            validationService,
             roundService,
             playerTurnService,
+            gameEndService,
         )
 
     private val lobbyService = LobbyService(trxManager, lobbiesDomainConfig, lobbyNotificationService, gameService)

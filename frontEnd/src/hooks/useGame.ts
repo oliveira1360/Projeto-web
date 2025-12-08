@@ -132,6 +132,14 @@ export function useGame(gameId?: number, userId?: number) {
                             roundNumber: data.data.roundNumber,
                         });
                         break;
+                    case "PLAYER_LEAVE":
+                        const removedPlayerId = data.data?.removedPlayerId;
+                        if (removedPlayerId === userId) {
+                            navigate("/lobbies", { replace: true });
+                            return;
+                        }
+                        await loadGameState(false);
+                        break;
                     case "GAME_ENDED":
                         setGameStatus("FINISHED");
                         await loadGameWinner();

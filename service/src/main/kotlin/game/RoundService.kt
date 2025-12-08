@@ -18,7 +18,10 @@ class RoundService(
     private val trxManager: TransactionManager,
     private val validationService: GameValidationService,
     private val notificationService: GameNotificationService,
+    private val gameEndService: GameEndService,
 ) {
+    val moneyRound = 2
+
     fun startRound(gameId: Int): Either<GameError, Int> =
         trxManager.run {
             validationService
@@ -26,9 +29,86 @@ class RoundService(
                     validateBasicGameAccess(gameId)
                 }.onFailure { return@run failure(it) }
 
-            // Check if there are players
+            if (!repositoryGame.isGameActive(gameId)) {
+                return@run failure(GameError.GameAlreadyFinished)
+            }
+
             val players = repositoryGame.listPlayersInGame(gameId)
-            if (players.listPlayersInGame.isEmpty()) {
+            val activePlayers = players.listPlayersInGame.toMutableList()
+
+            activePlayers
+                .filter { it.balance.money.value < moneyRound }
+                .forEach { player ->
+                    notificationService.notifyGame(
+                        gameId,
+                        GameEvent(
+                            type = GameEventType.PLAYER_LEAVE,
+                            gameId = gameId,
+                            message = "Player ${player.playerId} dont have enough money",
+                            data =
+                                mapOf(
+                                    "removedPlayerId" to player.playerId,
+                                    "players" to
+                                        activePlayers.map {
+                                            mapOf(
+                                                "id" to it.playerId,
+                                                "name" to it.name,
+                                            )
+                                        },
+                                ),
+                        ),
+                    )
+                    repositoryGame.removePlayerFromGame(gameId, player.playerId)
+                    activePlayers.removeIf { it.playerId == player.playerId }
+
+                    if (activePlayers.size == 1) {
+                        val gameWinner =
+                            repositoryGame.findGameWinner(gameId)
+                                ?: return@run failure(GameError.GameNotFinished)
+
+                        val winnerInfo =
+                            repositoryGame.findRoundWinnerCandidate(gameId)
+                                ?: return@run failure(GameError.RoundNotStarted)
+
+                        val winnerId = winnerInfo.player.playerId
+                        val roundNumber = winnerInfo.roundNumber
+
+                        val finalWinnerId = gameWinner.player.playerId
+
+                        repositoryGame.setGameWinnerAndFinish(gameId, finalWinnerId)
+
+                        val finalScores = repositoryGame.getFinalScoresRaw(gameId, finalWinnerId)
+                        finalScores.forEach { (pId, score, isWinner) ->
+                            if (isWinner) {
+                                repositoryGame.updateStatsGameWinner(pId, score)
+                            } else {
+                                repositoryGame.updateStatsGameLoser(pId, score)
+                            }
+                        }
+
+                        notificationService.notifyGame(
+                            gameId,
+                            GameEvent(
+                                type = GameEventType.GAME_ENDED,
+                                gameId = gameId,
+                                message = "Game has ended! Final winner: ${gameWinner.player.name.value}",
+                                data =
+                                    mapOf(
+                                        "winner" to
+                                            mapOf(
+                                                "playerId" to gameWinner.player.playerId,
+                                                "username" to gameWinner.player.name.value,
+                                                "totalPoints" to gameWinner.totalPoints.points,
+                                                "roundsWon" to gameWinner.roundsWon,
+                                            ),
+                                        "finalRound" to roundNumber,
+                                    ),
+                            ),
+                        )
+                    }
+                }
+
+            if (activePlayers.isEmpty()) {
                 return@run failure(GameError.NoPlayersInGame)
             }
 
@@ -36,7 +116,7 @@ class RoundService(
             if (repositoryGame.hasActiveRound(gameId)) {
                 val scoreboard = repositoryGame.getScores(gameId)
                 val finishedPlayers = scoreboard.pointsQueue.size
-                val totalPlayers = players.listPlayersInGame.size
+                val totalPlayers = activePlayers.size
 
                 if (finishedPlayers < totalPlayers) {
                     return@run failure(GameError.AllPlayersNotFinished)
@@ -48,7 +128,7 @@ class RoundService(
             repositoryGame.initTurn(gameId, roundNumber)
             val maxRounds = repositoryGame.getTotalRoundsOfGame(gameId)
 
-            val playerIds = players.listPlayersInGame.map { it.playerId }
+            val playerIds = activePlayers.map { it.playerId }
 
             playerIds.forEachIndexed { index, userId ->
                 repositoryGame.insertRoundOrder(gameId, roundNumber, index + 1, userId)
@@ -58,6 +138,8 @@ class RoundService(
                     repositoryGame.populateEmptyTurns(gameId, roundNumber, userId)
                 }
             }
+
+            repositoryGame.deductBalance(gameId, moneyRound)
 
             val scoreboard = repositoryGame.getScores(gameId)
             val roundOrder = repositoryGame.getRoundOrder(gameId)

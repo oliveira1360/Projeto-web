@@ -139,6 +139,13 @@ class RepositoryGameJDBI(
             .execute()
     }
 
+    override fun isGameActive(gameId: Int): Boolean =
+        handle
+            .createQuery(GameSqlRead.IS_GAME_ACTIVE)
+            .bind("gameId", gameId)
+            .mapTo(Boolean::class.java)
+            .singleOrNull() ?: false
+
     override fun insertRound(gameId: Int): Int =
         handle
             .createUpdate(RoundSql.INSERT_ROUND)
@@ -504,6 +511,17 @@ class RepositoryGameJDBI(
             .createUpdate(StatsSql.UPDATE_STATS_GAME_LOSER)
             .bind("userId", userId)
             .bind("points", points)
+            .execute()
+    }
+
+    override fun removePlayerFromGame(
+        gameId: Int,
+        userId: Int,
+    ) {
+        handle
+            .createUpdate(GameSqlWrite.REMOVE_PLAYER_FROM_GAME)
+            .bind("match_id", gameId)
+            .bind("user_id", userId)
             .execute()
     }
 
