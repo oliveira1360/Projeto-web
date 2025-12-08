@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import useGame from "../hooks/useGame";
 import GameLoading from "../components/game/GameLoading";
 import GameError from "../components/game/GameError";
@@ -12,6 +12,8 @@ import {PlayerInfoResponse} from "../services/player/playerResponseTypes";
 const GamePage: React.FC = () => {
     const { gameId } = useParams<{ gameId: string }>();
     const [userInfo, setUserInfo] = useState<PlayerInfoResponse | null>(null);
+    const navigate = useNavigate();
+
 
     useEffect(() => {
         const load = async () => {
@@ -50,10 +52,20 @@ const GamePage: React.FC = () => {
     useEffect(() => {
         if (roundWinner) {
             setShowRoundWinner(true);
-            const timer = setTimeout(() => setShowRoundWinner(false), 3000);
+            const timer = setTimeout(() => setShowRoundWinner(false), 5000);
             return () => clearTimeout(timer);
         }
     }, [roundWinner]);
+
+    useEffect(() => {
+        if (gameStatus === "FINISHED") {
+            const timer = setTimeout(() => {
+                navigate("/lobbies", { replace: true });
+            }, 5000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [gameStatus, navigate]);
 
     if (!userInfo) return <GameLoading />;
     if (loading) return <GameLoading />;
