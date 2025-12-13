@@ -13,7 +13,6 @@ interface GameLayoutProps {
     isMyTurn: boolean;
     currentRound: number;
     totalRounds: number;
-    remainingTime: number;
     startRound: () => Promise<void>;
     rollDice: () => Promise<void>;
     finishTurn: () => Promise<void>;
@@ -32,7 +31,6 @@ const GameLayout: React.FC<GameLayoutProps> = ({
                                                    isMyTurn,
                                                    currentRound,
                                                    totalRounds,
-                                                   remainingTime,
                                                    startRound,
                                                    rollDice,
                                                    finishTurn,

@@ -38,7 +38,6 @@ const GamePage: React.FC = () => {
         gameStatus,
         winner,
         roundWinner,
-        remainingTime,
         toggleHold,
         rollDice,
         finishTurn,
@@ -87,7 +86,6 @@ const GamePage: React.FC = () => {
             isMyTurn={isMyTurn}
             currentRound={currentRound}
             totalRounds={totalRounds}
-            remainingTime={remainingTime}
             startRound={startRound}
             rollDice={rollDice}
             finishTurn={finishTurn}
