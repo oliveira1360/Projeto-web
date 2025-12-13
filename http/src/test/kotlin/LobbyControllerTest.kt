@@ -175,7 +175,7 @@ class LobbyControllerTest {
         assertEquals(4, lobby1["maxPlayers"])
         val expected =
             listOf(
-                mapOf("id" to 1, "name" to "John Doe"),
+                mapOf("id" to 1, "name" to "John Doe", "imageUrl" to "https://example.com/john.png"),
             )
         assertEquals(expected, lobby1["currentPlayers"])
 
@@ -399,8 +399,8 @@ class LobbyControllerTest {
         val detailsBody = detailsResp.body as Map<*, *>
         val expected =
             listOf(
-                mapOf("id" to 1, "name" to "John Doe"),
-                mapOf("id" to 2, "name" to "Jane Smith"),
+                mapOf("id" to 1, "name" to "John Doe", "imageUrl" to "https://example.com/john.png"),
+                mapOf("id" to 2, "name" to "Jane Smith", "imageUrl" to "https://example.com/jane.png"),
             )
         assertEquals(expected, detailsBody["currentPlayers"])
     }
@@ -595,14 +595,14 @@ class LobbyControllerTest {
 
         val expected =
             listOf(
-                mapOf("id" to 1, "name" to "John Doe"),
-                mapOf("id" to 3, "name" to "User3"),
+                mapOf("id" to 1, "name" to "John Doe", "imageUrl" to "https://example.com/john.png"),
+                mapOf("id" to 3, "name" to "User3", "imageUrl" to "https://example.com/avatar.png"),
             )
 
         val expected2 =
             listOf(
-                mapOf("id" to 2, "name" to "Jane Smith"),
-                mapOf("id" to 4, "name" to "User4"),
+                mapOf("id" to 2, "name" to "Jane Smith", "imageUrl" to "https://example.com/jane.png"),
+                mapOf("id" to 4, "name" to "User4", "imageUrl" to "https://example.com/avatar.png"),
             )
         assertEquals(expected, lobby1Details["currentPlayers"])
         assertEquals(expected2, lobby2Details["currentPlayers"])

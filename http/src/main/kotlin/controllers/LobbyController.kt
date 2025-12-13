@@ -24,7 +24,7 @@ import java.time.Instant
 class LobbyController(
     private val lobbyService: LobbyService,
     private val lobbyNotificationService: LobbyNotificationService,
-    private val config: LobbiesDomainConfig,
+    private val config: LobbiesDomainConfig = LobbiesDomainConfig(2, 1),
 ) {
     @GetMapping("/{lobbyId}/events")
     fun subscribeToLobbyEvents(
