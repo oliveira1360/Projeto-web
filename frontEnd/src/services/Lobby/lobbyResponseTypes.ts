@@ -1,7 +1,7 @@
-
 export type PlayerInfo = {
     id: number;
     username: string;
+    imageUrl?: string;
 }
 
 
@@ -11,6 +11,7 @@ export interface Lobby {
     maxPlayers: number;
     currentPlayers: PlayerInfo[];
     rounds?: number;
+    timeRemaining?: number;
 }
 
 export type CreateLobbyResponse = {
@@ -19,11 +20,14 @@ export type CreateLobbyResponse = {
     maxPlayers: number;
     currentPlayers: number;
     rounds: number;
+    timeRemaining: number;
+    minPlayersToStart: number;
     _links?: any;
 };
 
 export type ListLobbiesResponse = {
     lobbies: Lobby[];
+    minPlayersToStart: number;
     _links?: any;
 };
 
@@ -34,17 +38,18 @@ export type LobbyDetailsResponse = {
     maxPlayers: number;
     currentPlayers: PlayerInfo[];
     rounds: number;
+    timeRemaining: number;
+    minPlayersToStart: number;
     _links?: any;
 };
 
-// Resposta para Juntar/Sair do Lobby
 export type JoinLeaveLobbyResponse = {
     lobbyId?: number;
     message: string;
+    timeRemaining?: number;
     _links?: any;
 };
 
-// SSE
 export type LobbyEventResponse = {
     type: string;
     data: any;

@@ -9,6 +9,7 @@ import {
 import { request } from "../request";
 import { Lobby } from "./lobbyResponseTypes";
 import {BASE_URL} from "../../utils/comman";
+import {data} from "react-router-dom";
 
 
 export const lobbyService = {
@@ -20,12 +21,14 @@ export const lobbyService = {
         });
         const data = await response.json();
         return {
+            minPlayersToStart: data.minPlayersToStart,
+            timeRemaining: data.timeRemaining,
             lobbyId: data.lobbyId,
             name: data.name,
             maxPlayers: data.maxPlayers,
             currentPlayers: data.currentPlayers,
             rounds: data.rounds,
-            _links: data._links,
+            _links: data._links
         };
     },
 
@@ -34,8 +37,9 @@ export const lobbyService = {
         const response = await request(`/lobbies`);
         const data = await response.json();
         return {
+            minPlayersToStart: data.minPlayersToStart,
             lobbies: data.lobbies as Lobby[],
-            _links: data._links,
+            _links: data._links
         };
     },
 
@@ -43,15 +47,18 @@ export const lobbyService = {
         const response = await request(`/lobbies/${lobbyId}`);
         const data = await response.json();
         return {
+            minPlayersToStart: data.minPlayersToStart,
+            timeRemaining: data.timeRemaining,
             lobbyId: data.lobbyId,
             name: data.name,
             maxPlayers: data.maxPlayers,
             currentPlayers: data.currentPlayers.map((player: any) => ({
                 id: player.id,
                 username: player.name,
+                imageUrl: player.imageUrl
             })),
             rounds: data.rounds,
-            _links: data._links,
+            _links: data._links
         };
     },
 
