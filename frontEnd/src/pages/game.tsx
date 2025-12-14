@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {useNavigate, useParams} from "react-router-dom";
-import useGame from "../hooks/useGame";
+import useGame, {useCloseWindow} from "../hooks/useGame";
 import GameLoading from "../components/game/GameLoading";
 import GameError from "../components/game/GameError";
 import GameFinished from "../components/game/GameFinished";
@@ -45,6 +45,8 @@ const GamePage: React.FC = () => {
         leaveGame,
         rollNumber
     } = game;
+
+    useCloseWindow(gameId ? Number(gameId) : undefined);
 
     const [showRoundWinner, setShowRoundWinner] = useState(false);
 

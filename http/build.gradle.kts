@@ -2,8 +2,10 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 
 plugins {
     kotlin("jvm") version "2.2.10"
-    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
+    kotlin("plugin.spring") version "1.9.25"
+    id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
     id("org.springframework.boot") version "3.5.6"
+    id("io.spring.dependency-management") version "1.1.7"
 }
 
 group = "org.example"
@@ -47,7 +49,7 @@ tasks.named<BootRun>("bootRun") {
 }
 
 val composeFileDir: Directory = rootProject.layout.projectDirectory
-val dockerComposePath: String = composeFileDir.file("docker/docker-compose.yml").asFile.absolutePath
+val dockerComposePath: String = composeFileDir.file("docker/docker-compose-test.yml").asFile.absolutePath
 
 val dockerExe =
     when (
@@ -69,4 +71,35 @@ tasks.register<Exec>("dbTestsWait") {
 
 tasks.register<Exec>("dbTestsDown") {
     commandLine(dockerExe, "compose", "-f", dockerComposePath, "down", "db-tests")
+}
+
+val dockerImageJvm = "poker-jvm"
+val dockerImageUbuntu = "agenda-ubuntu"
+
+tasks.register<Copy>("extractUberJar") {
+    dependsOn("assemble")
+    from(
+        zipTree(
+            tasks
+                .getByName("bootJar")
+                .outputs.files.singleFile,
+        ),
+    )
+    into(layout.buildDirectory.dir("dependency"))
+}
+
+tasks.register<Exec>("buildImageJvm") {
+    dependsOn("extractUberJar")
+    workingDir(rootProject.projectDir)
+    commandLine(dockerExe, "build", "-t", dockerImageJvm, "-f", "docker/Dockerfile-jvm", ".")
+}
+
+tasks.register<Exec>("buildImageUbuntu") {
+    workingDir(rootProject.projectDir)
+    commandLine(dockerExe, "build", "-t", dockerImageUbuntu, "-f", "docker/Dockerfile-ubuntu", ".")
+}
+
+tasks.register("buildImageAll") {
+    dependsOn("buildImageJvm")
+    dependsOn("buildImageUbuntu")
 }

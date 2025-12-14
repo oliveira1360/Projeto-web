@@ -157,6 +157,29 @@ export const gameService = {
         });
     },
 
+    leaveGameBeacon(gameId: number): boolean {
+        try {
+            const blob = new Blob(
+                [JSON.stringify({ gameId })],
+                { type: 'application/json' }
+            );
+
+            const success = navigator.sendBeacon(
+                `${BASE_URL}/game/${gameId}/leave`,
+                blob
+            );
+
+            if (!success) {
+                console.error('Failed to send leave game beacon');
+            }
+
+            return success;
+        } catch (error) {
+            console.error('Error sending beacon:', error);
+            return false;
+        }
+    },
+
     subscribeToGameEvents(
         gameId: number,
         onEvent: (eventType: string, data: any) => void,

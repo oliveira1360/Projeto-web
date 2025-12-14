@@ -329,4 +329,19 @@ class GameController(
                 "_links" to GameLinks.getScoreboard(gameId),
             )
         }
+
+    @PostMapping(
+        "{gameId}/leave",
+        produces = [ApiMediaTypes.APPLICATION_JSON, ApiMediaTypes.APPLICATION_PROBLEM_JSON],
+    )
+    fun leaveGame(
+        user: AuthenticatedUserDto,
+        @PathVariable gameId: Int,
+    ): ResponseEntity<*> =
+        errorHandler.handleResult("/game/$gameId/leave", gameService.leaveGame(user.user.id, gameId)) { success ->
+            mapOf(
+                "you have leave the Game" to user.user.id,
+                "_links" to GameLinks.leaveGame(gameId),
+            )
+        }
 }

@@ -1,4 +1,4 @@
-import {LobbyDetailsResponse} from "../../services/Lobby/lobbyResponseTypes";
+import {LobbyDetailsResponse} from "../../services/lobby/lobbyResponseTypes";
 import React from "react";
 
 interface LobbyDetailsProps {

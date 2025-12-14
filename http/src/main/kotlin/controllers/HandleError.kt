@@ -19,7 +19,7 @@ class HandleError {
         instance: String,
     ): ResponseEntity<ProblemDetail> =
         when (error) {
-            is GameError.EmptyHand ->
+            is GameError.EmptyHand -> {
                 ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -33,8 +33,9 @@ class HandleError {
                             additionalProperties = mapOf("requiredAction" to "shuffle"),
                         ),
                     )
+            }
 
-            is GameError.NoRoundInProgress ->
+            is GameError.NoRoundInProgress -> {
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -47,8 +48,9 @@ class HandleError {
                             instance = instance,
                         ),
                     )
+            }
 
-            is GameError.GameNotFinished ->
+            is GameError.GameNotFinished -> {
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -62,8 +64,9 @@ class HandleError {
                             additionalProperties = mapOf("allPlayersFinished" to false),
                         ),
                     )
+            }
 
-            is GameError.TooManyRolls ->
+            is GameError.TooManyRolls -> {
                 ResponseEntity
                     .status(HttpStatus.FORBIDDEN)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -77,8 +80,9 @@ class HandleError {
                             additionalProperties = mapOf("maxRolls" to 3, "currentRolls" to 3),
                         ),
                     )
+            }
 
-            is GameError.GameNotFound ->
+            is GameError.GameNotFound -> {
                 ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -91,8 +95,9 @@ class HandleError {
                             instance = instance,
                         ),
                     )
+            }
 
-            is GameError.LobbyNotFound ->
+            is GameError.LobbyNotFound -> {
                 ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -105,8 +110,9 @@ class HandleError {
                             instance = instance,
                         ),
                     )
+            }
 
-            is GameError.InvalidGameId ->
+            is GameError.InvalidGameId -> {
                 ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -119,8 +125,9 @@ class HandleError {
                             instance = instance,
                         ),
                     )
+            }
 
-            is GameError.InvalidUserId ->
+            is GameError.InvalidUserId -> {
                 ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -133,8 +140,9 @@ class HandleError {
                             instance = instance,
                         ),
                     )
+            }
 
-            is GameError.GameAlreadyFinished ->
+            is GameError.GameAlreadyFinished -> {
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -147,8 +155,9 @@ class HandleError {
                             instance = instance,
                         ),
                     )
+            }
 
-            is GameError.NoPlayersInGame ->
+            is GameError.NoPlayersInGame -> {
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -161,8 +170,9 @@ class HandleError {
                             instance = instance,
                         ),
                     )
+            }
 
-            is GameError.InvalidDiceIndices ->
+            is GameError.InvalidDiceIndices -> {
                 ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -175,8 +185,9 @@ class HandleError {
                             instance = instance,
                         ),
                     )
+            }
 
-            is GameError.RoundNotStarted ->
+            is GameError.RoundNotStarted -> {
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -189,8 +200,9 @@ class HandleError {
                             instance = instance,
                         ),
                     )
+            }
 
-            is GameError.AllPlayersNotFinished ->
+            is GameError.AllPlayersNotFinished -> {
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -203,8 +215,9 @@ class HandleError {
                             instance = instance,
                         ),
                     )
+            }
 
-            is GameError.UserNotInGame ->
+            is GameError.UserNotInGame -> {
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -217,8 +230,9 @@ class HandleError {
                             instance = instance,
                         ),
                     )
+            }
 
-            is GameError.UnauthorizedAction ->
+            is GameError.UnauthorizedAction -> {
                 ResponseEntity
                     .status(HttpStatus.FORBIDDEN)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -231,8 +245,9 @@ class HandleError {
                             instance = instance,
                         ),
                     )
+            }
 
-            is GameError.NotPlayerTurn ->
+            is GameError.NotPlayerTurn -> {
                 ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .header(HttpHeaders.CONTENT_TYPE, ApiMediaTypes.APPLICATION_PROBLEM_JSON)
@@ -245,9 +260,10 @@ class HandleError {
                             instance = instance,
                         ),
                     )
+            }
         }
 
-    inline fun <T> handleResult(
+    fun <T> handleResult(
         path: String,
         result: Either<GameError, T>,
         status: HttpStatus = HttpStatus.OK,

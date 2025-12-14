@@ -4,6 +4,7 @@ import { useGameRound } from "./useGameRound";
 import { useGameStatus } from "./useGameStatus";
 import { useGameEvents } from "./useGameEvents";
 import { gameService } from "../services/game/gameService";
+import {useEffect} from "react";
 
 export interface Die {
     value: string;
@@ -124,6 +125,23 @@ export function useGame(gameId?: number, userId?: number) {
         loading,
         error
     };
+}
+
+
+export function useCloseWindow(gameId?: number) {
+    useEffect(() => {
+        if (!gameId) return;
+
+        const handleBeforeUnload = () => {
+            gameService.leaveGameBeacon(gameId);
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [gameId]);
 }
 
 export default useGame;

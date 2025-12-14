@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLobby } from "../hooks/useLobby";
-import {lobbyService} from "../services/Lobby/lobbyService";
+import {lobbyService} from "../services/lobby/lobbyService";
 import {LobbyCard} from "../components/Lobby/LobbyCard";
 import {LobbyDetails} from "../components/Lobby/LobbyDetails";
 import {LobbyHeaderControls} from "../components/Lobby/LobbyHeaderControls";
@@ -45,6 +45,7 @@ const LobbyPage: React.FC = () => {
             // Se chegou aqui, recebemos um gameId do evento GAME_STARTED
             navigate(`/game/${gameId}`);
         } catch (error) {
+            // @ts-ignore
             if (error.message === "Timeout esperando início do jogo") {
                 // Se der timeout, significa que o jogo não começou imediatamente
                 navigate(`/lobby/${lobbyId}`);

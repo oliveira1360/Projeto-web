@@ -1,5 +1,5 @@
 import React from "react";
-import {PlayerInfo} from "../../services/Lobby/lobbyResponseTypes";
+import {PlayerInfo} from "../../services/lobby/lobbyResponseTypes";
 
 interface Player {
     userId: number;

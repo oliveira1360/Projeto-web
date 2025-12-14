@@ -60,4 +60,9 @@ class GameService(
         userId: Int,
         gameId: Int,
     ) = playerTurnService.finishTurn(userId, gameId)
+
+    fun leaveGame(
+        userId: Int,
+        gameId: Int,
+    ): Either<GameError, Unit> = gameEndService.leaveGame(userId, gameId)
 }

@@ -135,4 +135,40 @@ class GameEndService(
             val scoreboard = repositoryGame.getScores(gameId)
             success(scoreboard)
         }
+
+    fun leaveGame(
+        userId: Int,
+        gameId: Int,
+    ): Either<GameError, Unit> =
+        trxManager.run {
+            validationService.run { validateBasicGameAccess(gameId) }.onFailure { return@run failure(it) }
+            val players = repositoryGame.listPlayersInGame(gameId)
+            val activePlayers = players.listPlayersInGame.toMutableList()
+
+            activePlayers
+                .filter { it.playerId == userId }
+                .forEach { player ->
+                    notificationService.notifyGame(
+                        gameId,
+                        GameEvent(
+                            type = GameEventType.PLAYER_LEAVE,
+                            gameId = gameId,
+                            message = "Player ${player.playerId} dont have enough money",
+                            data =
+                                mapOf(
+                                    "removedPlayerId" to player.playerId,
+                                    "players" to
+                                        activePlayers.map {
+                                            mapOf(
+                                                "id" to it.playerId,
+                                                "name" to it.name,
+                                            )
+                                        },
+                                ),
+                        ),
+                    )
+                    repositoryGame.removePlayerFromGame(gameId, userId)
+                }
+            success(Unit)
+        }
 }

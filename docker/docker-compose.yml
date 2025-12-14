@@ -1,4 +1,12 @@
 services:
+  ubuntu:
+    container_name: ubuntu
+    image: poker-ubuntu
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile-ubuntu
+    tty: true
+
   db-tests:
     container_name: db-tests
     build:
@@ -10,3 +18,28 @@ services:
       - POSTGRES_DB=db
     ports:
       - 5432:5432
+
+  poker-jvm-1:
+    container_name: poker-jvm-1
+    hostname: poker-jvm-1
+    image: poker-jvm
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile-jvm
+    environment:
+      PORT: 8080
+      DB_URL: "jdbc:postgresql://db-tests:5432/db?user=dbuser&password=2025-daw-leic52d-2025-leic52d-14"
+    ports:
+      - 8080:8080
+    depends_on:
+      - db-tests
+
+  nginx:
+    container_name: poker-nginx
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile-nginx
+    ports:
+      - 3000:3000
+    depends_on:
+      - poker-jvm-1

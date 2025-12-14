@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { lobbyService, Lobby, LobbyDetailsResponse } from "../services/lobby/lobbyService";
+import { lobbyService,} from "../services/lobby/lobbyService";
+import {Lobby, LobbyDetailsResponse} from "../services/lobby/lobbyResponseTypes";
 
 interface LobbyHookResult {
     lobbies: Lobby[];

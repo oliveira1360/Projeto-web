@@ -2,6 +2,7 @@ import Scoreboard from "./Scoreboard";
 // @ts-ignore
 import backgroundImage from "../../img/pokertable.jpg";
 
+// @ts-ignore
 const GameFinished = ({ winner, players, leaveGame }) => (
     <div
         className="game-container finished"

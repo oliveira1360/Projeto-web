@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { lobbyService } from "../services/lobby/lobbyService";
-import {PlayerInfo} from "../services/Lobby/lobbyResponseTypes";
+import {PlayerInfo} from "../services/lobby/lobbyResponseTypes";
 
 
 interface LobbyRoomState {

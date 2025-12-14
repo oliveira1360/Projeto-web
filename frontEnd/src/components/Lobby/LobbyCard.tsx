@@ -1,5 +1,5 @@
 import React from "react";
-import {Lobby} from "../../services/Lobby/lobbyResponseTypes";
+import {Lobby} from "../../services/lobby/lobbyResponseTypes";
 
 interface LobbyCardProps {
     lobby: Lobby;

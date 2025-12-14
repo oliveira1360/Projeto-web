@@ -110,6 +110,12 @@ object GameLinks {
             LinkRelations.SELF to mapOf("href" to "/game/$gameId/scores"),
             LinkRelations.GAME to mapOf("href" to "/game/$gameId"),
         )
+
+    fun leaveGame(gameId: Int) =
+        mapOf(
+            LinkRelations.SELF to mapOf("href" to "/game/$gameId/leave"),
+            LinkRelations.GAME to mapOf("href" to "/game/$gameId"),
+        )
 }
 
 object LobbyLinks {
