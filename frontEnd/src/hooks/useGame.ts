@@ -1,132 +1,38 @@
-import { useGamePlayers } from "./useGamePlayers";
-import { useGameHand } from "./useGameHand";
-import { useGameRound } from "./useGameRound";
-import { useGameStatus } from "./useGameStatus";
-import { useGameEvents } from "./useGameEvents";
-import { gameService } from "../services/game/gameService";
-import {useEffect} from "react";
-
-export interface Die {
-    value: string;
-    held: boolean;
-}
+import {useEffect, useReducer} from "react";
+import { gameReducer, initialState } from "./gameReducer";
+import { useGameActions } from "./useGameActions";
+import { useGameSubscription } from "./useGameSubscription";
+import {gameService} from "../services/game/gameService";
 
 export function useGame(gameId?: number, userId?: number) {
-    const {
-        players,
-        loading: playersLoading,
-        error: playersError,
-        loadPlayers,
-        setPlayers
-    } = useGamePlayers(gameId);
+    const [state, dispatch] = useReducer(gameReducer, initialState);
 
-    const {
-        hand,
-        rollNumber,
-        loading: handLoading,
-        error: handError,
-        toggleHold,
-        rollDice,
-        loadHand,
-        resetHand
-    } = useGameHand(gameId);
+    const actions = useGameActions(gameId, userId, state, dispatch);
 
-    const {
-        currentRound,
-        totalRounds,
-        isMyTurn,
-        roundWinner,
-        loading: roundLoading,
-        error: roundError,
-        loadRoundInfo,
-        startRound,
-        finishTurn,
-        setCurrentRound,
-        setIsMyTurn,
-        setRoundWinner
-    } = useGameRound(gameId, userId);
-
-    const {
-        gameStatus,
-        winner,
-        loading: statusLoading,
-        error: statusError,
-        loadGameWinner,
-        leaveGame,
-        setGameStatus
-    } = useGameStatus(gameId);
-
-    useGameEvents(gameId, userId, {
-        onPlayerFinishedTurn: async (data) => {
-            if (!gameId || !userId) return;
-            const roundInfo = await gameService.getRoundInfo(gameId);
-            setCurrentRound(roundInfo.round);
-            setIsMyTurn(roundInfo.turn === userId);
-        },
-        onRoundStarted: () => {
-            loadPlayers(false);
-            loadHand();
-            loadRoundInfo();
-            resetHand();
-        },
-        onRoundEnded: (data) => {
-            setRoundWinner({
-                playerId: data.data.winner.playerId,
-                username: data.data.winner.username,
-                points: data.data.winner.points,
-                handValue: data.data.winner.handValue,
-                roundNumber: data.data.roundNumber,
-            });
-        },
-        onPlayerLeave: async () => {
-            await loadPlayers(false);
-        },
-        onGameEnded: async () => {
-            setGameStatus("FINISHED");
-            await loadGameWinner();
-        },
-        onConnected: () => {
-            loadPlayers();
-            loadHand();
-            loadRoundInfo();
-        },
-        onError: (error) => {
-            console.error("Game event error:", error);
-        }
-    });
-
-    const loading = playersLoading || handLoading || roundLoading || statusLoading;
-    const error = playersError || handError || roundError || statusError;
+    useGameSubscription(gameId, userId, actions, dispatch);
 
     return {
-        // Players
-        players,
+        players: state.players,
+        hand: state.hand,
+        rollNumber: state.rollNumber,
 
-        // Hand
-        hand,
-        rollNumber,
-        toggleHold,
-        rollDice,
+        currentRound: state.round.current,
+        totalRounds: state.round.total,
+        isMyTurn: state.round.isMyTurn,
+        roundWinner: state.round.winner,
 
-        // Round
-        currentRound,
-        totalRounds,
-        isMyTurn,
-        roundWinner,
-        startRound,
-        finishTurn,
+        gameStatus: state.status,
+        winner: state.winner,
+        loading: state.loading,
+        error: state.error,
 
-        // Status
-        gameStatus,
-        winner,
-        leaveGame,
-
-        // General
-        loading,
-        error
+        rollDice: actions.rollDice,
+        toggleHold: actions.toggleHold,
+        startRound: actions.startRound,
+        finishTurn: actions.finishTurn,
+        leaveGame: actions.leaveGame
     };
 }
-
 
 export function useCloseWindow(gameId?: number) {
     useEffect(() => {

@@ -12,6 +12,9 @@ import {PlayerInfoResponse} from "../services/player/playerResponseTypes";
 const GamePage: React.FC = () => {
     const { gameId } = useParams<{ gameId: string }>();
     const [userInfo, setUserInfo] = useState<PlayerInfoResponse | null>(null);
+    const [setupError, setSetupError] = useState<string | null>(null);
+    const [displayWinner, setDisplayWinner] = useState<any>(null);
+    const timerRef = React.useRef<NodeJS.Timeout | null>(null);
     const navigate = useNavigate();
 
 
@@ -34,7 +37,7 @@ const GamePage: React.FC = () => {
         currentRound,
         totalRounds,
         loading,
-        error,
+        error: gameError,
         gameStatus,
         winner,
         roundWinner,
@@ -52,11 +55,23 @@ const GamePage: React.FC = () => {
 
     useEffect(() => {
         if (roundWinner) {
+            setDisplayWinner(roundWinner);
             setShowRoundWinner(true);
-            const timer = setTimeout(() => setShowRoundWinner(false), 5000);
-            return () => clearTimeout(timer);
+
+            if (timerRef.current) clearTimeout(timerRef.current);
+
+            timerRef.current = setTimeout(() => {
+                setShowRoundWinner(false);
+            }, 5000);
         }
+
     }, [roundWinner]);
+
+    useEffect(() => {
+        return () => {
+            if (timerRef.current) clearTimeout(timerRef.current);
+        };
+    }, []);
 
     useEffect(() => {
         if (gameStatus === "FINISHED") {
@@ -68,9 +83,9 @@ const GamePage: React.FC = () => {
         }
     }, [gameStatus, navigate]);
 
-    if (!userInfo) return <GameLoading />;
-    if (loading) return <GameLoading />;
-    if (error) return <GameError error={error} />;
+    if (setupError) return <GameError error={setupError} />;
+    if (gameError) return <GameError error={gameError} />;
+    if (!userInfo || loading) return <GameLoading />;
 
     if (gameStatus === "FINISHED" && winner)
         return (
@@ -94,7 +109,7 @@ const GamePage: React.FC = () => {
             toggleHold={toggleHold}
             leaveGame={leaveGame}
             showRoundWinner={showRoundWinner}
-            roundWinner={roundWinner}
+            roundWinner={displayWinner}
             userId={userId}
             rollNumber={rollNumber}
         />

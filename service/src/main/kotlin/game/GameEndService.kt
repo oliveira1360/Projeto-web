@@ -145,30 +145,67 @@ class GameEndService(
             val players = repositoryGame.listPlayersInGame(gameId)
             val activePlayers = players.listPlayersInGame.toMutableList()
 
-            activePlayers
-                .filter { it.playerId == userId }
-                .forEach { player ->
-                    notificationService.notifyGame(
-                        gameId,
-                        GameEvent(
-                            type = GameEventType.PLAYER_LEAVE,
-                            gameId = gameId,
-                            message = "Player ${player.playerId} dont have enough money",
-                            data =
-                                mapOf(
-                                    "removedPlayerId" to player.playerId,
-                                    "players" to
-                                        activePlayers.map {
-                                            mapOf(
-                                                "id" to it.playerId,
-                                                "name" to it.name,
-                                            )
-                                        },
-                                ),
+            val leavingPlayer =
+                activePlayers.find { it.playerId == userId }
+                    ?: return@run failure(GameError.UserNotInGame)
+
+            repositoryGame.removePlayerFromGame(gameId, userId)
+            activePlayers.removeIf { it.playerId == userId }
+
+            notificationService.notifyGame(
+                gameId,
+                GameEvent(
+                    type = GameEventType.PLAYER_LEAVE,
+                    gameId = gameId,
+                    message = "Player ${leavingPlayer.name} left the game",
+                    data =
+                        mapOf(
+                            "removedPlayerId" to userId,
+                            "players" to
+                                activePlayers.map {
+                                    mapOf("id" to it.playerId, "name" to it.name)
+                                },
                         ),
-                    )
-                    repositoryGame.removePlayerFromGame(gameId, userId)
+                ),
+            )
+
+            if (activePlayers.size == 1) {
+                val winner = activePlayers.first()
+
+                repositoryGame.setGameWinnerAndFinish(gameId, winner.playerId)
+                val finalScores = repositoryGame.getFinalScoresRaw(gameId, winner.playerId)
+
+                finalScores.forEach { (pId, score, isWinner) ->
+                    if (isWinner) {
+                        repositoryGame.updateStatsGameWinner(pId, score)
+                    } else {
+                        repositoryGame.updateStatsGameLoser(pId, score)
+                    }
                 }
+
+                val winnerScore = finalScores.find { it.first == winner.playerId }?.second ?: 0
+                val round = repositoryGame.getRoundInfo(gameId)
+
+                notificationService.notifyGame(
+                    gameId,
+                    GameEvent(
+                        type = GameEventType.GAME_ENDED,
+                        gameId = gameId,
+                        message = "Game has ended! Final winner: ${winner.name}",
+                        data =
+                            mapOf(
+                                "winner" to
+                                    mapOf(
+                                        "playerId" to winner.playerId,
+                                        "username" to winner.name,
+                                        "totalPoints" to winnerScore,
+                                        "roundsWon" to round.totalRounds,
+                                    ),
+                                "finalRound" to (round.round.round),
+                            ),
+                    ),
+                )
+            }
             success(Unit)
         }
 }
