@@ -26,12 +26,15 @@ function PlayerStatsPage() {
     return (
         <div className="player-stats-container">
             <div className="player-stats-header">
-                <h1>Player Statistics</h1>
+                <div className="player-stats-header-center">
+                    <h1>Player Statistics</h1>
+                </div>
+                <div className="player-stats-header-left">
+                    <Link to="/home" className="player-stats-header-home">
+                        Home
+                    </Link>
+                </div>
             </div>
-            
-            <nav className="player-stats-nav">
-                <Link to="/home">Home</Link>
-            </nav>
 
             {userStats ? (
                 <div className="player-stats-card">

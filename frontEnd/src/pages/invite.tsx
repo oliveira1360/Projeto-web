@@ -81,11 +81,14 @@ function CreateInvitePage() {
     return (
         <div className="invite-container">
             <div className="invite-header">
-                <h1>Create Invite</h1>
-            </div>
-
-            <div className="invite-nav">
-                <Link to="/home">Back to Home</Link>
+                <div className="invite-header-center">
+                    <h1>Create Invite</h1>
+                </div>
+                <div className="invite-header-left">
+                    <Link to="/home" className="invite-header-home">
+                        Back to Home
+                    </Link>
+                </div>
             </div>
 
             {state.errorMessage && (

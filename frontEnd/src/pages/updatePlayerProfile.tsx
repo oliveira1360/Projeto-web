@@ -120,7 +120,14 @@ function UpdatePlayerProfilePage() {
     return (
         <div className="update-profile-container">
             <div className="update-profile-header">
-                <h1>Update Player Profile</h1>
+                <div className="update-profile-header-center">
+                    <h1>Update Player Profile</h1>
+                </div>
+                <div className="update-profile-header-left">
+                    <Link to="/playerProfile" className="update-profile-header-cancel">
+                            Cancel
+                    </Link>
+                </div>
             </div>
 
             {state.errorMessage && (
@@ -211,9 +218,6 @@ function UpdatePlayerProfilePage() {
                         <button type="submit" disabled={isSaving || !isSafeUpdatePassword(state.formData.password)}>
                             {isSaving ? "Saving..." : "Save changes"}
                         </button>
-                        <Link to="/playerProfile">
-                            Cancel
-                        </Link>
                     </div>
                 </form>
             </div>
