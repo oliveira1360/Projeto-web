@@ -1,5 +1,5 @@
 import {request} from "../request";
-import {PlayerInfoResponse} from "./playerResponseTypes";
+import {PlayerInfoResponse, PlayerStatsResponse} from "./playerResponseTypes";
 
 
 
@@ -22,6 +22,24 @@ export const playerService = {
             email: data.email,
             balance: data.balance,
             imageUrl: data.imageUrl,
+            _links: data._links,
+        };
+    },
+
+    async playerStats(): Promise<PlayerStatsResponse> {
+        const response = await request(`/user/stats`, {
+            method: 'GET',
+        });
+
+        const data = await response.json();
+        return {
+            userId: data.userId,
+            totalGamesPlayed: data.totalGamesPlayed,
+            totalWins: data.totalWins,
+            totalLosses: data.totalLosses,
+            totalPoints: data.totalPoints,
+            longestStreak: data.longestStreak,
+            currentStreak: data.currentStreak,
             _links: data._links,
         };
     },
