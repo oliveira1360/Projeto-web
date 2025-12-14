@@ -27,9 +27,14 @@ export function useGameActions(
             const data = await gameService.getPlayerHand(gameId);
             dispatch({ type: 'HAND_LOADED', payload: data.hand });
         } catch (e: any) {
+            if (e.code === 'USER_NOT_IN_GAME') {
+                navigate('/lobbies');
+            }
+
             dispatch({ type: 'RESET_HAND' });
+
         }
-    }, [gameId, dispatch]);
+    }, [gameId, dispatch, navigate]);
 
     const loadRoundInfo = useCallback(async () => {
         if (!gameId || !userId) return;
