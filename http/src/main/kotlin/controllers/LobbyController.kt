@@ -8,6 +8,7 @@ import org.example.LobbyError
 import org.example.LobbyNotificationService
 import org.example.LobbyService
 import org.example.Success
+import org.example.config.LobbiesDomainConfig
 import org.example.dto.inputDto.AuthenticatedUserDto
 import org.example.dto.inputDto.CreateLobbyDTO
 import org.springframework.http.HttpHeaders
@@ -15,12 +16,15 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
+import java.time.Duration
+import java.time.Instant
 
 @RestController
 @RequestMapping("/lobbies")
 class LobbyController(
     private val lobbyService: LobbyService,
     private val lobbyNotificationService: LobbyNotificationService,
+    private val config: LobbiesDomainConfig = LobbiesDomainConfig(2, 1),
 ) {
     @GetMapping("/{lobbyId}/events")
     fun subscribeToLobbyEvents(
@@ -65,12 +69,18 @@ class LobbyController(
             lobbyService.createLobby(user.user.id, body.name, body.maxPlayers, body.rounds),
             HttpStatus.CREATED,
         ) {
+            val now = Instant.now()
+            val timeElapsed = Duration.between(it.createdAt, now).seconds
+            val timeRemaining = config.lobbyTimeoutSeconds - timeElapsed
+
             mapOf(
                 "lobbyId" to it.id,
                 "name" to it.name.value,
                 "maxPlayers" to it.maxPlayers,
                 "currentPlayers" to it.currentPlayers.size,
                 "rounds" to it.rounds,
+                "timeRemaining" to timeRemaining.coerceAtLeast(0),
+                "minPlayersToStart" to config.minPlayersToStart,
                 "_links" to LobbyLinks.createLobby(it.id),
             )
         }
@@ -80,10 +90,15 @@ class LobbyController(
     )
     fun listLobbies(): ResponseEntity<*> {
         val result = lobbyService.listLobbies()
+        val now = Instant.now()
+
         return ResponseEntity.ok(
             mapOf(
                 "lobbies" to
                     result.map { lobby ->
+                        val timeElapsed = Duration.between(lobby.createdAt, now).seconds
+                        val timeRemaining = config.lobbyTimeoutSeconds - timeElapsed
+
                         mapOf(
                             "lobbyId" to lobby.id,
                             "name" to lobby.name.value,
@@ -93,10 +108,13 @@ class LobbyController(
                                     mapOf(
                                         "id" to user.id,
                                         "name" to user.name.value,
+                                        "imageUrl" to user.imageUrl?.value,
                                     )
                                 },
+                            "timeRemaining" to timeRemaining.coerceAtLeast(0),
                         )
                     },
+                "minPlayersToStart" to config.minPlayersToStart,
                 "_links" to LobbyLinks.listLobbies(),
             ),
         )
@@ -110,6 +128,10 @@ class LobbyController(
         @PathVariable lobbyId: Int,
     ): ResponseEntity<*> =
         handleResult("/lobbies/$lobbyId", lobbyService.getLobbyDetails(lobbyId)) { it ->
+            val now = Instant.now()
+            val timeElapsed = Duration.between(it.createdAt, now).seconds
+            val timeRemaining = config.lobbyTimeoutSeconds - timeElapsed
+
             mapOf(
                 "lobbyId" to it.id,
                 "name" to it.name.value,
@@ -119,9 +141,12 @@ class LobbyController(
                         mapOf(
                             "id" to user.id,
                             "name" to user.name.value,
+                            "imageUrl" to user.imageUrl?.value,
                         )
                     },
                 "rounds" to it.rounds,
+                "timeRemaining" to timeRemaining.coerceAtLeast(0),
+                "minPlayersToStart" to config.minPlayersToStart,
                 "_links" to LobbyLinks.lobbyDetails(lobbyId),
             )
         }
@@ -135,9 +160,14 @@ class LobbyController(
         @PathVariable lobbyId: Int,
     ): ResponseEntity<*> =
         handleResult("/lobbies/join/$lobbyId", lobbyService.joinLobby(user.user.id, lobbyId), HttpStatus.ACCEPTED) {
+            val now = Instant.now()
+            val timeElapsed = Duration.between(it.createdAt, now).seconds
+            val timeRemaining = config.lobbyTimeoutSeconds - timeElapsed
+
             mapOf(
                 "lobbyId" to it.id,
                 "message" to "Successfully joined lobby",
+                "timeRemaining" to timeRemaining.coerceAtLeast(0),
                 "_links" to LobbyLinks.joinLobby(lobbyId),
             )
         }

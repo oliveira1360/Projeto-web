@@ -139,3 +139,14 @@ export function isSafeUpdatePassword(password?: string): boolean {
     let isLongEnough = password.length >= 8;
     return hasUpperCase && hasNumbers && isLongEnough;
 }
+
+export async function logoutUser(): Promise<boolean> {
+    const response = await fetch(`${BASE_URL}/user/logout`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+
+    return response.ok;
+}

@@ -1,9 +1,10 @@
 /* ===== CONTAINER PRINCIPAL ===== */
-.player-profile-container {
+.player-stats-container {
     max-width: 900px;
     width: 100%;
     margin: 0 auto;
     padding: 0;
+    padding-top: 180px;
     background: #1a1d23;
     min-height: 100vh;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -11,7 +12,7 @@
 
 
 /* ===== HEADER FULL WIDTH ===== */
-.player-profile-header {
+.player-stats-header {
     width: 100vw;
     margin-left: 50%;
     margin-top: 5%;
@@ -22,7 +23,7 @@
     border-radius: 0;
 }
 
-.player-profile-header h1 {
+.player-stats-header h1 {
     margin: 0;
     font-size: 28px;
     font-weight: 600;
@@ -31,7 +32,7 @@
 
 
 /* ===== NAV FULL WIDTH ===== */
-.player-profile-nav {
+.player-stats-nav {
     width: 100vw;
     margin-left: 50%;
     transform: translateX(-50%);
@@ -41,7 +42,7 @@
     border-radius: 0;
 }
 
-.player-profile-nav a {
+.player-stats-nav a {
     color: #0a84ff;
     text-decoration: none;
     font-size: 16px;
@@ -50,13 +51,13 @@
     transition: color 0.2s;
 }
 
-.player-profile-nav a:hover {
+.player-stats-nav a:hover {
     color: #58a6ff;
 }
 
 
 /* ===== LOADING ===== */
-.player-profile-loading {
+.player-stats-loading {
     text-align: center;
     padding: 60px 20px;
     color: #8e92a3;
@@ -65,7 +66,7 @@
 
 
 /* ===== CARD ===== */
-.player-profile-card {
+.player-stats-card {
     background: #252932;
     margin: 24px;
     border-radius: 12px;
@@ -74,8 +75,8 @@
 }
 
 
-/* ===== AVATAR SECTION ===== */
-.player-profile-avatar {
+/* ===== HEADER SECTION ===== */
+.player-stats-overview {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -84,36 +85,27 @@
     border-bottom: 1px solid #3d4453;
 }
 
-.player-profile-avatar img {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid #0a84ff;
-    margin-bottom: 16px;
-}
-
-.player-profile-avatar h2 {
+.player-stats-overview h2 {
     margin: 0 0 4px 0;
     color: #fff;
     font-size: 22px;
     font-weight: 600;
 }
 
-.player-profile-avatar p {
+.player-stats-overview p {
     margin: 0;
     color: #8e92a3;
     font-size: 15px;
 }
 
 
-/* ===== USER INFO ===== */
-.player-profile-info {
+/* ===== STATS INFO ===== */
+.player-stats-info {
     display: flex;
     flex-direction: column;
 }
 
-.player-profile-info p {
+.player-stats-info p {
     margin: 0;
     padding: 20px 24px;
     border-bottom: 1px solid #3d4453;
@@ -123,17 +115,17 @@
     gap: 20px;
 }
 
-.player-profile-info p:last-child {
+.player-stats-info p:last-child {
     border-bottom: none;
 }
 
-.player-profile-info strong {
+.player-stats-info strong {
     color: #8e92a3;
     font-weight: 400;
     font-size: 16px;
 }
 
-.player-profile-info span {
+.player-stats-info span {
     color: #fff;
     font-size: 16px;
     font-weight: 500;
@@ -141,15 +133,28 @@
 }
 
 
+/* ===== HIGHLIGHT STATS ===== */
+.player-stats-info p:nth-child(2) span,
+.player-stats-info p:nth-child(4) span {
+    color: #30d158;
+    font-weight: 600;
+}
+
+.player-stats-info p:nth-child(3) span {
+    color: #ff453a;
+    font-weight: 600;
+}
+
+
 /* ===== ACTION BUTTONS ===== */
-.player-profile-actions {
+.player-stats-actions {
     display: flex;
     flex-direction: column;
     gap: 12px;
     padding: 24px;
 }
 
-.player-profile-actions a {
+.player-stats-actions a {
     padding: 14px 20px;
     text-decoration: none;
     border-radius: 10px;
@@ -159,20 +164,20 @@
     text-align: center;
 }
 
-.player-profile-actions a:first-child {
+.player-stats-actions a:first-child {
     background: #0a84ff;
     color: #fff;
 }
 
-.player-profile-actions a:first-child:hover {
+.player-stats-actions a:first-child:hover {
     background: #0077ed;
 }
 
-.player-profile-actions a:last-child {
+.player-stats-actions a:last-child {
     background: #2f3541;
     color: #0a84ff;
 }
 
-.player-profile-actions a:last-child:hover {
+.player-stats-actions a:last-child:hover {
     background: #3d4453;
 }

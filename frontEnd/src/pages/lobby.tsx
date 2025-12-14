@@ -4,9 +4,10 @@ import { useParams } from "react-router-dom";
 import { useLobbyRoom } from "../hooks/useLobbyRoom";
 import { playerService } from "../services/player/playerService";
 import { PlayerInfoResponse } from "../services/player/playerResponseTypes";
-import {LobbyLoading} from "../components/Lobby/LobbyLoading";
-import {LobbyError} from "../components/Lobby/LobbyError";
-import {LobbyRoom} from "../components/Lobby/LobbyRoom";
+import { LobbyLoading } from "../components/Lobby/LobbyLoading";
+import { LobbyError } from "../components/Lobby/LobbyError";
+import { LobbyRoom } from "../components/Lobby/LobbyRoom";
+import { LobbyTimer } from "../components/Lobby/LobbyTimer";
 
 function LobbyPage() {
     const { lobbyId } = useParams<{ lobbyId: string }>();
@@ -31,24 +32,38 @@ function LobbyPage() {
         players,
         loading,
         error,
+        timeRemaining,
+        timerStatus,
+        minPlayersToStart,
         leaveLobby,
-    } = useLobbyRoom(lobbyId ? Number(lobbyId) : undefined, userId ?? undefined);
+    } = useLobbyRoom(lobbyId ? Number(lobbyId) : undefined);
 
     if (!userInfo) return <LobbyLoading />;
     if (loading) return <LobbyLoading />;
     if (error) return <LobbyError error={error} />;
 
     return (
-        <LobbyRoom
-            lobbyId={currentLobbyId}
-            name={name}
-            currentPlayers={currentPlayers}
-            maxPlayers={maxPlayers}
-            rounds={rounds}
-            players={players}
-            userId={userId}
-            leaveLobby={leaveLobby}
-        />
+        <div>
+
+
+            <LobbyRoom
+                lobbyId={currentLobbyId}
+                name={name}
+                currentPlayers={currentPlayers}
+                maxPlayers={maxPlayers}
+                rounds={rounds}
+                players={players}
+                userId={userId}
+                leaveLobby={leaveLobby}
+            />
+            <LobbyTimer
+                timeRemaining={timeRemaining}
+                timerStatus={timerStatus}
+                currentPlayersCount={players.length}
+                minPlayersToStart={minPlayersToStart}
+                maxPlayers={maxPlayers}
+            />
+        </div>
     );
 }
 

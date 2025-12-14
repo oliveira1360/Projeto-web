@@ -100,6 +100,7 @@ body {
     opacity: 0.6;
 }
 
+/* Avatar com suporte para imagens */
 .player-avatar {
     width: 80px;
     height: 80px;
@@ -112,11 +113,24 @@ body {
     font-size: 2em;
     color: white;
     font-weight: bold;
+    position: relative;
+    overflow: hidden;
 }
 
 .player-avatar.empty {
     background: #3d4453;
     color: #6b7280;
+}
+
+/* Adicionar estilos para quando há imagem */
+.player-avatar img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
 }
 
 .player-name {
@@ -275,3 +289,225 @@ body {
     margin-top: 20px;
     min-width: 200px;
 }
+
+
+* Container principal do timer */
+.lobby-timer-container {
+    max-width: 1200px;
+    margin: 0 auto 20px auto;
+    padding: 0 20px;
+}
+
+/* Card do timer */
+.timer-card {
+    padding: 15px 24px;
+    border-radius: 10px;
+    border: 2px solid;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* Conteúdo do timer */
+.timer-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* Ícone do timer */
+.timer-icon {
+    font-size: 20px;
+    display: inline-block;
+}
+
+/* Mensagem do timer */
+.timer-message {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* === Estados do Timer === */
+
+/* Aguardando jogadores (Amarelo) */
+.timer-card.waiting-players {
+    background: #fff3cd;
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.timer-card.waiting-players:hover {
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+/* Pronto para iniciar (Azul) */
+.timer-card.ready-to-start {
+    background: #d1ecf1;
+    border-color: #17a2b8;
+    color: #0c5460;
+}
+
+.timer-card.ready-to-start:hover {
+    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+}
+
+/* Lobby cheio (Verde) */
+.timer-card.lobby-full {
+    background: #d4f4dd;
+    border-color: #28a745;
+    color: #155724;
+}
+
+.timer-card.lobby-full:hover {
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+/* Jogo iniciando (Verde com animação) */
+.timer-card.game-starting {
+    background: #d4f4dd;
+    border-color: #28a745;
+    color: #155724;
+    animation: pulse-timer 1s ease-in-out infinite;
+}
+
+@keyframes pulse-timer {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 4px 16px rgba(40, 167, 69, 0.4);
+    }
+}
+
+/* Lobby fechando (Vermelho) */
+.timer-card.lobby-closing {
+    background: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
+    animation: shake-timer 0.5s ease-in-out infinite;
+}
+
+@keyframes shake-timer {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .lobby-timer-container {
+        padding: 0 10px;
+    }
+
+    .timer-card {
+        padding: 12px 16px;
+    }
+
+    .timer-message {
+        font-size: 14px;
+    }
+
+    .timer-icon {
+        font-size: 18px;
+    }
+}
+
+/* Tema escuro (compatível com o resto do lobby) */
+@media (prefers-color-scheme: dark) {
+    .timer-card {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

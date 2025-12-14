@@ -1,11 +1,6 @@
 import React from "react";
 import {PlayerInfo} from "../../services/lobby/lobbyResponseTypes";
 
-interface Player {
-    userId: number;
-    username: string;
-}
-
 interface LobbyRoomProps {
     lobbyId: number;
     name: string;
@@ -31,7 +26,6 @@ export const LobbyRoom: React.FC<LobbyRoomProps> = ({
 
     return (
         <div>
-
             <div className="lobby-room-container">
                 <div className="lobby-room-header">
                     <h1>{name}</h1>
@@ -58,7 +52,47 @@ export const LobbyRoom: React.FC<LobbyRoomProps> = ({
                                 className={`player-card ${player.id === userId ? 'current-user' : ''}`}
                             >
                                 <div className="player-avatar">
-                                    {player.username.charAt(0).toUpperCase()}
+                                    {player.imageUrl ? (
+                                        <img
+                                            src={player.imageUrl}
+                                            alt={player.username}
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                objectFit: 'cover',
+                                                borderRadius: '50%'
+                                            }}
+                                            onError={(e) => {
+                                                // Se a imagem falhar, esconder e mostrar a inicial
+                                                const img = e.currentTarget;
+                                                img.style.display = 'none';
+                                                // Criar div com inicial
+                                                const parent = img.parentElement;
+                                                if (parent && !parent.querySelector('.player-initial')) {
+                                                    const initial = document.createElement('div');
+                                                    initial.className = 'player-initial';
+                                                    initial.textContent = player.username.charAt(0).toUpperCase();
+                                                    initial.style.cssText = `
+                                                        position: absolute;
+                                                        top: 0;
+                                                        left: 0;
+                                                        width: 100%;
+                                                        height: 100%;
+                                                        display: flex;
+                                                        align-items: center;
+                                                        justify-content: center;
+                                                        font-size: 2em;
+                                                        color: white;
+                                                        font-weight: bold;
+                                                    `;
+                                                    parent.appendChild(initial);
+                                                }
+                                            }}
+                                        />
+                                    ) : (
+                                        // Fallback: mostrar inicial do nome
+                                        player.username.charAt(0).toUpperCase()
+                                    )}
                                 </div>
                                 <p className="player-name">{player.username}</p>
                                 {player.id === userId && (
