@@ -5,9 +5,9 @@ import org.example.config.GameDomainConfig
 import org.example.entity.core.Balance
 import org.example.entity.core.Email
 import org.example.entity.core.Name
-import org.example.entity.core.Password
 import org.example.entity.core.URL
 import org.example.entity.core.toMoney
+import org.example.entity.core.toPasswordFromRaw
 import org.example.entity.dice.Dice
 import org.example.entity.dice.DiceFace
 import org.example.entity.lobby.Lobby
@@ -95,7 +95,7 @@ class GameServiceTest {
             name = Name("John Doe"),
             nickName = Name("john"),
             email = email1,
-            passwordHash = "SecurePass123!",
+            passwordHash = "SecurePass123!".toPasswordFromRaw(),
             imageUrl = URL("https://example.com/john.png"),
         )
 
@@ -104,7 +104,7 @@ class GameServiceTest {
             name = Name("Jane Smith"),
             nickName = Name("jane"),
             email = email2,
-            passwordHash = "SecurePass123!",
+            passwordHash = "SecurePass123!".toPasswordFromRaw(),
             imageUrl = URL("https://example.com/jane.png"),
         )
 
@@ -113,7 +113,7 @@ class GameServiceTest {
             name = Name("Bob Wilson"),
             nickName = Name("bob"),
             email = email3,
-            passwordHash = "SecurePass123!",
+            passwordHash = "SecurePass123!".toPasswordFromRaw(),
             imageUrl = URL("https://example.com/bob.png"),
         )
 
@@ -168,7 +168,7 @@ class GameServiceTest {
                 name = Name("New User"),
                 nickName = Name("newuser"),
                 email = Email("new${System.currentTimeMillis()}@example.com"),
-                passwordHash = "SecurePass123!",
+                passwordHash = "SecurePass123!".toPasswordFromRaw(),
                 imageUrl = URL("https://example.com/new.png"),
             )
 
@@ -600,7 +600,7 @@ class GameServiceTest {
     @Test
     @Order(34)
     fun `should validate password strength`() {
-        assertThrows<IllegalArgumentException> { Password("weak") }
+        assertThrows<IllegalArgumentException> { "weak".toPasswordFromRaw() }
     }
 
     @Test

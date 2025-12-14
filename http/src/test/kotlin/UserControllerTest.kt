@@ -88,7 +88,7 @@ class UserControllerTest {
                 name = Name(name),
                 nickName = Name("$nickName$userCounter"),
                 email = Email(uniqueEmail),
-                passwordHash = password,
+                passwordHash = password.toPasswordFromRaw(),
                 imageUrl = URL("https://example.com/avatar.png"),
             )
         }

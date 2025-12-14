@@ -5,6 +5,7 @@ import org.example.entity.core.Name
 import org.example.entity.core.toEmail
 import org.example.entity.core.toMoney
 import org.example.entity.core.toName
+import org.example.entity.core.toPasswordFromHash
 import org.example.entity.core.toUrlOrNull
 import org.example.entity.lobby.Lobby
 import org.example.entity.player.User
@@ -287,7 +288,7 @@ private class UserMapper : RowMapper<User> {
             nickName = rs.getString("nick_name").toName(),
             email = rs.getString("email").toEmail(),
             imageUrl = rs.getString("avatar_url")?.toUrlOrNull(),
-            passwordHash = rs.getString("password_hash"),
+            passwordHash = rs.getString("password_hash").toPasswordFromHash(),
             balance = Balance(rs.getInt("balance").toMoney()),
         )
 }

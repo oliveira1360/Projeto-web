@@ -80,7 +80,7 @@ class LobbyControllerTest {
                 name = Name(name),
                 nickName = Name("$nickName$userCounter"),
                 email = uniqueEmail,
-                passwordHash = "SecurePass123!",
+                passwordHash = "SecurePass123!".toPasswordFromRaw(),
                 imageUrl = URL("https://example.com/avatar.png"),
             )
         }
@@ -101,7 +101,7 @@ class LobbyControllerTest {
                     name = Name("John Doe"),
                     nickName = Name("john"),
                     email = Email("john@example.com"),
-                    passwordHash = "SecurePass123!",
+                    passwordHash = "SecurePass123!".toPasswordFromRaw(),
                     imageUrl = URL("https://example.com/john.png"),
                 )
             }
@@ -112,7 +112,7 @@ class LobbyControllerTest {
                     name = Name("Jane Smith"),
                     nickName = Name("jane"),
                     email = Email("jane@example.com"),
-                    passwordHash = "SecurePass123!",
+                    passwordHash = "SecurePass123!".toPasswordFromRaw(),
                     imageUrl = URL("https://example.com/jane.png"),
                 )
             }

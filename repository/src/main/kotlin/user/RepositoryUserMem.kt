@@ -3,6 +3,7 @@ package org.example.user
 import org.example.entity.core.Balance
 import org.example.entity.core.Email
 import org.example.entity.core.Name
+import org.example.entity.core.PasswordHash
 import org.example.entity.core.URL
 import org.example.entity.core.toBalance
 import org.example.entity.core.toMoney
@@ -30,7 +31,7 @@ class RepositoryUserMem : RepositoryUser {
         name: Name,
         nickName: Name,
         email: Email,
-        passwordHash: String,
+        passwordHash: PasswordHash,
         imageUrl: URL?,
     ): User {
         _users.find { it.email == email }?.let {
@@ -57,7 +58,7 @@ class RepositoryUserMem : RepositoryUser {
         userId: Int,
         name: Name?,
         nickName: Name?,
-        passwordHash: String?,
+        passwordHash: PasswordHash?,
         imageUrl: URL?,
     ): User =
         users.find { it.id == userId }.let {
@@ -119,7 +120,7 @@ class RepositoryUserMem : RepositoryUser {
 
     override fun findByEmailAndPassword(
         email: Email,
-        passwordHash: String,
+        passwordHash: PasswordHash,
     ): User? = users.find { it.email == email && it.passwordHash == passwordHash }
 
     override fun updateBalance(

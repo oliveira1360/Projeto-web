@@ -3,6 +3,7 @@ package org.example.entity.player
 import org.example.entity.core.Balance
 import org.example.entity.core.Email
 import org.example.entity.core.Name
+import org.example.entity.core.PasswordHash
 import org.example.entity.core.URL
 
 data class User(
@@ -11,6 +12,6 @@ data class User(
     val nickName: Name,
     val imageUrl: URL?,
     val email: Email,
-    val passwordHash: String,
+    val passwordHash: PasswordHash,
     val balance: Balance,
 )

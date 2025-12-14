@@ -11,6 +11,7 @@ import org.example.config.LobbiesDomainConfig
 import org.example.entity.core.Email
 import org.example.entity.core.Name
 import org.example.entity.core.URL
+import org.example.entity.core.toPasswordFromRaw
 import org.example.entity.player.User
 import org.example.game.GameEndService
 import org.example.game.GameService
@@ -88,7 +89,7 @@ class LobbyServiceTest {
             Name(name),
             Name(nickName),
             newEmail,
-            "SuperSecret123!",
+            "SuperSecret123!".toPasswordFromRaw(),
             URL("https://example.com/avatar.png"),
         )
     }

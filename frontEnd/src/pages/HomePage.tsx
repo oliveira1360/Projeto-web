@@ -33,7 +33,7 @@ const HomePage: React.FC = () => {
 
                 <HomeButton
                     to="/stats"
-                    label="ESTATÍSTICAS"
+                    label="STATISTICS"
                     icon="📊"
                     className="btn-info-action"
                 />
@@ -42,7 +42,7 @@ const HomePage: React.FC = () => {
 
                 <HomeButton
                     to="/about"
-                    label="SOBRE"
+                    label="ABOUT"
                     icon="ℹ️"
                     className="btn-secondary-action"
                 />

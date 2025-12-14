@@ -141,7 +141,7 @@ class GameControllerTest {
                 name = Name(name),
                 nickName = Name("$nickName$userCounter"),
                 email = uniqueEmail,
-                passwordHash = "SecurePass123!",
+                passwordHash = "SecurePass123!".toPasswordFromRaw(),
                 imageUrl = URL("https://example.com/avatar.png"),
             )
         }

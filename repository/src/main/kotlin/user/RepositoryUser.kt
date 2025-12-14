@@ -3,6 +3,7 @@ package org.example.user
 import org.example.Repository
 import org.example.entity.core.Email
 import org.example.entity.core.Name
+import org.example.entity.core.PasswordHash
 import org.example.entity.core.URL
 import org.example.entity.player.User
 import org.example.entity.player.UserInfo
@@ -19,7 +20,7 @@ interface RepositoryUser : Repository<User> {
         name: Name,
         nickName: Name,
         email: Email,
-        passwordHash: String,
+        passwordHash: PasswordHash,
         imageUrl: URL? = null,
     ): User
 
@@ -29,7 +30,7 @@ interface RepositoryUser : Repository<User> {
         userId: Int,
         name: Name?,
         nickName: Name?,
-        passwordHash: String?,
+        passwordHash: PasswordHash?,
         imageUrl: URL?,
     ): User
 
@@ -51,7 +52,7 @@ interface RepositoryUser : Repository<User> {
 
     fun findByEmailAndPassword(
         email: Email,
-        passwordHash: String,
+        passwordHash: PasswordHash,
     ): User?
 
     fun updateBalance(
