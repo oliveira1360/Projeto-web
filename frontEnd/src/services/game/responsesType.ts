@@ -4,6 +4,7 @@ export interface Player {
     points?: number;
     rolls?: number;
     hand?: string[];
+    url?: string;
 }
 
 

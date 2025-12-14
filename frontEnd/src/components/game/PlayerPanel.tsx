@@ -28,10 +28,49 @@ export const PlayerSlot: React.FC<PlayerSlotProps> = ({ player, isCurrentPlayer 
         ${isPlaceholder ? 'placeholder' : ''}
     `;
 
+    const imageUrl = player?.url;
+
     return (
         <div className={`player-slot ${positionClass}`}>
             <div className={avatarClasses}>
-                {initial}
+                {imageUrl ? (
+                    <img
+                        src={imageUrl}
+                        alt={name}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            borderRadius: '50%'
+                        }}
+                        onError={(e) => {
+                            const img = e.currentTarget;
+                            img.style.display = 'none';
+                            const parent = img.parentElement;
+                            if (parent && !parent.querySelector('.player-initial')) {
+                                const initialDiv = document.createElement('div');
+                                initialDiv.className = 'player-initial';
+                                initialDiv.textContent = initial;
+                                initialDiv.style.cssText = `
+                                    position: absolute;
+                                    top: 0;
+                                    left: 0;
+                                    width: 100%;
+                                    height: 100%;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    font-size: 2em;
+                                    color: white;
+                                    font-weight: bold;
+                                `;
+                                parent.appendChild(initialDiv);
+                            }
+                        }}
+                    />
+                ) : (
+                    initial
+                )}
             </div>
             <span className={usernameClasses}>
                 {name}

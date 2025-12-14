@@ -49,7 +49,7 @@ const GamePage: React.FC = () => {
         rollNumber
     } = game;
 
-    useCloseWindow(gameId ? Number(gameId) : undefined);
+    //useCloseWindow(gameId ? Number(gameId) : undefined);
 
     const [showRoundWinner, setShowRoundWinner] = useState(false);
 

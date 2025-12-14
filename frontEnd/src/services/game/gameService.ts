@@ -9,7 +9,6 @@ import {
 import {request} from "../request";
 
 export const gameService = {
-
     async createGame(lobbyId: number): Promise<CreateGameResponse> {
         const response = await request(`/game/create`, {
             method: "POST",
@@ -33,7 +32,8 @@ export const gameService = {
                 username: p.name,
                 points: p.balance,
                 rolls: p.rolls,
-                hand: p.hand.value
+                hand: p.hand.value,
+                url: p.url.value,
             })),
             _links: data._links,
         };
@@ -154,6 +154,12 @@ export const gameService = {
     async closeGame(gameId: number): Promise<void> {
         await request(`/game/${gameId}`, {
             method: "POST",
+        });
+    },
+
+    async leaveGame(gameId: number): Promise<void> {
+        await request(`/game/${gameId}/leave`, {
+            method: "POST"
         });
     },
 

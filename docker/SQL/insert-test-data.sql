@@ -2,12 +2,12 @@
 -- === USERS ===
 INSERT INTO users (username, nick_name, email, password_hash, avatar_url, last_login, balance)
 VALUES
-    ('john_doe', 'JohnnyD', 'john@example.com', '183783f2f9a3306158aa309951440e947cfa8b6720c88fd07c6f52c4436a1901', 'https://example.com/avatars/john.png', '2025-11-17 12:00:00', 1000),
-    ('jane_smith', 'JaneS', 'jane@example.com', '183783f2f9a3306158aa309951440e947cfa8b6720c88fd07c6f52c4436a1901', 'https://example.com/avatars/jane.png', '2025-11-17 11:45:00', 1500),
-    ('mike_wilson', 'MikeW', 'mike@example.com', '183783f2f9a3306158aa309951440e947cfa8b6720c88fd07c6f52c4436a1901', 'https://example.com/avatars/mike.png', '2025-11-17 13:15:00', 750),
-    ('sarah_jones', 'SarahJ', 'sarah@example.com', '183783f2f9a3306158aa309951440e947cfa8b6720c88fd07c6f52c4436a1901', 'https://example.com/avatars/sarah.png', '2025-11-17 10:30:00', 2000),
-    ('alex_brown', 'AlexB', 'alex@example.com', '183783f2f9a3306158aa309951440e947cfa8b6720c88fd07c6f52c4436a1901', 'https://example.com/avatars/alex.png', '2025-11-16 16:20:00', 500),
-    ('emily_davis', 'EmilyD', 'emily@example.com', '183783f2f9a3306158aa309951440e947cfa8b6720c88fd07c6f52c4436a1901', 'https://example.com/avatars/emily.png', '2025-11-17 08:30:00', 1200);
+    ('john_doe', 'JohnnyD', 'john@example.com', '183783f2f9a3306158aa309951440e947cfa8b6720c88fd07c6f52c4436a1901', '' ||'https://pbs.twimg.com/profile_images/1745127406237564928/JLYcWiF2.jpg', '2025-11-17 12:00:00', 1000),
+    ('jane_smith', 'JaneS', 'jane@example.com', '183783f2f9a3306158aa309951440e947cfa8b6720c88fd07c6f52c4436a1901', 'https://pbs.twimg.com/profile_images/1745127406237564928/JLYcWiF2.jpg', '2025-11-17 11:45:00', 1500),
+    ('mike_wilson', 'MikeW', 'mike@example.com', '183783f2f9a3306158aa309951440e947cfa8b6720c88fd07c6f52c4436a1901', 'https://pbs.twimg.com/profile_images/1745127406237564928/JLYcWiF2.jpg', '2025-11-17 13:15:00', 750),
+    ('sarah_jones', 'SarahJ', 'sarah@example.com', '183783f2f9a3306158aa309951440e947cfa8b6720c88fd07c6f52c4436a1901', 'https://pbs.twimg.com/profile_images/1745127406237564928/JLYcWiF2.jpg', '2025-11-17 10:30:00', 2000),
+    ('alex_brown', 'AlexB', 'alex@example.com', '183783f2f9a3306158aa309951440e947cfa8b6720c88fd07c6f52c4436a1901', 'https://pbs.twimg.com/profile_images/1745127406237564928/JLYcWiF2.jpg', '2025-11-16 16:20:00', 500),
+    ('emily_davis', 'EmilyD', 'emily@example.com', '183783f2f9a3306158aa309951440e947cfa8b6720c88fd07c6f52c4436a1901', 'https://pbs.twimg.com/profile_images/1745127406237564928/JLYcWiF2.jpg', '2025-11-17 08:30:00', 1200);
 
 -- === PLAYER STATS ===
 INSERT INTO player_stats (user_id, total_games, total_wins, total_losses, total_points, longest_win_streak, current_streak)

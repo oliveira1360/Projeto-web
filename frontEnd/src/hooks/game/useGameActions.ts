@@ -74,7 +74,7 @@ export function useGameActions(
 
     const leaveGame = async () => {
         if (gameId) {
-            await gameService.closeGame(gameId);
+            await gameService.leaveGame(gameId);
             navigate("/lobbies");
         }
     };

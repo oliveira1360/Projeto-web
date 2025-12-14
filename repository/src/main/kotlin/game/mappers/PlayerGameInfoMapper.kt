@@ -4,6 +4,7 @@ import org.example.entity.PlayerGameInfo
 import org.example.entity.core.Balance
 import org.example.entity.core.Money
 import org.example.entity.core.Name
+import org.example.entity.core.URL
 import org.example.entity.core.toQuantity
 import org.example.entity.dice.toDiceFromString
 import org.example.entity.player.Hand
@@ -21,6 +22,8 @@ class PlayerGameInfoMapper : RowMapper<PlayerGameInfo> {
         val roll = rs.getInt("roll_number")
         val balance = Balance(Money(rs.getInt("balance")))
         val pgArray = rs.getArray("hand")
+        val avatarUrl = rs.getString("avatar_url")
+        val url = if (rs.wasNull()) null else URL(avatarUrl)
         val diceList =
             if (pgArray != null) {
                 val handArray = pgArray.array as Array<*>
@@ -41,6 +44,7 @@ class PlayerGameInfoMapper : RowMapper<PlayerGameInfo> {
             rolls = roll.toQuantity(),
             hand = Hand(diceList),
             balance = balance,
+            url = url,
         )
     }
 }
