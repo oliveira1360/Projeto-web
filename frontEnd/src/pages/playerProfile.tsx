@@ -21,13 +21,16 @@ function PlayerProfilePage() {
     return (
         <div className="player-profile-container">
             <div className="player-profile-header">
-                <h1>Player Profile</h1>
+                <div className="player-profile-header-center">
+                    <h1>Player Statistics</h1>
+                </div>
+                <div className="player-profile-header-left">
+                    <Link to="/home" className="player-profile-header-home">
+                        Home
+                    </Link>
+                </div>
             </div>
             
-            <nav className="player-profile-nav">
-                <Link to="/home">Home</Link>
-            </nav>
-
             {userInfo ? (
                 <div className="player-profile-card">
                     <div className="player-profile-avatar">

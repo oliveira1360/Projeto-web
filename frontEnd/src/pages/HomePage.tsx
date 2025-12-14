@@ -9,12 +9,12 @@ const HomePage: React.FC = () => {
         <div className="home-container">
             <div className="home-header">
                 <div className="home-header-center">
-                    <h1>Bem-vindo ao Jogo!</h1>
+                    <h1>Welcome to the Game! - Poker Dice</h1>
                 </div>
                 
                 <div className="home-header-right">
                     <Link to="/playerProfile" className="home-header-profile">
-                        👤 PERFIL
+                        👤 PROFILE
                     </Link>
                     <Link to="/logout" className="home-header-logout">
                         ❌ LOGOUT
@@ -23,7 +23,7 @@ const HomePage: React.FC = () => {
             </div>
 
             <div className="home-button-grid">
-                <p>Escolha a sua próxima ação:</p>
+                <p>Choose your next action:</p>
                 <HomeButton
                     to="/lobbies"
                     label="LOBBIES"

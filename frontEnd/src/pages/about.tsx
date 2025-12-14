@@ -7,12 +7,16 @@ function AboutPage() {
     return (
         <div className="about-container">
             <div className="about-header">
-                <h1>About</h1>
+                <div className="about-header-center">
+                    <h1>About This Game</h1>
+                </div>
+                <div className="about-header-left">
+                    <Link to="/home" className="about-header-home">
+                        Home
+                    </Link>
+                </div>
             </div>
 
-            <nav className="about-nav">
-                <Link to="/home">Home</Link>
-            </nav>
 
             <div className="about-card">
                 <div className="about-content">

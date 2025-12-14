@@ -3,44 +3,73 @@
     width: 100%;
     margin: 0 auto;
     padding: 0;
-    background: #1a1d23;
+    background: var(--background-dark);
     min-height: 100vh;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .invite-header {
+    width: 100vw;
+    margin-left: 50%;
+    transform: translateX(-50%);
     background: linear-gradient(135deg, #252932 0%, #2f3541 100%);
-    padding: 20px 16px;
+    padding: 24px 32px;
     border-bottom: 1px solid #3d4453;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
 }
 
-.invite-header h1 {
-    margin: 0;
-    font-size: 24px;
+.invite-header-center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.invite-header-center h1 {
+    margin: 0 0 8px 0;
+    font-size: clamp(22px, 4.5vw, 34px);
     font-weight: 600;
     color: #fff;
 }
 
-.invite-nav {
-    padding: 12px 16px;
-    background: #14161b;
-    border-bottom: 1px solid #252932;
+.invite-header-left {
+    display: flex;
+    gap: 12px;
+    position: absolute;
+    left: 32px;
 }
 
-.invite-nav a {
-    padding: 8px 16px;
-    background: #252932;
-    color: #0a84ff;
+.invite-header-left a {
+    padding: 10px 18px;
     text-decoration: none;
     border-radius: 8px;
+    font-weight: 600;
     font-size: 14px;
-    font-weight: 500;
-    transition: background-color 0.2s;
-    display: inline-block;
+    transition: all 0.2s;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
 }
 
-.invite-nav a:hover {
-    background: #2f3541;
+.invite-header-home {
+    background: var(--card-background);
+    color: #fff;
+    border: 1px solid var(--border-color);
+}
+
+.invite-header-home:hover {
+    background: var(--border-color);
+    color: var(--text-light);
+    transform: translateY(-1px);
 }
 
 .invite-error {
@@ -56,7 +85,7 @@
 .invite-card {
     background: #252932;
 
-    margin: 0;
+    margin-top: 25px;
     border-radius: 12px;
     padding: 24px;
     overflow: hidden;
@@ -110,8 +139,9 @@
 
 .invite-token-display {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
 }
 
 .invite-token-label {
@@ -119,6 +149,14 @@
     color: #8e92a3;
     font-size: 16px;
     font-weight: 400;
+    white-space: nowrap;
+}
+
+.invite-token-code-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
 }
 
 .invite-token-code {
@@ -131,4 +169,35 @@
     color: #fff;
     font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
     line-height: 1.6;
+    flex: 1;
+}
+
+.invite-copy-button {
+    padding: 12px 16px;
+    background: #0a84ff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    line-height: 1.6;
+}
+
+.invite-copy-button:hover {
+    background: #0077ed;
+}
+
+.copy-icon {
+    font-size: 16px;
+}
+
+.copy-text {
+    font-size: 14px;
 }
