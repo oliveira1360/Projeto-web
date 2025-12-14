@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { gameService } from "../services/game/gameService";
+import { gameService } from "../../services/game/gameService";
 import { GameAction, GameState } from "./gameReducer";
 
 export function useGameActions(

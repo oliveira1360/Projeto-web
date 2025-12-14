@@ -1,4 +1,4 @@
-import { Player, RoundInfoResponse } from "../services/game/responsesType";
+import { Player, RoundInfoResponse } from "../../services/game/responsesType";
 
 export interface Die {
     value: string;

@@ -2,7 +2,7 @@ import {useEffect, useReducer} from "react";
 import { gameReducer, initialState } from "./gameReducer";
 import { useGameActions } from "./useGameActions";
 import { useGameSubscription } from "./useGameSubscription";
-import {gameService} from "../services/game/gameService";
+import {gameService} from "../../services/game/gameService";
 
 export function useGame(gameId?: number, userId?: number) {
     const [state, dispatch] = useReducer(gameReducer, initialState);

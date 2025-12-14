@@ -2,12 +2,8 @@ import { test, expect } from '@playwright/test';
 import { ProfileTestPage } from '../../pages/player/ProfileTestPage';
 
 test.describe('Perfil do Jogador', () => {
-    let profilePage: ProfileTestPage;
-
     test.beforeEach(async ({ page }) => {
-        profilePage = new ProfileTestPage(page);
-
-
+        // Mock de autenticação global
         await page.route('**/user/me', async route => {
             await route.fulfill({
                 status: 200,
@@ -21,48 +17,27 @@ test.describe('Perfil do Jogador', () => {
     });
 
     test('Deve exibir os dados do jogador corretamente', async ({ page }) => {
+        const profilePage = new ProfileTestPage(page);
 
         // Mock dos dados do utilizador
         await page.route('**/user/info', async route => {
-            const responseData = {
-                userId: 1,
-                name: 'Teste User',
-                nickName: 'teste123',
-                email: 'teste@teste.com',
-                balance: '1000',
-                imageUrl: 'https://example.com/avatar.png',
-                _links: {}
-            };
-
             await route.fulfill({
                 status: 200,
                 contentType: 'application/json',
-                body: JSON.stringify(responseData)
+                body: JSON.stringify({
+                    userId: 1,
+                    name: 'Teste User',
+                    nickName: 'teste123',
+                    email: 'teste@teste.com',
+                    balance: '1000',
+                    imageUrl: 'https://example.com/avatar.png',
+                    _links: {}
+                })
             });
         });
 
         await profilePage.goto();
-
-        // Aguarda um pouco
-        await page.waitForTimeout(1000);
-
-        // Verifica o HTML da página
-        const bodyHTML = await page.locator('body').innerHTML();
-
-        // Verifica se estamos na página correta (não no login)
-        const isLoginPage = bodyHTML.includes('sign-in-container') || bodyHTML.includes('Create Account');
-
-        if (isLoginPage) {
-        }
-
-        // Verifica se o container do perfil existe
-        const containerExists = await page.locator('.player-profile-container').count();
-
-        // Verifica se o card aparece
-        const cardExists = await page.locator('.player-profile-card').count();
-
-        // Tira screenshot
-        await page.screenshot({ path: 'debug-profile-page.png', fullPage: true });
+        await profilePage.waitForProfileLoaded();
 
         await profilePage.expectUserInfo(
             'Teste User',
@@ -70,10 +45,10 @@ test.describe('Perfil do Jogador', () => {
             'teste@teste.com',
             '1000'
         );
-
     });
 
     test('Deve exibir avatar quando imageUrl está presente', async ({ page }) => {
+        const profilePage = new ProfileTestPage(page);
         const imageUrl = 'https://example.com/avatar.png';
 
         await page.route('**/user/info', async route => {
@@ -93,10 +68,13 @@ test.describe('Perfil do Jogador', () => {
         });
 
         await profilePage.goto();
+        await profilePage.waitForProfileLoaded();
         await profilePage.expectAvatarVisible(imageUrl);
     });
 
     test('Não deve exibir avatar quando imageUrl está ausente', async ({ page }) => {
+        const profilePage = new ProfileTestPage(page);
+
         await page.route('**/user/info', async route => {
             await route.fulfill({
                 status: 200,
@@ -113,10 +91,13 @@ test.describe('Perfil do Jogador', () => {
         });
 
         await profilePage.goto();
+        await profilePage.waitForProfileLoaded();
         await profilePage.expectAvatarNotVisible();
     });
 
     test('Deve exibir todos os links de navegação', async ({ page }) => {
+        const profilePage = new ProfileTestPage(page);
+
         await page.route('**/user/info', async route => {
             await route.fulfill({
                 status: 200,
@@ -133,10 +114,13 @@ test.describe('Perfil do Jogador', () => {
         });
 
         await profilePage.goto();
+        await profilePage.waitForProfileLoaded();
         await profilePage.expectNavigationLinks();
     });
 
     test('Deve navegar para a página de atualização de perfil', async ({ page }) => {
+        const profilePage = new ProfileTestPage(page);
+
         await page.route('**/user/info', async route => {
             await route.fulfill({
                 status: 200,
@@ -154,12 +138,15 @@ test.describe('Perfil do Jogador', () => {
         });
 
         await profilePage.goto();
+        await profilePage.waitForProfileLoaded();
         await profilePage.clickUpdateProfile();
 
-        await expect(page).toHaveURL(/.*playerProfile\/update/, { timeout: 10000 });
+        await expect(page).toHaveURL(/\/playerProfile\/update/);
     });
 
     test('Deve navegar para a página home', async ({ page }) => {
+        const profilePage = new ProfileTestPage(page);
+
         await page.route('**/user/info', async route => {
             await route.fulfill({
                 status: 200,
@@ -176,12 +163,15 @@ test.describe('Perfil do Jogador', () => {
         });
 
         await profilePage.goto();
+        await profilePage.waitForProfileLoaded();
         await profilePage.clickHome();
 
-        await expect(page).toHaveURL(/.*\/home/, { timeout: 10000 });
+        await expect(page).toHaveURL(/\/home/);
     });
 
     test('Deve navegar para a página de criar convite', async ({ page }) => {
+        const profilePage = new ProfileTestPage(page);
+
         await page.route('**/user/info', async route => {
             await route.fulfill({
                 status: 200,
@@ -198,12 +188,15 @@ test.describe('Perfil do Jogador', () => {
         });
 
         await profilePage.goto();
+        await profilePage.waitForProfileLoaded();
         await profilePage.clickCreateInvite();
 
-        await expect(page).toHaveURL(/.*createInvite/, { timeout: 10000 });
+        await expect(page).toHaveURL(/\/createInvite/);
     });
 
     test('Deve formatar nickname com @ corretamente', async ({ page }) => {
+        const profilePage = new ProfileTestPage(page);
+
         await page.route('**/user/info', async route => {
             await route.fulfill({
                 status: 200,
@@ -222,10 +215,12 @@ test.describe('Perfil do Jogador', () => {
         await profilePage.goto();
         await profilePage.waitForProfileLoaded();
 
-        await expect(profilePage.nicknameText).toHaveText('@cool_nickname', { timeout: 10000 });
+        await expect(profilePage.nicknameText).toHaveText('@cool_nickname');
     });
 
     test('Deve exibir balance com valor zero corretamente', async ({ page }) => {
+        const profilePage = new ProfileTestPage(page);
+
         await page.route('**/user/info', async route => {
             await route.fulfill({
                 status: 200,
@@ -244,11 +239,13 @@ test.describe('Perfil do Jogador', () => {
         await profilePage.goto();
         await profilePage.waitForProfileLoaded();
 
-        await expect(profilePage.balanceField).toContainText('0', { timeout: 10000 });
-        await expect(profilePage.balanceField).toContainText('€', { timeout: 10000 });
+        await expect(profilePage.balanceField).toContainText('0');
+        await expect(profilePage.balanceField).toContainText('€');
     });
 
     test('Deve mostrar informações completas do perfil', async ({ page }) => {
+        const profilePage = new ProfileTestPage(page);
+
         await page.route('**/user/info', async route => {
             await route.fulfill({
                 status: 200,
@@ -268,19 +265,23 @@ test.describe('Perfil do Jogador', () => {
         await profilePage.goto();
         await profilePage.waitForProfileLoaded();
 
-        await expect(profilePage.nameHeading).toBeVisible({ timeout: 10000 });
-        await expect(profilePage.nicknameText).toBeVisible({ timeout: 10000 });
-        await expect(profilePage.emailField).toBeVisible({ timeout: 10000 });
-        await expect(profilePage.balanceField).toBeVisible({ timeout: 10000 });
-        await expect(profilePage.avatarImage).toBeVisible({ timeout: 10000 });
+        // Verifica visibilidade
+        await expect(profilePage.nameHeading).toBeVisible();
+        await expect(profilePage.nicknameText).toBeVisible();
+        await expect(profilePage.emailField).toBeVisible();
+        await expect(profilePage.balanceField).toBeVisible();
+        await expect(profilePage.avatarImage).toBeVisible();
 
-        await expect(profilePage.nameHeading).toHaveText('João Silva', { timeout: 10000 });
-        await expect(profilePage.nicknameText).toHaveText('@joao_gamer', { timeout: 10000 });
-        await expect(profilePage.emailField).toHaveText('joao@teste.com', { timeout: 10000 });
-        await expect(profilePage.balanceField).toContainText('5500', { timeout: 10000 });
+        // Verifica conteúdo
+        await expect(profilePage.nameHeading).toHaveText('João Silva');
+        await expect(profilePage.nicknameText).toHaveText('@joao_gamer');
+        await expect(profilePage.emailField).toHaveText('joao@teste.com');
+        await expect(profilePage.balanceField).toContainText('5500');
     });
 
     test('Deve ter todos os botões de ação visíveis', async ({ page }) => {
+        const profilePage = new ProfileTestPage(page);
+
         await page.route('**/user/info', async route => {
             await route.fulfill({
                 status: 200,
@@ -299,10 +300,40 @@ test.describe('Perfil do Jogador', () => {
         await profilePage.goto();
         await profilePage.waitForProfileLoaded();
 
-        const updateLink = page.locator('a', { hasText: 'Update Profile' });
-        const inviteLink = page.locator('a', { hasText: 'Create Invite' });
+        // Usa os locators do Page Object
+        await expect(profilePage.updateProfileLink).toBeVisible();
+        await expect(profilePage.createInviteLink).toBeVisible();
+    });
 
-        await expect(updateLink).toBeVisible({ timeout: 10000 });
-        await expect(inviteLink).toBeVisible({ timeout: 10000 });
+    test('Deve exibir estado de loading antes dos dados carregarem', async ({ page }) => {
+        const profilePage = new ProfileTestPage(page);
+
+        // Simula delay no carregamento
+        await page.route('**/user/info', async route => {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    userId: 14,
+                    name: 'Teste Loading',
+                    nickName: 'loading_test',
+                    email: 'loading@teste.com',
+                    balance: '100',
+                    _links: {}
+                })
+            });
+        });
+
+        const gotoPromise = profilePage.goto();
+
+        // Verifica loading state (pode já não estar visível se carregar muito rápido)
+        const loadingVisible = await profilePage.loadingText.isVisible().catch(() => false);
+
+        await gotoPromise;
+        await profilePage.waitForProfileLoaded();
+
+        // Após carregar, o card deve estar visível
+        await expect(profilePage.profileCard).toBeVisible();
     });
 });

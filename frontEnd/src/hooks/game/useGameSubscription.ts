@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { gameService } from "../services/game/gameService";
+import { gameService } from "../../services/game/gameService";
 import { GameAction } from "./gameReducer";
 
 type Actions = {

@@ -14,8 +14,8 @@ export class InviteTestPage {
         this.page = page;
         this.inviteContainer = page.locator('.invite-container');
         this.title = page.locator('.invite-header h1');
-        this.homeLink = page.locator('.invite-nav a', { hasText: 'Back to Home' });
-        this.createButton = page.locator('button', { hasText: /Create New Invite|Creating/ });
+        this.homeLink = page.locator('.invite-header-home');
+        this.createButton = page.locator('button', { hasText: /Create New Invite|Creating/i });
         this.successMessage = page.locator('.invite-success');
         this.errorMessage = page.locator('.invite-error');
         this.tokenDisplay = page.locator('.invite-token-code');

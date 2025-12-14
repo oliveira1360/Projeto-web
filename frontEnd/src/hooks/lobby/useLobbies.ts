@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { lobbyService,} from "../services/lobby/lobbyService";
-import {Lobby, LobbyDetailsResponse} from "../services/lobby/lobbyResponseTypes";
+import { lobbyService,} from "../../services/lobby/lobbyService";
+import {Lobby, LobbyDetailsResponse} from "../../services/lobby/lobbyResponseTypes";
 
 interface LobbyHookResult {
     lobbies: Lobby[];
@@ -9,11 +9,10 @@ interface LobbyHookResult {
     error: string | null;
     listAllLobbies: () => Promise<void>;
     getDetails: (lobbyId: number) => Promise<void>;
-    joinLobby: (lobbyId: number) => Promise<void>;
     leaveLobby: (lobbyId: number) => Promise<void>;
 }
 
-export function useLobby(): LobbyHookResult {
+export function useLobbies(): LobbyHookResult {
     const [lobbies, setLobbies] = useState<Lobby[]>([]);
     const [currentLobbyDetails, setCurrentLobbyDetails] = useState<LobbyDetailsResponse | null>(null);
     const [loading, setLoading] = useState(false);
@@ -46,19 +45,6 @@ export function useLobby(): LobbyHookResult {
             setLoading(false);
         }
     }, []);
-
-    const joinLobby = useCallback(async (lobbyId: number) => {
-        setLoading(true);
-        setError(null);
-        try {
-            await lobbyService.joinLobby(lobbyId);
-            await getDetails(lobbyId); // Atualiza os detalhes para o usuário ver
-        } catch (e: any) {
-            setError(`Failed to join lobby: ${e.message}`);
-        } finally {
-            setLoading(false);
-        }
-    }, [getDetails]);
 
     const leaveLobby = useCallback(async (lobbyId: number) => {
         setLoading(true);
@@ -108,7 +94,6 @@ export function useLobby(): LobbyHookResult {
         error,
         listAllLobbies,
         getDetails,
-        joinLobby,
         leaveLobby,
     };
 }

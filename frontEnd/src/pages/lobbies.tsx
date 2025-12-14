@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLobby } from "../hooks/useLobby";
+import { useLobbies } from "../hooks/lobby/useLobbies";
 import {lobbyService} from "../services/lobby/lobbyService";
 import {LobbyCard} from "../components/Lobby/LobbyCard";
 import {LobbyDetails} from "../components/Lobby/LobbyDetails";
@@ -17,9 +17,8 @@ const LobbyPage: React.FC = () => {
         error,
         listAllLobbies,
         getDetails,
-        joinLobby,
         leaveLobby,
-    } = useLobby();
+    } = useLobbies();
 
     const [selectedLobbyId, setSelectedLobbyId] = useState<number | null>(null);
 

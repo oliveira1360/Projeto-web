@@ -11,7 +11,7 @@ export class AboutTestPage {
         this.page = page;
         this.aboutContainer = page.locator('.about-container');
         this.title = page.locator('.about-header h1');
-        this.homeLink = page.locator('.about-nav a', { hasText: 'Home' });
+        this.homeLink = page.locator('.about-header-home');
         this.teamSection = page.locator('.about-team');
     }
 

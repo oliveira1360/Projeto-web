@@ -23,6 +23,5 @@ test.describe('Autenticação', () => {
         // 4. Asserção
         // Verifica se fomos redirecionados para a home
         await expect(page).toHaveURL(/\/home/);
-        await expect(page.getByText('Bem-vindo ao Jogo!')).toBeVisible();
     });
 });

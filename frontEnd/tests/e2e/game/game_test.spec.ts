@@ -104,8 +104,8 @@ test.describe('Game UI & Mecânicas', () => {
 
             await gamePage.goto(GAME_ID);
 
-            // Deve redirecionar para home
-            await expect(page).toHaveURL(/\/home/, { timeout: 10000 });
+
+            await expect(page).toHaveURL(/\/lobbies/, { timeout: 10000 });
         });
     });
 

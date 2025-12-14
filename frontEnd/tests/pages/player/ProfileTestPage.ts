@@ -2,6 +2,8 @@ import { type Page, type Locator, expect } from '@playwright/test';
 
 export class ProfileTestPage {
     readonly page: Page;
+    readonly profileContainer: Locator;
+    readonly profileCard: Locator;
     readonly nameHeading: Locator;
     readonly nicknameText: Locator;
     readonly emailField: Locator;
@@ -11,19 +13,19 @@ export class ProfileTestPage {
     readonly createInviteLink: Locator;
     readonly homeLink: Locator;
     readonly loadingText: Locator;
-    readonly profileCard: Locator;
 
     constructor(page: Page) {
         this.page = page;
+        this.profileContainer = page.locator('.player-profile-container');
         this.profileCard = page.locator('.player-profile-card');
         this.nameHeading = page.locator('.player-profile-avatar h2');
         this.nicknameText = page.locator('.player-profile-avatar p');
         this.emailField = page.locator('.player-profile-info p').filter({ hasText: 'Email' }).locator('span');
         this.balanceField = page.locator('.player-profile-info p').filter({ hasText: 'Balance' }).locator('span');
         this.avatarImage = page.locator('.player-profile-avatar img');
-        this.updateProfileLink = page.locator('a', { hasText: 'Update Profile' });
-        this.createInviteLink = page.locator('a', { hasText: 'Create Invite' });
-        this.homeLink = page.locator('.player-profile-nav a', { hasText: 'Home' });
+        this.updateProfileLink = page.locator('.player-profile-actions a', { hasText: 'Update Profile' });
+        this.createInviteLink = page.locator('.player-profile-actions a', { hasText: 'Create Invite' });
+        this.homeLink = page.locator('.player-profile-header-home');
         this.loadingText = page.locator('.player-profile-loading');
     }
 
@@ -33,7 +35,25 @@ export class ProfileTestPage {
 
     async waitForProfileLoaded() {
         // Espera o card do perfil aparecer (quando dados carregam)
-        await this.profileCard.waitFor({ state: 'visible', timeout: 10000 });
+        await expect(this.profileCard).toBeVisible({ timeout: 10000 });
+    }
+
+    async clickHome() {
+        await this.homeLink.click();
+    }
+
+    async clickUpdateProfile() {
+        await this.waitForProfileLoaded();
+        await this.updateProfileLink.click();
+    }
+
+    async clickCreateInvite() {
+        await this.waitForProfileLoaded();
+        await this.createInviteLink.click();
+    }
+
+    async expectPageVisible() {
+        await expect(this.profileContainer).toBeVisible();
     }
 
     async expectUserInfo(name: string, nickname: string, email: string, balance: string) {
@@ -65,20 +85,5 @@ export class ProfileTestPage {
         await expect(this.homeLink).toBeVisible({ timeout: 10000 });
         await expect(this.updateProfileLink).toBeVisible({ timeout: 10000 });
         await expect(this.createInviteLink).toBeVisible({ timeout: 10000 });
-    }
-
-    async clickUpdateProfile() {
-        await this.waitForProfileLoaded();
-        await this.updateProfileLink.click({ timeout: 10000 });
-    }
-
-    async clickCreateInvite() {
-        await this.waitForProfileLoaded();
-        await this.createInviteLink.click({ timeout: 10000 });
-    }
-
-    async clickHome() {
-        await this.waitForProfileLoaded();
-        await this.homeLink.click({ timeout: 10000 });
     }
 }

@@ -141,7 +141,8 @@ class LobbyService(
                     data =
                         mapOf(
                             "userId" to user.id,
-                            "userName" to user.nickName.value,
+                            "userName" to user.name.value,
+                            "imageUrl" to (user.imageUrl?.value ?: ""),
                             "currentPlayers" to updatedLobby.currentPlayers.size,
                             "maxPlayers" to updatedLobby.maxPlayers,
                         ),

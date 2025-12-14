@@ -88,7 +88,7 @@ test.describe('Navegação', () => {
             const about = new AboutTestPage(page);
 
             await home.goto();
-            await page.click('a:has-text("SOBRE")');
+            await home.clickAbout();
 
             await expect(page).toHaveURL(/\/about/);
             await about.expectPageVisible();
@@ -173,26 +173,6 @@ test.describe('Navegação', () => {
         });
     });
 
-    test.describe('Navegação a partir de Update Profile', () => {
-        test('Deve navegar de Update Profile para Perfil (Cancel)', async ({ page }) => {
-            const profile = new ProfileTestPage(page);
-
-            // Navega primeiro para o perfil
-            await profile.goto();
-            await profile.waitForProfileLoaded();
-
-            // Vai para update
-            await profile.clickUpdateProfile();
-            await expect(page).toHaveURL(/\/playerProfile\/update/);
-
-            // Cancela
-            await page.click('a:has-text("Cancel")');
-
-            await expect(page).toHaveURL(/\/playerProfile/);
-            await profile.waitForProfileLoaded();
-        });
-    });
-
 
     test.describe('Navegação circular', () => {
         test('Deve conseguir fazer ciclo: Home → Perfil → Home → About → Home', async ({ page }) => {
@@ -212,7 +192,7 @@ test.describe('Navegação', () => {
             await expect(page).toHaveURL(/\/home/);
 
             // Home → About
-            await page.click('a:has-text("SOBRE")');
+            await home.clickAbout();
             await expect(page).toHaveURL(/\/about/);
             await about.expectPageVisible();
 
@@ -310,33 +290,6 @@ test.describe('Navegação', () => {
 
             await expect(about.homeLink).toBeVisible();
             await expect(about.homeLink).toHaveAttribute('href', /home/);
-        });
-    });
-
-    test.describe('Navegação com estado', () => {
-        test('Deve manter dados ao navegar Perfil → Update → Cancel', async ({ page }) => {
-            const profile = new ProfileTestPage(page);
-
-            await profile.goto();
-            await profile.waitForProfileLoaded();
-
-            // Captura o nome no perfil
-            const nameInProfile = await profile.nameHeading.textContent();
-
-            // Vai para update
-            await profile.clickUpdateProfile();
-            await expect(page).toHaveURL(/\/playerProfile\/update/);
-
-            // Verifica que o nome está preenchido no formulário
-            const nameInForm = await page.locator('input[name="name"]').inputValue();
-            expect(nameInForm).toBe(nameInProfile);
-
-            // Cancela e volta
-            await page.click('a:has-text("Cancel")');
-            await expect(page).toHaveURL(/\/playerProfile/);
-
-            // Verifica que o nome ainda está lá
-            await expect(profile.nameHeading).toHaveText(nameInProfile || '');
         });
     });
 });

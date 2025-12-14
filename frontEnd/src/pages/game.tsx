@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {useNavigate, useParams} from "react-router-dom";
-import useGame, {useCloseWindow} from "../hooks/useGame";
+import useGame, {useCloseWindow} from "../hooks/game/useGame";
 import GameLoading from "../components/game/GameLoading";
 import GameError from "../components/game/GameError";
 import GameFinished from "../components/game/GameFinished";

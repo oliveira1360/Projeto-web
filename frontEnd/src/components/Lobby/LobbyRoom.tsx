@@ -4,7 +4,6 @@ import {PlayerInfo} from "../../services/lobby/lobbyResponseTypes";
 interface LobbyRoomProps {
     lobbyId: number;
     name: string;
-    currentPlayers: PlayerInfo[];
     maxPlayers: number;
     rounds: number;
     players: PlayerInfo[];
@@ -15,7 +14,6 @@ interface LobbyRoomProps {
 export const LobbyRoom: React.FC<LobbyRoomProps> = ({
                                                         lobbyId,
                                                         name,
-                                                        currentPlayers,
                                                         maxPlayers,
                                                         rounds,
                                                         players,

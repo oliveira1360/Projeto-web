@@ -5,13 +5,24 @@ body {
     padding: 0;
 }
 
-.lobby-room-container {
+/* Container principal do timer */
+.lobby-timer-container {
     max-width: 1200px;
-    margin: 40px auto;
-    padding: 20px;
-    background-color: #1a1d23; /* Fundo acinzentado */
-    min-height: 100vh;
+    margin: 0 auto;
+    padding: 0 20px 10px;
+
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+
+    background: linear-gradient(
+            to top,
+            #1a1d23 70%,
+            rgba(26, 29, 35, 0.85) 85%,
+            rgba(26, 29, 35, 0)
+    );
 }
+
 
 .lobby-room-header {
     text-align: center;
@@ -291,7 +302,7 @@ body {
 }
 
 
-* Container principal do timer */
+* Container principal do timer *
 .lobby-timer-container {
     max-width: 1200px;
     margin: 0 auto 20px auto;
@@ -427,87 +438,3 @@ body {
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

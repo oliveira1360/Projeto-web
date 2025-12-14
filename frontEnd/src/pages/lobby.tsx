@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useLobbyRoom } from "../hooks/useLobbyRoom";
+import { useLobbyRoom } from "../hooks/lobby/useLobbyRoom";
 import { playerService } from "../services/player/playerService";
 import { PlayerInfoResponse } from "../services/player/playerResponseTypes";
 import { LobbyLoading } from "../components/Lobby/LobbyLoading";
@@ -26,7 +26,6 @@ function LobbyPage() {
     const {
         lobbyId: currentLobbyId,
         name,
-        currentPlayers,
         maxPlayers,
         rounds,
         players,
@@ -49,7 +48,6 @@ function LobbyPage() {
             <LobbyRoom
                 lobbyId={currentLobbyId}
                 name={name}
-                currentPlayers={currentPlayers}
                 maxPlayers={maxPlayers}
                 rounds={rounds}
                 players={players}

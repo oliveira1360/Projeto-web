@@ -9,10 +9,10 @@ export class HomeTestPage {
 
     constructor(page: Page) {
         this.page = page;
-        this.title = page.getByRole('heading', { name: 'Bem-vindo ao Jogo!' });
+        this.title = page.getByRole('heading', { name: /Welcome to the Game!|Bem-vindo ao Jogo!/i });
         this.lobbiesButton = page.getByRole('link', { name: 'LOBBIES' });
-        this.profileButton = page.getByRole('link', { name: 'PERFIL DO JOGADOR' });
-        this.aboutButton = page.getByRole('link', { name: 'SOBRE' });
+        this.profileButton = page.getByRole('link', { name: /PERFIL DO JOGADOR|PROFILE/i });
+        this.aboutButton = page.getByRole('link', { name: /SOBRE|ABOUT/i });
     }
 
     async goto() {
@@ -25,5 +25,9 @@ export class HomeTestPage {
 
     async clickProfile() {
         await this.profileButton.click();
+    }
+
+    async clickAbout() {
+        await this.aboutButton.click();
     }
 }
