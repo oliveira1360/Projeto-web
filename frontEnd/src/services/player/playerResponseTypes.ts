@@ -6,7 +6,7 @@ export type PlayerInfoResponse = {
     nickName: string;
     email: string;
     balance: string;
-    imageUrl?: string; // Opcional
+    imageUrl?: string;
     _links: any;
 };
 

@@ -85,14 +85,14 @@ function UpdatePlayerProfilePage() {
         dispatch({ type: "save_start" });
         try {
             const payload: {
-                name: string;
-                nickName: string;
-                imageUrl: string;
+                name?: string;
+                nickName?: string;
+                imageUrl?: string ;
                 password?: string;
             } = {
                 name: state.formData.name,
                 nickName: state.formData.nickName,
-                imageUrl: state.formData.imageUrl,
+                imageUrl: state.formData.imageUrl.trim() || undefined,
             };
 
             if (state.formData.password && state.formData.password.trim().length > 0) {
