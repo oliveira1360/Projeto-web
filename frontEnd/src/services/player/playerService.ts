@@ -45,15 +45,6 @@ export const playerService = {
     },
 
     async updatePlayerProfile(profileData: { name?: string; nickName?: string; imageUrl?: string; password?: string; }): Promise<PlayerInfoResponse> {
-        if (profileData.password != undefined && profileData.password.trim().length > 0) {
-            // Using SHA-256 to hash the password before sending it to the server
-            // Code obtained and adapted from https://www.geeksforgeeks.org/javascript/how-to-create-hash-from-string-in-javascript/
-            const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(profileData.password)); 
-            const hashArray = Array.from(new Uint8Array(hashBuffer)); 
-            const passwordHashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
-            profileData.password = passwordHashHex;
-        }
-
         const response = await request(`/user/update`, {
             method: 'POST',
             headers: {
